@@ -79,7 +79,7 @@ export default function PastorAppPage() {
 
       {/* Footer */}
       <div className="text-center pb-8 pt-2">
-        <p className="text-xs text-gray-400">Igreja Batista Tchê Missionária</p>
+        <p className="text-xs text-gray-400">Igreja Batista Transformação</p>
       </div>
     </div>
   )

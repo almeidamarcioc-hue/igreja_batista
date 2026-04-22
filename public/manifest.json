@@ -1,7 +1,7 @@
 {
   "name": "Agenda Pastores — IBTM",
   "short_name": "Agenda IBTM",
-  "description": "Agenda dos Pastores da Igreja Batista Tchê Missionária",
+  "description": "Agenda dos Pastores da Igreja Batista Transformação",
   "start_url": "/pastor",
   "display": "standalone",
   "background_color": "#002347",
