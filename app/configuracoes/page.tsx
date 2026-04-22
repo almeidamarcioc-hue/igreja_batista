@@ -152,8 +152,11 @@ export default function ConfiguracoesPage() {
       {erro && <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{erro}</div>}
       {sucesso && <div className="bg-green-50 border border-green-300 text-green-700 rounded-lg px-4 py-3 mb-4 text-sm">{sucesso}</div>}
 
+      {/* Row 1: WhatsApp + Horários de Atendimento */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+
       {/* Conexão WhatsApp */}
-      <div className="bg-white rounded-xl shadow-sm p-5 mb-5 max-w-2xl">
+      <div className="bg-white rounded-xl shadow-sm p-5">
         <h2 style={{ color: '#002347' }} className="font-bold text-base mb-3">Conexão WhatsApp</h2>
 
         {waStatus === 'nao_configurado' && (
@@ -203,7 +206,7 @@ export default function ConfiguracoesPage() {
       </div>
 
       {/* Horários de Atendimento */}
-      <div className="bg-white rounded-xl shadow-sm p-5 mb-5 max-w-2xl">
+      <div className="bg-white rounded-xl shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 style={{ color: '#002347' }} className="font-bold text-base">Horários de Atendimento</h2>
           {sucessoHorarios && <span className="text-green-600 text-xs font-semibold">{sucessoHorarios}</span>}
@@ -328,56 +331,63 @@ export default function ConfiguracoesPage() {
         </button>
       </div>
 
-      <form onSubmit={handleSalvar} className="bg-white rounded-xl shadow-sm p-5 space-y-5 max-w-2xl">
-        <h2 style={{ color: '#002347' }} className="font-bold text-base">Configurações de Lembretes</h2>
+      </div>{/* fim grid Row 1 */}
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Horas de antecedência para lembrete
-          </label>
-          <input
-            type="number"
-            min={1}
-            max={168}
-            value={config.horas_lembrete}
-            onChange={(e) => setConfig((c) => ({ ...c, horas_lembrete: Number(e.target.value) }))}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none"
-            style={inputStyle}
-            onFocus={onFocus}
-            onBlur={onBlur}
-          />
-          <p className="text-xs text-gray-400 mt-1">Padrão: 24 horas antes do agendamento.</p>
+      {/* Row 2: Mensagens — full width, 2 colunas em desktop */}
+      <form onSubmit={handleSalvar} className="bg-white rounded-xl shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 style={{ color: '#002347' }} className="font-bold text-base">Configurações de Lembretes</h2>
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Horas de antecedência:</label>
+            <input
+              type="number"
+              min={1}
+              max={168}
+              value={config.horas_lembrete}
+              onChange={(e) => setConfig((c) => ({ ...c, horas_lembrete: Number(e.target.value) }))}
+              className="w-24 border rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+              style={inputStyle}
+              onFocus={onFocus}
+              onBlur={onBlur}
+            />
+            <span className="text-xs text-gray-400">horas antes</span>
+          </div>
         </div>
 
         <div style={{ borderColor: '#f3f4f6' }} className="border-t pt-4">
-          <h3 style={{ color: '#002347' }} className="font-semibold text-sm mb-3">Mensagens WhatsApp</h3>
-          <p className="text-xs text-gray-400 mb-4">Variáveis disponíveis: {'{nome}'}, {'{pastor}'}, {'{data}'}, {'{hora}'}, {'{assunto}'}</p>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <h3 style={{ color: '#002347' }} className="font-semibold text-sm">Mensagens WhatsApp</h3>
+            <p className="text-xs text-gray-400">Variáveis: {'{nome}'}, {'{pastor}'}, {'{data}'}, {'{hora}'}, {'{assunto}'}</p>
+          </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Confirmação de Agendamento</label>
-              <textarea value={config.msg_confirmacao} onChange={(e) => setConfig((c) => ({ ...c, msg_confirmacao: e.target.value }))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+            {/* Coluna 1 */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Confirmação de Agendamento</label>
+                <textarea value={config.msg_confirmacao} onChange={(e) => setConfig((c) => ({ ...c, msg_confirmacao: e.target.value }))} rows={4} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Lembrete</label>
+                <textarea value={config.msg_lembrete} onChange={(e) => setConfig((c) => ({ ...c, msg_lembrete: e.target.value }))} rows={4} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Cancelamento</label>
+                <textarea value={config.msg_cancelamento} onChange={(e) => setConfig((c) => ({ ...c, msg_cancelamento: e.target.value }))} rows={4} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Lembrete</label>
-              <textarea value={config.msg_lembrete} onChange={(e) => setConfig((c) => ({ ...c, msg_lembrete: e.target.value }))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Cancelamento</label>
-              <textarea value={config.msg_cancelamento} onChange={(e) => setConfig((c) => ({ ...c, msg_cancelamento: e.target.value }))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Remarcação</label>
-              <textarea value={config.msg_remarcacao} onChange={(e) => setConfig((c) => ({ ...c, msg_remarcacao: e.target.value }))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Notificação para o Pastor</label>
-              <p className="text-xs text-gray-400 mb-1">Variáveis: {'{nome_fiel}'}, {'{telefone}'}, {'{assunto}'}, {'{data}'}, {'{hora}'}</p>
-              <textarea value={config.msg_pastor} onChange={(e) => setConfig((c) => ({ ...c, msg_pastor: e.target.value }))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            {/* Coluna 2 */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Remarcação</label>
+                <textarea value={config.msg_remarcacao} onChange={(e) => setConfig((c) => ({ ...c, msg_remarcacao: e.target.value }))} rows={4} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Notificação para o Pastor</label>
+                <p className="text-xs text-gray-400 mb-1">Variáveis: {'{nome_fiel}'}, {'{telefone}'}, {'{assunto}'}, {'{data}'}, {'{hora}'}</p>
+                <textarea value={config.msg_pastor} onChange={(e) => setConfig((c) => ({ ...c, msg_pastor: e.target.value }))} rows={4} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+              </div>
             </div>
           </div>
         </div>
@@ -386,7 +396,7 @@ export default function ConfiguracoesPage() {
           type="submit"
           disabled={salvando}
           style={{ backgroundColor: '#002347', color: '#fff' }}
-          className="w-full py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+          className="w-full mt-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
         >
           {salvando ? 'Salvando...' : '💾 Salvar Configurações'}
         </button>

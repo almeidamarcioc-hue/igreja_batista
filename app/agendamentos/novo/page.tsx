@@ -253,7 +253,7 @@ export default function NovoAgendamentoPage() {
 
       <div className="bg-white rounded-xl shadow-sm p-6">
         {/* Busca de fiel */}
-        <div className="mb-6">
+        <div className="mb-5">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Buscar Fiel Cadastrado</label>
           <div className="relative">
             <div className="flex gap-2">
@@ -288,7 +288,10 @@ export default function NovoAgendamentoPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
+          {/* ── Coluna esquerda: dados do agendamento ── */}
+          <div className="space-y-4">
           {/* Nome e Telefone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -408,6 +411,10 @@ export default function NovoAgendamentoPage() {
             </div>
           </div>
 
+          </div>{/* fim coluna esquerda */}
+
+          {/* ── Coluna direita: opções e ações ── */}
+          <div className="space-y-4 mt-4 lg:mt-0">
           {/* Status e Recorrência */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -537,12 +544,14 @@ export default function NovoAgendamentoPage() {
             type="submit"
             disabled={submitting}
             style={{ backgroundColor: '#002347', color: '#ffffff' }}
-            className="w-full py-3 rounded-lg font-semibold text-sm transition-all hover:bg-yellow-600 disabled:opacity-50"
+            className="w-full py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
             onMouseOver={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#C5A059'; (e.target as HTMLButtonElement).style.color = '#002347' }}
             onMouseOut={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#002347'; (e.target as HTMLButtonElement).style.color = '#ffffff' }}
           >
             {submitting ? 'Salvando...' : '💾 Salvar Agendamento'}
           </button>
+          </div>{/* fim coluna direita */}
+          </div>{/* fim grid 2 colunas */}
         </form>
       </div>
     </div>
