@@ -121,33 +121,33 @@ export default function ConfiguracoesPage() {
           {sucessoHorarios && <span className="text-green-600 text-xs font-semibold">{sucessoHorarios}</span>}
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {horarios.map((h) => (
             <div key={h.dia_semana} className="rounded-xl border p-3" style={{ borderColor: h.ativo ? '#C5A059' : '#e5e7eb', backgroundColor: h.ativo ? '#fffbf0' : '#f9fafb' }}>
+              {/* Cabeçalho do dia */}
               <div className="flex items-center gap-3 mb-2">
-                {/* Toggle ativo */}
                 <button
                   type="button"
                   onClick={() => setHorario(h.dia_semana, 'ativo', !h.ativo)}
-                  className="w-10 h-6 rounded-full transition-colors flex-shrink-0 relative"
+                  className="w-11 h-6 rounded-full flex-shrink-0 relative overflow-hidden transition-colors"
                   style={{ backgroundColor: h.ativo ? '#002347' : '#d1d5db' }}
                 >
                   <span
-                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
-                    style={{ transform: h.ativo ? 'translateX(18px)' : 'translateX(2px)' }}
+                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                    style={{ left: h.ativo ? '22px' : '2px' }}
                   />
                 </button>
-                <span className="font-bold text-sm w-20 flex-shrink-0" style={{ color: h.ativo ? '#002347' : '#9ca3af' }}>
+                <span className="font-bold text-sm" style={{ color: h.ativo ? '#002347' : '#9ca3af' }}>
                   {DIAS_SEMANA[h.dia_semana]}
                 </span>
                 {!h.ativo && <span className="text-xs text-gray-400">Sem atendimento</span>}
               </div>
 
               {h.ativo && (
-                <div className="space-y-2 pl-13">
-                  {/* Turno da manhã / linha principal */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <label className="text-xs text-gray-500 w-12">Início</label>
+                <div className="space-y-2 pl-14">
+                  {/* Turno da manhã */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-xs text-gray-500 w-10">Início</label>
                     <input
                       type="time"
                       value={h.inicio}
@@ -165,7 +165,7 @@ export default function ConfiguracoesPage() {
                     />
                   </div>
 
-                  {/* Toggle intervalo */}
+                  {/* Checkbox intervalo */}
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -190,8 +190,8 @@ export default function ConfiguracoesPage() {
 
                   {/* Turno da tarde */}
                   {h.intervalo_inicio !== null && (
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <label className="text-xs text-gray-500 w-12">Retorno</label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="text-xs text-gray-500 w-10">Retorno</label>
                       <input
                         type="time"
                         value={h.intervalo_fim ?? '13:00'}
@@ -210,10 +210,10 @@ export default function ConfiguracoesPage() {
                     </div>
                   )}
 
-                  {/* Sem intervalo: campo fim separado */}
+                  {/* Sem intervalo: campo fim */}
                   {h.intervalo_inicio === null && (
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <label className="text-xs text-gray-500 w-12">Fim</label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="text-xs text-gray-500 w-10">Fim</label>
                       <input
                         type="time"
                         value={h.fim}
