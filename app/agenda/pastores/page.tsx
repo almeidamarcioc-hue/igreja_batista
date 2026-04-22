@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Badge from '@/components/Badge'
@@ -8,22 +9,18 @@ import { Pastor, Slot } from '@/types'
 
 const DIAS_SEMANA_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-const HORAS_DIA = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']
+const HORAS_DIA = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '13:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00']
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function addDays(d: Date, n: number): Date {
-  const r = new Date(d)
-  r.setDate(r.getDate() + n)
-  return r
+  const r = new Date(d); r.setDate(r.getDate() + n); return r
 }
 
 function startOfWeek(d: Date): Date {
-  const r = new Date(d)
-  r.setDate(r.getDate() - r.getDay())
-  return r
+  const r = new Date(d); r.setDate(r.getDate() - r.getDay()); return r
 }
 
 function startOfMonth(d: Date): Date {
@@ -57,11 +54,11 @@ function slotColor(tipo: string): { bg: string; border: string; text: string } {
 
 function abrirWhatsApp(telefone: string, mensagem: string) {
   const num = telefone.replace(/\D/g, '')
-  const url = `https://wa.me/${num.startsWith('55') ? num : '55' + num}?text=${encodeURIComponent(mensagem)}`
-  window.open(url, '_blank')
+  window.open(`https://wa.me/${num.startsWith('55') ? num : '55' + num}?text=${encodeURIComponent(mensagem)}`, '_blank')
 }
 
 export default function AgendaPastoresPage() {
+  const router = useRouter()
   const [pastores, setPastores] = useState<Pastor[]>([])
   const [pastorId, setPastorId] = useState<number | null>(null)
   const [view, setView] = useState<'mensal' | 'semanal' | 'diaria'>('mensal')
@@ -69,6 +66,7 @@ export default function AgendaPastoresPage() {
   const [slots, setSlots] = useState<Record<string, Record<string, Slot>>>({})
   const [loading, setLoading] = useState(false)
   const [painel, setPainel] = useState<{ data: string; hora: string; slot: Slot | null } | null>(null)
+  const [painelDia, setPainelDia] = useState<string | null>(null)
   const [motivoBloqueio, setMotivoBloqueio] = useState('')
   const [bloqueando, setBloqueando] = useState(false)
 
@@ -100,22 +98,33 @@ export default function AgendaPastoresPage() {
         dataInicio = toDateStr(currentDate)
         dataFim = dataInicio
       }
-      const res = await fetch(`/api/slots?pastorId=${pastorId}&dataInicio=${dataInicio}&dataFim=${dataFim}`)
+      const res = await fetch(`/api/slots?pastorId=${pastorId}&dataInicio=${dataInicio}&dataFim=${dataFim}&_t=${Date.now()}`)
       const data = await res.json()
       setSlots(data || {})
-    } catch {}
+    } catch { /* silencioso */ }
     finally { setLoading(false) }
   }, [pastorId, view, currentDate])
 
   useEffect(() => { fetchSlots() }, [fetchSlots])
 
-  const getSlot = (data: string, hora: string): Slot | null => {
-    return slots?.[data]?.[hora] ?? null
-  }
+  // Atualiza ao voltar para a aba
+  useEffect(() => {
+    const onFocus = () => fetchSlots()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [fetchSlots])
+
+  const getSlot = (data: string, hora: string): Slot | null => slots?.[data]?.[hora] ?? null
 
   const abrirPainel = (data: string, hora: string) => {
     setPainel({ data, hora, slot: getSlot(data, hora) })
     setMotivoBloqueio('')
+    setPainelDia(null)
+  }
+
+  const abrirPainelDia = (ds: string) => {
+    setPainelDia(ds)
+    setPainel(null)
   }
 
   const handleBloquear = async () => {
@@ -129,18 +138,17 @@ export default function AgendaPastoresPage() {
       })
       await fetchSlots()
       setPainel(null)
-    } catch {}
+    } catch { /* silencioso */ }
     finally { setBloqueando(false) }
   }
 
   const handleDesbloquear = async () => {
     if (!painel?.slot || painel.slot.tipo !== 'bloqueado') return
     try {
-      const id = painel.slot.dados.id
-      await fetch(`/api/bloqueios/${id}`, { method: 'DELETE' })
+      await fetch(`/api/bloqueios/${painel.slot.dados.id}`, { method: 'DELETE' })
       await fetchSlots()
       setPainel(null)
-    } catch {}
+    } catch { /* silencioso */ }
   }
 
   const daysInMonth = (): (Date | null)[] => {
@@ -160,6 +168,10 @@ export default function AgendaPastoresPage() {
   }
 
   const pastor = pastores.find((p) => p.id === pastorId)
+  const hoje = toDateStr(new Date())
+
+  // Agendamentos do dia para o painel lateral de dia
+  const slotsDia = painelDia ? Object.entries(slots[painelDia] || {}).sort(([a], [b]) => a.localeCompare(b)) : []
 
   return (
     <div>
@@ -173,7 +185,7 @@ export default function AgendaPastoresPage() {
             value={pastorId ?? ''}
             onChange={(e) => setPastorId(Number(e.target.value))}
             className="border rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none"
-            style={{ borderColor: '#e5e7eb' }}
+            style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
           >
             {pastores.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
           </select>
@@ -184,7 +196,7 @@ export default function AgendaPastoresPage() {
             <button
               key={v}
               onClick={() => setView(v)}
-              style={view === v ? { backgroundColor: '#002347', color: '#fff' } : {}}
+              style={view === v ? { backgroundColor: '#002347', color: '#fff' } : { color: '#374151' }}
               className="px-3 py-1.5 rounded-md text-sm font-semibold capitalize transition-colors"
             >
               {v === 'diaria' ? 'Diária' : v.charAt(0).toUpperCase() + v.slice(1)}
@@ -192,25 +204,12 @@ export default function AgendaPastoresPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={() => setCurrentDate(navigate(currentDate, view, -1))}
-            style={{ backgroundColor: '#002347', color: '#fff' }}
-            className="w-8 h-8 rounded-lg font-bold text-sm"
-          >◀</button>
-          <span style={{ color: '#002347' }} className="font-semibold text-sm min-w-[180px] text-center">
-            {formatDateLabel(currentDate, view)}
-          </span>
-          <button
-            onClick={() => setCurrentDate(navigate(currentDate, view, 1))}
-            style={{ backgroundColor: '#002347', color: '#fff' }}
-            className="w-8 h-8 rounded-lg font-bold text-sm"
-          >▶</button>
-          <button
-            onClick={() => setCurrentDate(new Date())}
-            style={{ backgroundColor: '#C5A059', color: '#002347' }}
-            className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-          >Hoje</button>
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <button onClick={() => setCurrentDate(navigate(currentDate, view, -1))} style={{ backgroundColor: '#002347', color: '#fff' }} className="w-8 h-8 rounded-lg font-bold text-sm">◀</button>
+          <span style={{ color: '#002347' }} className="font-semibold text-sm min-w-[160px] text-center">{formatDateLabel(currentDate, view)}</span>
+          <button onClick={() => setCurrentDate(navigate(currentDate, view, 1))} style={{ backgroundColor: '#002347', color: '#fff' }} className="w-8 h-8 rounded-lg font-bold text-sm">▶</button>
+          <button onClick={() => setCurrentDate(new Date())} style={{ backgroundColor: '#C5A059', color: '#002347' }} className="px-3 py-1.5 rounded-lg text-sm font-semibold">Hoje</button>
+          <button onClick={fetchSlots} style={{ backgroundColor: '#f3f4f6', color: '#374151' }} className="px-3 py-1.5 rounded-lg text-sm font-semibold">↻ Atualizar</button>
         </div>
       </div>
 
@@ -218,7 +217,8 @@ export default function AgendaPastoresPage() {
 
       {!loading && (
         <div className="bg-white rounded-xl shadow-sm p-4">
-          {/* MENSAL */}
+
+          {/* ── MENSAL ── */}
           {view === 'mensal' && (
             <div>
               <div className="grid grid-cols-7 gap-1 mb-2">
@@ -231,36 +231,77 @@ export default function AgendaPastoresPage() {
                   if (!day) return <div key={`empty-${i}`} />
                   const ds = toDateStr(day)
                   const daySlots = slots[ds] || {}
-                  const tipos = Object.values(daySlots).map((s) => s.tipo)
-                  const isToday = ds === toDateStr(new Date())
+                  const agendamentos = Object.entries(daySlots)
+                    .filter(([, s]) => s.tipo !== 'bloqueado')
+                    .sort(([a], [b]) => a.localeCompare(b))
+                  const bloqueios = Object.entries(daySlots).filter(([, s]) => s.tipo === 'bloqueado')
+                  const isToday = ds === hoje
+                  const total = agendamentos.length + bloqueios.length
+
                   return (
                     <div
                       key={ds}
-                      style={{ border: isToday ? '2px solid #C5A059' : '1px solid #e5e7eb' }}
-                      className="rounded-lg p-1 min-h-[60px]"
+                      onClick={() => abrirPainelDia(ds)}
+                      style={{
+                        border: isToday ? '2px solid #C5A059' : '1px solid #e5e7eb',
+                        backgroundColor: isToday ? '#fffbf0' : '#fff',
+                        cursor: 'pointer',
+                        minHeight: 80,
+                      }}
+                      className="rounded-lg p-1.5 hover:bg-blue-50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <span style={{ color: isToday ? '#C5A059' : '#374151', fontWeight: isToday ? 700 : 400 }} className="text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: isToday ? '#C5A059' : '#374151' }}
+                        >
                           {day.getDate()}
                         </span>
-                        <button
-                          onClick={() => abrirPainel(ds, '08:00')}
-                          className="text-xs text-blue-500 hover:underline"
-                        >Ver</button>
+                        {total > 0 && (
+                          <span className="text-xs font-semibold rounded-full px-1" style={{ backgroundColor: '#002347', color: '#C5A059', fontSize: 10 }}>
+                            {total}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex flex-wrap gap-0.5 mt-1">
-                        {tipos.includes('confirmado') && <span className="w-2 h-2 rounded-full bg-red-500" title="Confirmado" />}
-                        {tipos.includes('pendente') && <span className="w-2 h-2 rounded-full bg-yellow-400" title="Pendente" />}
-                        {tipos.includes('bloqueado') && <span className="w-2 h-2 rounded-full bg-gray-400" title="Bloqueado" />}
+
+                      {/* Chips de agendamento */}
+                      <div className="space-y-0.5">
+                        {agendamentos.slice(0, 3).map(([hora, slot]) => (
+                          <div
+                            key={hora}
+                            className="rounded px-1 py-0.5 text-xs truncate leading-tight"
+                            style={{
+                              backgroundColor: slot.tipo === 'confirmado' ? '#dcfce7' : '#fef3c7',
+                              color: slot.tipo === 'confirmado' ? '#166534' : '#92400e',
+                            }}
+                          >
+                            <span className="font-semibold">{hora}</span> {String(slot.dados.nome_fiel || '').split(' ')[0]}
+                          </div>
+                        ))}
+                        {bloqueios.length > 0 && agendamentos.length < 3 && (
+                          <div className="rounded px-1 py-0.5 text-xs truncate leading-tight" style={{ backgroundColor: '#f3f4f6', color: '#6b7280' }}>
+                            🔒 {bloqueios.length} bloqueio{bloqueios.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                        {agendamentos.length > 3 && (
+                          <div className="text-xs text-gray-400 pl-1">+{agendamentos.length - 3} mais</div>
+                        )}
                       </div>
                     </div>
                   )
                 })}
               </div>
+
+              {/* Legenda */}
+              <div className="flex gap-4 mt-3 pt-3 border-t text-xs text-gray-500">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: '#dcfce7', border: '1px solid #22c55e' }} />Confirmado</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: '#fef3c7', border: '1px solid #f59e0b' }} />Pendente</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ backgroundColor: '#f3f4f6', border: '1px solid #9ca3af' }} />Bloqueado</span>
+              </div>
             </div>
           )}
 
-          {/* SEMANAL */}
+          {/* ── SEMANAL ── */}
           {view === 'semanal' && (
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
@@ -269,13 +310,9 @@ export default function AgendaPastoresPage() {
                     <th className="w-16 py-2 text-gray-500 font-semibold border-b">Hora</th>
                     {weekDays().map((day) => {
                       const ds = toDateStr(day)
-                      const isToday = ds === toDateStr(new Date())
+                      const isToday = ds === hoje
                       return (
-                        <th
-                          key={ds}
-                          className="py-2 font-semibold border-b text-center"
-                          style={{ color: isToday ? '#C5A059' : '#374151' }}
-                        >
+                        <th key={ds} className="py-2 font-semibold border-b text-center" style={{ color: isToday ? '#C5A059' : '#374151' }}>
                           {DIAS_SEMANA_PT[day.getDay()]}<br />
                           <span className="font-normal">{String(day.getDate()).padStart(2, '0')}/{String(day.getMonth() + 1).padStart(2, '0')}</span>
                         </th>
@@ -292,13 +329,15 @@ export default function AgendaPastoresPage() {
                         const slot = getSlot(ds, hora)
                         const cor = slot ? slotColor(slot.tipo) : { bg: '#f9fafb', border: '#e5e7eb', text: '#9ca3af' }
                         return (
-                          <td key={ds} className="py-1 px-1 text-center">
+                          <td key={ds} className="py-1 px-1">
                             <button
                               onClick={() => abrirPainel(ds, hora)}
                               style={{ backgroundColor: cor.bg, color: cor.text, border: `1px solid ${cor.border}` }}
-                              className="w-full rounded px-1 py-1 text-xs truncate"
+                              className="w-full rounded px-1 py-1 text-xs truncate text-left"
                             >
-                              {slot ? (slot.tipo === 'bloqueado' ? '🔒' : String(slot.dados.nome_fiel || '').split(' ')[0] || '✓') : '—'}
+                              {slot
+                                ? slot.tipo === 'bloqueado' ? '🔒' : String(slot.dados.nome_fiel || '').split(' ')[0] || '✓'
+                                : <span className="opacity-30">—</span>}
                             </button>
                           </td>
                         )
@@ -310,7 +349,7 @@ export default function AgendaPastoresPage() {
             </div>
           )}
 
-          {/* DIÁRIA */}
+          {/* ── DIÁRIA ── */}
           {view === 'diaria' && (
             <div className="space-y-2">
               <p style={{ color: '#002347' }} className="font-bold text-sm mb-3">
@@ -329,9 +368,7 @@ export default function AgendaPastoresPage() {
                       className="flex-1 text-left px-4 py-2 rounded-lg border text-sm font-medium"
                     >
                       {slot
-                        ? slot.tipo === 'bloqueado'
-                          ? `🔒 Bloqueado: ${slot.dados.motivo || ''}`
-                          : `${slot.dados.nome_fiel} — ${slot.dados.assunto}`
+                        ? slot.tipo === 'bloqueado' ? `🔒 Bloqueado: ${slot.dados.motivo || ''}` : `${slot.dados.nome_fiel} — ${slot.dados.assunto}`
                         : 'Livre'}
                     </button>
                   </div>
@@ -342,18 +379,66 @@ export default function AgendaPastoresPage() {
         </div>
       )}
 
-      {/* Painel lateral */}
-      {painel && (
-        <div
-          className="fixed inset-0 z-50 flex"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-          onClick={(e) => { if (e.target === e.currentTarget) setPainel(null) }}
-        >
+      {/* ── PAINEL DIA (mensal → click no dia) ── */}
+      {painelDia && (
+        <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={(e) => { if (e.target === e.currentTarget) setPainelDia(null) }}>
           <div className="ml-auto w-96 bg-white h-full shadow-2xl flex flex-col overflow-y-auto">
-            <div
-              style={{ backgroundColor: '#002347', borderBottom: '2px solid #C5A059' }}
-              className="flex items-center justify-between px-5 py-4"
-            >
+            <div style={{ backgroundColor: '#002347', borderBottom: '2px solid #C5A059' }} className="flex items-center justify-between px-5 py-4">
+              <div>
+                <p className="text-white font-bold">{painelDia.split('-').reverse().join('/')}</p>
+                <p style={{ color: '#C5A059' }} className="text-xs">{pastor?.nome}</p>
+              </div>
+              <button onClick={() => setPainelDia(null)} className="text-white text-2xl leading-none">×</button>
+            </div>
+            <div className="px-5 py-5 flex-1">
+              {slotsDia.length === 0 ? (
+                <p className="text-green-600 font-semibold text-sm">✓ Nenhum agendamento neste dia</p>
+              ) : (
+                <div className="space-y-3">
+                  {slotsDia.map(([hora, slot]) => {
+                    const cor = slotColor(slot.tipo)
+                    return (
+                      <div
+                        key={hora}
+                        className="rounded-xl p-3 cursor-pointer hover:opacity-90"
+                        style={{ backgroundColor: cor.bg, border: `1px solid ${cor.border}` }}
+                        onClick={() => { abrirPainel(painelDia, hora) }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-sm" style={{ color: cor.text }}>{hora}</span>
+                          <Badge status={slot.tipo as 'confirmado' | 'pendente' | 'bloqueado'} />
+                        </div>
+                        {slot.tipo === 'bloqueado' ? (
+                          <p className="text-xs text-gray-500">🔒 {String(slot.dados.motivo || 'Bloqueado')}</p>
+                        ) : (
+                          <>
+                            <p className="font-semibold text-sm" style={{ color: cor.text }}>{String(slot.dados.nome_fiel || '')}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{String(slot.dados.assunto || '')}</p>
+                          </>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <button
+                onClick={() => { router.push('/agendamentos/novo') }}
+                style={{ backgroundColor: '#002347', color: '#fff' }}
+                className="w-full mt-5 py-2.5 rounded-lg text-sm font-semibold"
+              >
+                ➕ Novo Agendamento Neste Dia
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PAINEL SLOT (hora específica) ── */}
+      {painel && (
+        <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={(e) => { if (e.target === e.currentTarget) setPainel(null) }}>
+          <div className="ml-auto w-96 bg-white h-full shadow-2xl flex flex-col overflow-y-auto">
+            <div style={{ backgroundColor: '#002347', borderBottom: '2px solid #C5A059' }} className="flex items-center justify-between px-5 py-4">
               <div>
                 <p className="text-white font-bold">{painel.hora} — {painel.data.split('-').reverse().join('/')}</p>
                 <p style={{ color: '#C5A059' }} className="text-xs">{pastor?.nome}</p>
@@ -373,12 +458,7 @@ export default function AgendaPastoresPage() {
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none mb-3"
                     style={{ borderColor: '#e5e7eb' }}
                   />
-                  <button
-                    onClick={handleBloquear}
-                    disabled={bloqueando}
-                    style={{ backgroundColor: '#002347', color: '#fff' }}
-                    className="w-full py-2 rounded-lg font-semibold text-sm"
-                  >
+                  <button onClick={handleBloquear} disabled={bloqueando} style={{ backgroundColor: '#002347', color: '#fff' }} className="w-full py-2 rounded-lg font-semibold text-sm">
                     {bloqueando ? 'Bloqueando...' : '🔒 Bloquear Horário'}
                   </button>
                 </div>
@@ -388,11 +468,7 @@ export default function AgendaPastoresPage() {
                 <div>
                   <p className="text-gray-600 font-semibold mb-2">🔒 Horário Bloqueado</p>
                   <p className="text-sm text-gray-500 mb-4">Motivo: {String(painel.slot.dados.motivo || '—')}</p>
-                  <button
-                    onClick={handleDesbloquear}
-                    style={{ backgroundColor: '#ef4444', color: '#fff' }}
-                    className="w-full py-2 rounded-lg font-semibold text-sm"
-                  >
+                  <button onClick={handleDesbloquear} style={{ backgroundColor: '#ef4444', color: '#fff' }} className="w-full py-2 rounded-lg font-semibold text-sm">
                     🔓 Desbloquear
                   </button>
                 </div>
@@ -414,25 +490,16 @@ export default function AgendaPastoresPage() {
                       onClick={() => abrirWhatsApp(String(painel.slot!.dados.telefone), `Olá ${painel.slot!.dados.nome_fiel}, lembrando do seu atendimento hoje às ${painel.hora}.`)}
                       style={{ backgroundColor: '#25D366', color: '#fff' }}
                       className="flex-1 py-2 rounded-lg text-sm font-semibold"
-                    >
-                      📱 WA Fiel
-                    </button>
+                    >📱 WA Fiel</button>
                     {pastor?.telefone && (
                       <button
                         onClick={() => abrirWhatsApp(pastor.telefone, `Pastor(a) ${pastor.nome}, lembrete: atendimento com ${painel.slot!.dados.nome_fiel} às ${painel.hora}.`)}
                         style={{ backgroundColor: '#128C7E', color: '#fff' }}
                         className="flex-1 py-2 rounded-lg text-sm font-semibold"
-                      >
-                        📱 WA Pastor
-                      </button>
+                      >📱 WA Pastor</button>
                     )}
                   </div>
-                  <button
-                    onClick={() => setPainel(null)}
-                    className="w-full mt-2 py-2 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700"
-                  >
-                    Fechar
-                  </button>
+                  <button onClick={() => setPainel(null)} className="w-full mt-2 py-2 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700">Fechar</button>
                 </div>
               )}
             </div>
@@ -446,7 +513,7 @@ export default function AgendaPastoresPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-2">
-      <span className="font-semibold text-gray-600 w-24">{label}:</span>
+      <span className="font-semibold text-gray-600 w-24 flex-shrink-0">{label}:</span>
       <span className="text-gray-800">{value}</span>
     </div>
   )
