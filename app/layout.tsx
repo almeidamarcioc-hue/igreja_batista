@@ -6,11 +6,22 @@ import InitDb from './InitDb'
 export const metadata: Metadata = {
   title: 'Secretaria IBTM',
   description: 'Sistema de Agenda Eclesiástica',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Agenda IBTM',
+  },
+  icons: { apple: '/logo.png' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
       <body style={{ backgroundColor: '#f0f2f5' }}>
         <InitDb />
         <ShellClient>{children}</ShellClient>

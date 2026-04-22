@@ -1,0 +1,15 @@
+{
+  "name": "Agenda Pastores — IBTM",
+  "short_name": "Agenda IBTM",
+  "description": "Agenda dos Pastores da Igreja Batista Tchê Missionária",
+  "start_url": "/pastor",
+  "display": "standalone",
+  "background_color": "#002347",
+  "theme_color": "#002347",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
