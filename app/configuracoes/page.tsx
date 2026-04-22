@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { Configuracoes, HorarioAtendimento } from '@/types'
-
-type WAStatus = 'nao_configurado' | 'open' | 'close' | 'connecting' | 'error' | 'carregando'
 
 const configVazia: Configuracoes = {
   id: 1,
@@ -39,11 +37,6 @@ export default function ConfiguracoesPage() {
   const [horarios, setHorarios] = useState<HorarioAtendimento[]>(horariosDefault)
   const [salvandoHorarios, setSalvandoHorarios] = useState(false)
   const [sucessoHorarios, setSucessoHorarios] = useState('')
-
-  // WhatsApp connection
-  const [waStatus, setWaStatus] = useState<WAStatus>('carregando')
-  const [waQR, setWaQR] = useState<string | null>(null)
-  const [waCarregandoQR, setWaCarregandoQR] = useState(false)
 
   const carregar = async () => {
     setLoading(true)
@@ -86,37 +79,6 @@ export default function ConfiguracoesPage() {
     setHorarios(prev => prev.map(h => h.dia_semana === dia ? { ...h, [campo]: valor } : h))
   }
 
-  const verificarStatusWA = useCallback(async () => {
-    const res = await fetch('/api/whatsapp/status')
-    const data = await res.json()
-    setWaStatus(data.status as WAStatus)
-    if (data.status === 'open') setWaQR(null)
-  }, [])
-
-  const conectarWA = async () => {
-    setWaCarregandoQR(true)
-    setWaQR(null)
-    try {
-      const res = await fetch('/api/whatsapp/qrcode')
-      const data = await res.json()
-      setWaQR(data.qrcode ?? null)
-      setWaStatus('connecting')
-    } finally {
-      setWaCarregandoQR(false)
-    }
-  }
-
-  // Polling de status quando conectando
-  useEffect(() => {
-    verificarStatusWA()
-  }, [verificarStatusWA])
-
-  useEffect(() => {
-    if (waStatus !== 'connecting' && waStatus !== 'carregando') return
-    const interval = setInterval(verificarStatusWA, 4000)
-    return () => clearInterval(interval)
-  }, [waStatus, verificarStatusWA])
-
   useEffect(() => { carregar() }, [])
 
   const handleSalvar = async (e: React.FormEvent) => {
@@ -152,61 +114,8 @@ export default function ConfiguracoesPage() {
       {erro && <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{erro}</div>}
       {sucesso && <div className="bg-green-50 border border-green-300 text-green-700 rounded-lg px-4 py-3 mb-4 text-sm">{sucesso}</div>}
 
-      {/* Row 1: WhatsApp + Horários de Atendimento */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-
-      {/* Conexão WhatsApp */}
-      <div className="bg-white rounded-xl shadow-sm p-5">
-        <h2 style={{ color: '#002347' }} className="font-bold text-base mb-3">Conexão WhatsApp</h2>
-
-        {waStatus === 'nao_configurado' && (
-          <p className="text-sm text-gray-500">Envio automático via WhatsApp não configurado.</p>
-        )}
-
-        {waStatus !== 'nao_configurado' && (
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-full ${waStatus === 'open' ? 'bg-green-500' : waStatus === 'connecting' || waStatus === 'carregando' ? 'bg-yellow-400' : 'bg-red-500'}`} />
-              <span className="text-sm font-semibold text-gray-700">
-                {waStatus === 'open' ? 'Conectado — mensagens serão enviadas automaticamente' : waStatus === 'connecting' ? 'Conectando... (escaneie o QR Code abaixo)' : waStatus === 'carregando' ? 'Verificando...' : 'Desconectado'}
-              </span>
-            </div>
-
-            {waStatus !== 'open' && (
-              <button
-                type="button"
-                onClick={conectarWA}
-                disabled={waCarregandoQR}
-                className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
-                style={{ backgroundColor: '#25D366', color: '#fff' }}
-              >
-                {waCarregandoQR ? 'Gerando QR Code...' : '📱 Conectar WhatsApp'}
-              </button>
-            )}
-
-            {waStatus === 'open' && (
-              <button
-                type="button"
-                onClick={verificarStatusWA}
-                className="text-sm text-gray-500 underline"
-              >
-                ↻ Verificar
-              </button>
-            )}
-          </div>
-        )}
-
-        {waQR && waStatus !== 'open' && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 mb-2">Escaneie o QR Code com o WhatsApp do celular:</p>
-            <img src={waQR} alt="QR Code WhatsApp" className="rounded-lg border" style={{ width: 220, height: 220 }} />
-            <p className="text-xs text-gray-400 mt-2">Aguardando conexão... O status atualiza automaticamente.</p>
-          </div>
-        )}
-      </div>
-
       {/* Horários de Atendimento */}
-      <div className="bg-white rounded-xl shadow-sm p-5">
+      <div className="bg-white rounded-xl shadow-sm p-5 mb-5">
         <div className="flex items-center justify-between mb-4">
           <h2 style={{ color: '#002347' }} className="font-bold text-base">Horários de Atendimento</h2>
           {sucessoHorarios && <span className="text-green-600 text-xs font-semibold">{sucessoHorarios}</span>}
@@ -331,9 +240,7 @@ export default function ConfiguracoesPage() {
         </button>
       </div>
 
-      </div>{/* fim grid Row 1 */}
-
-      {/* Row 2: Mensagens — full width, 2 colunas em desktop */}
+      {/* Mensagens — full width, 2 colunas em desktop */}
       <form onSubmit={handleSalvar} className="bg-white rounded-xl shadow-sm p-5">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 style={{ color: '#002347' }} className="font-bold text-base">Configurações de Lembretes</h2>
@@ -405,28 +312,3 @@ export default function ConfiguracoesPage() {
   )
 }
 
-function CopyBox({ text, label }: { text: string; label: string }) {
-  const [copiado, setCopiado] = useState(false)
-  const copiar = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiado(true)
-      setTimeout(() => setCopiado(false), 1500)
-    })
-  }
-  return (
-    <div className="flex items-center gap-2 mt-1">
-      {label && <span className="text-xs text-amber-700 w-14 flex-shrink-0">{label}</span>}
-      <div className="flex items-center gap-1 flex-1 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-        <code className="text-xs text-amber-900 flex-1 select-all">{text}</code>
-        <button
-          type="button"
-          onClick={copiar}
-          className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
-          style={{ backgroundColor: copiado ? '#25D366' : '#002347', color: '#fff' }}
-        >
-          {copiado ? '✓' : 'Copiar'}
-        </button>
-      </div>
-    </div>
-  )
-}
