@@ -87,7 +87,7 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader
-        icon="⛪"
+        logo
         title="Secretaria IBTM"
         subtitle={formatDatePT(dataHoje)}
       />
@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
       {pastores.length === 0 && !loading && (
         <div className="bg-white rounded-xl shadow-sm p-10 text-center text-gray-400">
-          <p className="text-5xl mb-3">⛪</p>
+          <img src="/logo.png" alt="IBTM" className="mx-auto mb-3" style={{ height: 64, opacity: 0.4 }} />
           <p className="font-semibold">Nenhum pastor cadastrado.</p>
           <p className="text-sm mt-1">
             Acesse{' '}

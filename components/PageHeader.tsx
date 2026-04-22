@@ -2,15 +2,20 @@ interface PageHeaderProps {
   title: string
   subtitle?: string
   icon?: string
+  logo?: boolean
 }
 
-export default function PageHeader({ title, subtitle, icon }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, icon, logo }: PageHeaderProps) {
   return (
     <div
       style={{ borderLeft: '4px solid #C5A059', backgroundColor: '#ffffff' }}
       className="rounded-xl shadow-sm px-6 py-4 mb-6 flex items-center gap-4"
     >
-      {icon && (
+      {logo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/logo.png" alt="IBTM" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+      )}
+      {!logo && icon && (
         <span className="text-3xl leading-none">{icon}</span>
       )}
       <div>
