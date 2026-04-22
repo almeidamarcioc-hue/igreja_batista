@@ -74,7 +74,13 @@ export interface Slot {
 // ─── Connection ────────────────────────────────────────────────────────────
 
 function getDb() {
-  return neon(process.env.DATABASE_URL!)
+  const raw = process.env.DATABASE_URL!
+  // @neondatabase/serverless uses HTTP — strip TCP-only params
+  const url = raw
+    .replace(/[?&]channel_binding=[^&]*/g, '')
+    .replace(/\?&/, '?')
+    .replace(/[?&]$/, '')
+  return neon(url)
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
