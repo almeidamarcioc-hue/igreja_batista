@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { Configuracoes } from '@/types'
+
+type WAStatus = 'nao_configurado' | 'open' | 'close' | 'connecting' | 'error' | 'carregando'
 
 const configVazia: Configuracoes = {
   id: 1,
@@ -22,6 +24,11 @@ export default function ConfiguracoesPage() {
   const [sucesso, setSucesso] = useState('')
   const [erro, setErro] = useState('')
 
+  // WhatsApp connection
+  const [waStatus, setWaStatus] = useState<WAStatus>('carregando')
+  const [waQR, setWaQR] = useState<string | null>(null)
+  const [waCarregandoQR, setWaCarregandoQR] = useState(false)
+
   const carregar = async () => {
     setLoading(true)
     try {
@@ -34,6 +41,37 @@ export default function ConfiguracoesPage() {
       setLoading(false)
     }
   }
+
+  const verificarStatusWA = useCallback(async () => {
+    const res = await fetch('/api/whatsapp/status')
+    const data = await res.json()
+    setWaStatus(data.status as WAStatus)
+    if (data.status === 'open') setWaQR(null)
+  }, [])
+
+  const conectarWA = async () => {
+    setWaCarregandoQR(true)
+    setWaQR(null)
+    try {
+      const res = await fetch('/api/whatsapp/qrcode')
+      const data = await res.json()
+      setWaQR(data.qrcode ?? null)
+      setWaStatus('connecting')
+    } finally {
+      setWaCarregandoQR(false)
+    }
+  }
+
+  // Polling de status quando conectando
+  useEffect(() => {
+    verificarStatusWA()
+  }, [verificarStatusWA])
+
+  useEffect(() => {
+    if (waStatus !== 'connecting' && waStatus !== 'carregando') return
+    const interval = setInterval(verificarStatusWA, 4000)
+    return () => clearInterval(interval)
+  }, [waStatus, verificarStatusWA])
 
   useEffect(() => { carregar() }, [])
 
@@ -69,6 +107,64 @@ export default function ConfiguracoesPage() {
 
       {erro && <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{erro}</div>}
       {sucesso && <div className="bg-green-50 border border-green-300 text-green-700 rounded-lg px-4 py-3 mb-4 text-sm">{sucesso}</div>}
+
+      {/* Conexão WhatsApp */}
+      <div className="bg-white rounded-xl shadow-sm p-5 mb-5 max-w-2xl">
+        <h2 style={{ color: '#002347' }} className="font-bold text-base mb-3">Conexão WhatsApp</h2>
+
+        {waStatus === 'nao_configurado' && (
+          <div className="rounded-lg p-4 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #f59e0b' }}>
+            <p className="font-semibold text-amber-800 mb-1">Evolution API não configurada</p>
+            <p className="text-amber-700">Adicione as variáveis de ambiente no Vercel:</p>
+            <ul className="mt-2 space-y-1 font-mono text-xs text-amber-900">
+              <li>EVOLUTION_API_URL=https://sua-evolution-api.com</li>
+              <li>EVOLUTION_API_KEY=sua-chave-api</li>
+              <li>EVOLUTION_INSTANCE=secretaria-ibtm</li>
+            </ul>
+          </div>
+        )}
+
+        {waStatus !== 'nao_configurado' && (
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${waStatus === 'open' ? 'bg-green-500' : waStatus === 'connecting' || waStatus === 'carregando' ? 'bg-yellow-400' : 'bg-red-500'}`} />
+              <span className="text-sm font-semibold text-gray-700">
+                {waStatus === 'open' ? 'Conectado' : waStatus === 'connecting' ? 'Conectando...' : waStatus === 'carregando' ? 'Verificando...' : 'Desconectado'}
+              </span>
+            </div>
+
+            {waStatus !== 'open' && (
+              <button
+                type="button"
+                onClick={conectarWA}
+                disabled={waCarregandoQR}
+                className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
+                style={{ backgroundColor: '#25D366', color: '#fff' }}
+              >
+                {waCarregandoQR ? 'Gerando QR Code...' : '📱 Conectar WhatsApp'}
+              </button>
+            )}
+
+            {waStatus === 'open' && (
+              <button
+                type="button"
+                onClick={verificarStatusWA}
+                className="text-sm text-gray-500 underline"
+              >
+                ↻ Verificar
+              </button>
+            )}
+          </div>
+        )}
+
+        {waQR && waStatus !== 'open' && (
+          <div className="mt-4">
+            <p className="text-sm text-gray-600 mb-2">Escaneie o QR Code com o WhatsApp do celular:</p>
+            <img src={waQR} alt="QR Code WhatsApp" className="rounded-lg border" style={{ width: 220, height: 220 }} />
+            <p className="text-xs text-gray-400 mt-2">Aguardando conexão... O status atualiza automaticamente.</p>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSalvar} className="bg-white rounded-xl shadow-sm p-5 space-y-5 max-w-2xl">
         <h2 style={{ color: '#002347' }} className="font-bold text-base">Configurações de Lembretes</h2>

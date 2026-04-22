@@ -186,21 +186,39 @@ export default function NovoAgendamentoPage() {
 
       setSucesso('Agendamento criado com sucesso!')
 
-      // Monta fila de notificações WhatsApp para envio manual (evita popup blocker)
-      const filaWA: typeof notifWA = []
+      // Tenta envio automático via Evolution API; fallback para botões manuais
       const pastorSelecionado = pastores.find((p) => p.id === Number(pastorId))
+      const statusWA = await fetch('/api/whatsapp/status').then((r) => r.json()).catch(() => ({ status: 'error' }))
+      const waConectado = statusWA?.status === 'open'
+
+      const filaWA: typeof notifWA = []
+
+      const enviarOuEnfileirar = async (label: string, tel: string, msg: string, aviso?: string) => {
+        if (aviso) { filaWA.push({ label, telefone: tel, mensagem: msg, aviso, enviado: false }); return }
+        if (waConectado) {
+          const res = await fetch('/api/whatsapp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telefone: tel, mensagem: msg }),
+          })
+          const result = await res.json()
+          filaWA.push({ label, telefone: tel, mensagem: msg, enviado: result.ok, aviso: result.ok ? undefined : result.erro })
+        } else {
+          filaWA.push({ label, telefone: tel, mensagem: msg, enviado: false })
+        }
+      }
 
       if (enviarConfirmacao) {
         const msg = buildMensagemConfirmacao(config, nomeFiel, pastorSelecionado?.nome || '', data, hora)
-        filaWA.push({ label: `Confirmação → ${nomeFiel}`, telefone, mensagem: msg, enviado: false })
+        await enviarOuEnfileirar(`Confirmação → ${nomeFiel}`, telefone, msg)
       }
 
       if (avisarPastor) {
         if (pastorSelecionado?.telefone) {
           const msg = buildMensagemPastor(config, nomeFiel, telefone, assunto, data, hora)
-          filaWA.push({ label: `Aviso → Pastor(a) ${pastorSelecionado.nome}`, telefone: pastorSelecionado.telefone, mensagem: msg, enviado: false })
+          await enviarOuEnfileirar(`Aviso → Pastor(a) ${pastorSelecionado.nome}`, pastorSelecionado.telefone, msg)
         } else {
-          filaWA.push({ label: `Aviso → Pastor(a) ${pastorSelecionado?.nome || ''}`, telefone: '', mensagem: '', aviso: 'Sem telefone cadastrado', enviado: false })
+          await enviarOuEnfileirar(`Aviso → Pastor(a) ${pastorSelecionado?.nome || ''}`, '', '', 'Sem telefone cadastrado')
         }
       }
 
@@ -505,7 +523,7 @@ export default function NovoAgendamentoPage() {
                         className="text-sm font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap"
                         style={{ backgroundColor: '#25D366', color: '#fff' }}
                       >
-                        Enviar →
+                        📱 Enviar →
                       </button>
                     )}
                   </div>

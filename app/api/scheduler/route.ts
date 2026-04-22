@@ -6,6 +6,7 @@ import {
   Agendamento,
 } from '@/lib/db'
 import { preencherTemplate, gerarUrl } from '@/lib/whatsapp'
+import { enviarMensagem, isConfigurado, getStatus } from '@/lib/evolutionApi'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -22,62 +23,66 @@ export async function GET() {
     const pendentes = await getLembretesPendentes()
     const config = await getConfiguracoes()
 
+    const waAtivo = isConfigurado() && (await getStatus()) === 'open'
+
     const resultados: Array<{
       agendamento: Agendamento
-      whatsappUrl: string | null
-      whatsappUrlPastor: string | null
+      fiel: { enviado: boolean; erro?: string; url?: string | null }
+      pastor: { enviado: boolean; erro?: string; url?: string | null }
     }> = []
 
     for (const agendamento of pendentes) {
-      // Formata a data para exibição amigável
       let dataFormatada = agendamento.data
       try {
-        const dateObj = new Date(`${agendamento.data}T00:00:00`)
-        dataFormatada = format(dateObj, "dd/MM/yyyy (EEEE)", { locale: ptBR })
-      } catch {
-        // mantém o formato original se a conversão falhar
-      }
+        dataFormatada = format(new Date(`${agendamento.data}T00:00:00`), "dd/MM/yyyy (EEEE)", { locale: ptBR })
+      } catch { /* mantém original */ }
 
       const templateData: Record<string, string> = {
         nome: agendamento.nome_fiel,
         nome_fiel: agendamento.nome_fiel,
         pastor: agendamento.pastor_nome ?? '',
+        pastor_nome: agendamento.pastor_nome ?? '',
         data: dataFormatada,
         hora: agendamento.hora?.slice(0, 5) ?? '',
         assunto: agendamento.assunto,
         telefone: agendamento.telefone,
       }
 
-      // Mensagem para o fiel
-      const msgFiel = config.msg_lembrete
-        ? preencherTemplate(config.msg_lembrete, templateData)
-        : `Olá ${agendamento.nome_fiel}! Lembrete: você tem um agendamento com o(a) pastor(a) ${agendamento.pastor_nome ?? ''} no dia ${dataFormatada} às ${agendamento.hora?.slice(0, 5) ?? ''}.`
+      const msgFiel = preencherTemplate(
+        config.msg_lembrete || 'Olá {nome}! Lembrete: agendamento com {pastor} em {data} às {hora}.',
+        templateData
+      )
+      const msgPastor = preencherTemplate(
+        config.msg_pastor || 'Lembrete: {nome_fiel} - {assunto} - {data} às {hora}.',
+        templateData
+      )
 
-      // Mensagem para o pastor
-      const msgPastor = config.msg_pastor
-        ? preencherTemplate(config.msg_pastor, templateData)
-        : `Lembrete de agendamento: ${agendamento.nome_fiel} - ${agendamento.assunto} - ${dataFormatada} às ${agendamento.hora?.slice(0, 5) ?? ''}.`
+      let fiel: (typeof resultados[0])['fiel']
+      let pastor: (typeof resultados[0])['pastor']
 
-      const urlFiel = agendamento.telefone
-        ? gerarUrl(agendamento.telefone, msgFiel)
-        : null
+      if (waAtivo) {
+        // Envio automático via Evolution API
+        const resFiel = agendamento.telefone
+          ? await enviarMensagem(agendamento.telefone, msgFiel)
+          : { ok: false, erro: 'Sem telefone' }
+        const resPastor = agendamento.pastor_tel
+          ? await enviarMensagem(agendamento.pastor_tel, msgPastor)
+          : { ok: false, erro: 'Pastor sem telefone' }
+        fiel = { enviado: resFiel.ok, erro: resFiel.erro }
+        pastor = { enviado: resPastor.ok, erro: resPastor.erro }
+      } else {
+        // Fallback: gera URLs para envio manual
+        fiel = { enviado: false, url: agendamento.telefone ? gerarUrl(agendamento.telefone, msgFiel) : null }
+        pastor = { enviado: false, url: agendamento.pastor_tel ? gerarUrl(agendamento.pastor_tel, msgPastor) : null }
+      }
 
-      const urlPastor = agendamento.pastor_tel
-        ? gerarUrl(agendamento.pastor_tel, msgPastor)
-        : null
-
-      resultados.push({
-        agendamento,
-        whatsappUrl: urlFiel,
-        whatsappUrlPastor: urlPastor,
-      })
-
-      // Marca como enviado no banco
+      resultados.push({ agendamento, fiel, pastor })
       await marcarLembreteEnviado(agendamento.id)
     }
 
     return NextResponse.json({
       success: true,
+      waAtivo,
       processados: resultados.length,
       lembretes: resultados,
     })
