@@ -3,6 +3,10 @@ export interface Pastor {
   nome: string
   telefone: string
   endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
   imagem: string
 }
 
@@ -39,6 +43,10 @@ export interface Fiel {
   telefone: string
   email: string
   endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
   observacoes: string
 }
 

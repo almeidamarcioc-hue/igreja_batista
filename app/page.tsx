@@ -172,8 +172,8 @@ export default function DashboardPage() {
           <p className="font-semibold">Nenhum pastor cadastrado.</p>
           <p className="text-sm mt-1">
             Acesse{' '}
-            <a href="/configuracoes" style={{ color: '#C5A059' }} className="underline">
-              Configurações
+            <a href="/cadastros/pastores" style={{ color: '#C5A059' }} className="underline">
+              Cadastros → Pastores
             </a>{' '}
             para adicionar pastores.
           </p>

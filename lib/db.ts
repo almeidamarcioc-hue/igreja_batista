@@ -7,6 +7,10 @@ export interface Pastor {
   nome: string
   telefone: string
   endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
   imagem: string
 }
 
@@ -44,6 +48,10 @@ export interface Fiel {
   telefone: string
   email: string
   endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
   observacoes: string
   data_criacao: string
 }
@@ -80,6 +88,10 @@ export async function initDb(): Promise<void> {
       nome VARCHAR(100) NOT NULL,
       telefone VARCHAR(20) DEFAULT '',
       endereco TEXT DEFAULT '',
+      numero VARCHAR(20) DEFAULT '',
+      bairro VARCHAR(100) DEFAULT '',
+      cidade VARCHAR(100) DEFAULT '',
+      estado VARCHAR(2) DEFAULT '',
       imagem TEXT DEFAULT ''
     )
   `
@@ -120,6 +132,10 @@ export async function initDb(): Promise<void> {
       telefone VARCHAR(20) DEFAULT '',
       email VARCHAR(100) DEFAULT '',
       endereco TEXT DEFAULT '',
+      numero VARCHAR(20) DEFAULT '',
+      bairro VARCHAR(100) DEFAULT '',
+      cidade VARCHAR(100) DEFAULT '',
+      estado VARCHAR(2) DEFAULT '',
       observacoes TEXT DEFAULT '',
       data_criacao TIMESTAMP DEFAULT NOW()
     )
@@ -137,6 +153,16 @@ export async function initDb(): Promise<void> {
     )
   `
 
+  // Migrate existing tables: add new address columns if missing
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) DEFAULT ''`
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) DEFAULT ''`
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS estado VARCHAR(2) DEFAULT ''`
+  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
+  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) DEFAULT ''`
+  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) DEFAULT ''`
+  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS estado VARCHAR(2) DEFAULT ''`
+
   // Insert default pastores if none exist
   const pastoresExistentes = await sql`SELECT COUNT(*) AS cnt FROM pastores`
   const count = Number((pastoresExistentes[0] as { cnt: string }).cnt)
@@ -148,24 +174,25 @@ export async function initDb(): Promise<void> {
     await sql`INSERT INTO pastores (nome, telefone, endereco, imagem) VALUES ('Sâmela', '', '', '')`
   }
 
-  // Insert default config if not exists
-  const configExistente = await sql`SELECT COUNT(*) AS cnt FROM configuracoes WHERE id = 1`
-  const configCount = Number((configExistente[0] as { cnt: string }).cnt)
-
-  if (configCount === 0) {
-    await sql`
-      INSERT INTO configuracoes (id, horas_lembrete, msg_confirmacao, msg_lembrete, msg_cancelamento, msg_remarcacao, msg_pastor)
-      VALUES (
-        1,
-        24,
-        'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} foi confirmado para o dia {data} às {hora}. Assunto: {assunto}.',
-        'Olá {nome}! Lembramos que você tem um agendamento com o(a) pastor(a) {pastor} amanhã, dia {data} às {hora}.',
-        'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} para o dia {data} às {hora} foi cancelado.',
-        'Olá {nome}! Seu agendamento foi remarcado para o dia {data} às {hora} com o(a) pastor(a) {pastor}.',
-        'Novo agendamento: {nome_fiel} - {assunto} - {data} às {hora}. Telefone: {telefone}.'
-      )
-    `
-  }
+  // Upsert default config with example messages
+  await sql`
+    INSERT INTO configuracoes (id, horas_lembrete, msg_confirmacao, msg_lembrete, msg_cancelamento, msg_remarcacao, msg_pastor)
+    VALUES (
+      1,
+      24,
+      'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} foi confirmado para o dia {data} às {hora}. Assunto: {assunto}. Que Deus abençoe! 🙏',
+      'Olá {nome}! Lembramos que você tem um agendamento com o(a) pastor(a) {pastor} amanhã, dia {data} às {hora}. Estamos esperando por você!',
+      'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} para o dia {data} às {hora} foi cancelado. Entre em contato para remarcar.',
+      'Olá {nome}! Seu agendamento foi remarcado para o dia {data} às {hora} com o(a) pastor(a) {pastor}. Qualquer dúvida, estamos à disposição.',
+      'Pastor(a), novo agendamento: {nome_fiel} - Assunto: {assunto} - {data} às {hora}. Telefone: {telefone}.'
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      msg_confirmacao = CASE WHEN configuracoes.msg_confirmacao = '' THEN EXCLUDED.msg_confirmacao ELSE configuracoes.msg_confirmacao END,
+      msg_lembrete    = CASE WHEN configuracoes.msg_lembrete    = '' THEN EXCLUDED.msg_lembrete    ELSE configuracoes.msg_lembrete    END,
+      msg_cancelamento= CASE WHEN configuracoes.msg_cancelamento= '' THEN EXCLUDED.msg_cancelamento ELSE configuracoes.msg_cancelamento END,
+      msg_remarcacao  = CASE WHEN configuracoes.msg_remarcacao  = '' THEN EXCLUDED.msg_remarcacao  ELSE configuracoes.msg_remarcacao  END,
+      msg_pastor      = CASE WHEN configuracoes.msg_pastor      = '' THEN EXCLUDED.msg_pastor      ELSE configuracoes.msg_pastor      END
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
@@ -188,10 +215,14 @@ export async function criarPastor(dados: Partial<Pastor>): Promise<number> {
   const nome = dados.nome ?? ''
   const telefone = dados.telefone ?? ''
   const endereco = dados.endereco ?? ''
+  const numero = dados.numero ?? ''
+  const bairro = dados.bairro ?? ''
+  const cidade = dados.cidade ?? ''
+  const estado = dados.estado ?? ''
   const imagem = dados.imagem ?? ''
   const rows = await sql`
-    INSERT INTO pastores (nome, telefone, endereco, imagem)
-    VALUES (${nome}, ${telefone}, ${endereco}, ${imagem})
+    INSERT INTO pastores (nome, telefone, endereco, numero, bairro, cidade, estado, imagem)
+    VALUES (${nome}, ${telefone}, ${endereco}, ${numero}, ${bairro}, ${cidade}, ${estado}, ${imagem})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
@@ -204,10 +235,15 @@ export async function updatePastor(id: number, dados: Partial<Pastor>): Promise<
   const nome = dados.nome ?? pastor.nome
   const telefone = dados.telefone ?? pastor.telefone
   const endereco = dados.endereco ?? pastor.endereco
+  const numero = dados.numero ?? pastor.numero ?? ''
+  const bairro = dados.bairro ?? pastor.bairro ?? ''
+  const cidade = dados.cidade ?? pastor.cidade ?? ''
+  const estado = dados.estado ?? pastor.estado ?? ''
   const imagem = dados.imagem ?? pastor.imagem
   await sql`
     UPDATE pastores
-    SET nome = ${nome}, telefone = ${telefone}, endereco = ${endereco}, imagem = ${imagem}
+    SET nome = ${nome}, telefone = ${telefone}, endereco = ${endereco},
+        numero = ${numero}, bairro = ${bairro}, cidade = ${cidade}, estado = ${estado}, imagem = ${imagem}
     WHERE id = ${id}
   `
 }
@@ -739,10 +775,14 @@ export async function salvarFiel(dados: Partial<Fiel>): Promise<number> {
   const telefone = dados.telefone ?? ''
   const email = dados.email ?? ''
   const endereco = dados.endereco ?? ''
+  const numero = dados.numero ?? ''
+  const bairro = dados.bairro ?? ''
+  const cidade = dados.cidade ?? ''
+  const estado = dados.estado ?? ''
   const observacoes = dados.observacoes ?? ''
   const rows = await sql`
-    INSERT INTO fieis (nome, telefone, email, endereco, observacoes)
-    VALUES (${nome}, ${telefone}, ${email}, ${endereco}, ${observacoes})
+    INSERT INTO fieis (nome, telefone, email, endereco, numero, bairro, cidade, estado, observacoes)
+    VALUES (${nome}, ${telefone}, ${email}, ${endereco}, ${numero}, ${bairro}, ${cidade}, ${estado}, ${observacoes})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
@@ -756,10 +796,15 @@ export async function updateFiel(id: number, dados: Partial<Fiel>): Promise<void
   const telefone = dados.telefone ?? atual.telefone
   const email = dados.email ?? atual.email
   const endereco = dados.endereco ?? atual.endereco
+  const numero = dados.numero ?? atual.numero ?? ''
+  const bairro = dados.bairro ?? atual.bairro ?? ''
+  const cidade = dados.cidade ?? atual.cidade ?? ''
+  const estado = dados.estado ?? atual.estado ?? ''
   const observacoes = dados.observacoes ?? atual.observacoes
   await sql`
     UPDATE fieis
-    SET nome = ${nome}, telefone = ${telefone}, email = ${email}, endereco = ${endereco}, observacoes = ${observacoes}
+    SET nome = ${nome}, telefone = ${telefone}, email = ${email}, endereco = ${endereco},
+        numero = ${numero}, bairro = ${bairro}, cidade = ${cidade}, estado = ${estado}, observacoes = ${observacoes}
     WHERE id = ${id}
   `
 }

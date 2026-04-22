@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import Modal from '@/components/Modal'
 import { Fiel } from '@/types'
 
-const fielVazio: Partial<Fiel> = { nome: '', telefone: '', email: '', endereco: '', observacoes: '' }
+const fielVazio: Partial<Fiel> = { nome: '', telefone: '', email: '', endereco: '', numero: '', bairro: '', cidade: '', estado: '', observacoes: '' }
 
 const inputClass = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none'
 const inputStyle = { borderColor: '#e5e7eb' }
@@ -189,6 +189,26 @@ export default function CadastroFieisPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Endereço</label>
             <input type="text" value={fielEditando.endereco ?? ''} onChange={(e) => setFielEditando((f) => ({ ...f, endereco: e.target.value }))} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Número</label>
+              <input type="text" value={fielEditando.numero ?? ''} onChange={(e) => setFielEditando((f) => ({ ...f, numero: e.target.value }))} placeholder="123" className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Bairro</label>
+              <input type="text" value={fielEditando.bairro ?? ''} onChange={(e) => setFielEditando((f) => ({ ...f, bairro: e.target.value }))} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade</label>
+              <input type="text" value={fielEditando.cidade ?? ''} onChange={(e) => setFielEditando((f) => ({ ...f, cidade: e.target.value }))} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Estado</label>
+              <input type="text" value={fielEditando.estado ?? ''} onChange={(e) => setFielEditando((f) => ({ ...f, estado: e.target.value.toUpperCase().slice(0, 2) }))} placeholder="SP" maxLength={2} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Observações</label>

@@ -212,7 +212,7 @@ export default function NovoAgendamentoPage() {
     <div>
       <PageHeader icon="➕" title="Novo Agendamento" subtitle="Agendar atendimento pastoral" />
 
-      <div className="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
+      <div className="bg-white rounded-xl shadow-sm p-6">
         {/* Busca de fiel */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Buscar Fiel Cadastrado</label>
