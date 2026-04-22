@@ -705,6 +705,20 @@ export async function deleteBloqueio(id: number): Promise<void> {
   await sql`DELETE FROM bloqueios WHERE id = ${id}`
 }
 
+export async function criarBloqueiosDia(pastorId: number, data: string, motivo: string): Promise<void> {
+  const sql = getDb()
+  const HORAS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00']
+  await sql`DELETE FROM bloqueios WHERE pastor_id = ${pastorId} AND data = ${data}::date`
+  for (const hora of HORAS) {
+    await sql`INSERT INTO bloqueios (pastor_id, data, hora, motivo) VALUES (${pastorId}, ${data}::date, ${hora}::time, ${motivo})`
+  }
+}
+
+export async function deleteBloqueiosDia(pastorId: number, data: string): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM bloqueios WHERE pastor_id = ${pastorId} AND data = ${data}::date`
+}
+
 export async function getBloqueioSlot(
   pastorId: number,
   data: string,

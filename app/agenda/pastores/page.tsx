@@ -67,6 +67,7 @@ export default function AgendaPastoresPage() {
   const [motivoBloqueio, setMotivoBloqueio] = useState('')
   const [bloqueando, setBloqueando] = useState(false)
   const [atualizandoStatus, setAtualizandoStatus] = useState(false)
+  const [bloqueandoDia, setBloqueandoDia] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -132,12 +133,38 @@ export default function AgendaPastoresPage() {
       await fetch('/api/bloqueios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pastor_id: pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }),
+        body: JSON.stringify({ pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }),
       })
       await fetchSlots()
       setPainel(null)
     } catch { /* silencioso */ }
     finally { setBloqueando(false) }
+  }
+
+  const handleBloquearDia = async (data: string) => {
+    if (!pastorId) return
+    setBloqueandoDia(true)
+    try {
+      await fetch('/api/bloqueios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pastorId, data, hora: 'dia', motivo: motivoBloqueio || 'Dia bloqueado' }),
+      })
+      await fetchSlots()
+      setPainelDia(null)
+    } catch { /* silencioso */ }
+    finally { setBloqueandoDia(false) }
+  }
+
+  const handleDesbloquearDia = async (data: string) => {
+    if (!pastorId) return
+    setBloqueandoDia(true)
+    try {
+      await fetch(`/api/bloqueios?pastorId=${pastorId}&data=${data}`, { method: 'DELETE' })
+      await fetchSlots()
+      setPainelDia(null)
+    } catch { /* silencioso */ }
+    finally { setBloqueandoDia(false) }
   }
 
   const handleDesbloquear = async () => {
@@ -373,9 +400,31 @@ export default function AgendaPastoresPage() {
           {/* ── DIÁRIA ── */}
           {view === 'diaria' && (
             <div className="space-y-2">
-              <p style={{ color: '#002347' }} className="font-bold text-sm mb-3">
-                {String(currentDate.getDate()).padStart(2, '0')}/{String(currentDate.getMonth() + 1).padStart(2, '0')}/{currentDate.getFullYear()}
-              </p>
+              <div className="flex items-center justify-between mb-3">
+                <p style={{ color: '#002347' }} className="font-bold text-sm">
+                  {String(currentDate.getDate()).padStart(2, '0')}/{String(currentDate.getMonth() + 1).padStart(2, '0')}/{currentDate.getFullYear()}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setMotivoBloqueio(''); handleBloquearDia(toDateStr(currentDate)) }}
+                    disabled={bloqueandoDia}
+                    style={{ backgroundColor: '#002347', color: '#fff' }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                  >
+                    {bloqueandoDia ? '...' : '🔒 Bloquear Dia'}
+                  </button>
+                  {Object.values(slots[toDateStr(currentDate)] || {}).some(s => s.tipo === 'bloqueado') && (
+                    <button
+                      onClick={() => handleDesbloquearDia(toDateStr(currentDate))}
+                      disabled={bloqueandoDia}
+                      style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                    >
+                      🔓 Desbloquear
+                    </button>
+                  )}
+                </div>
+              </div>
               {HORAS_DIA.map((hora) => {
                 const ds = toDateStr(currentDate)
                 const slot = getSlot(ds, hora)
@@ -443,13 +492,46 @@ export default function AgendaPastoresPage() {
                 </div>
               )}
 
-              <button
-                onClick={() => { router.push('/agendamentos/novo') }}
-                style={{ backgroundColor: '#002347', color: '#fff' }}
-                className="w-full mt-5 py-2.5 rounded-lg text-sm font-semibold"
-              >
-                ➕ Novo Agendamento Neste Dia
-              </button>
+              <div className="mt-5 space-y-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Motivo do bloqueio (opcional)</label>
+                  <input
+                    type="text"
+                    value={motivoBloqueio}
+                    onChange={(e) => setMotivoBloqueio(e.target.value)}
+                    placeholder="Ex: Feriado, Viagem..."
+                    className="w-full border rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+                    style={{ borderColor: '#e5e7eb' }}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleBloquearDia(painelDia!)}
+                    disabled={bloqueandoDia}
+                    style={{ backgroundColor: '#002347', color: '#fff' }}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                  >
+                    {bloqueandoDia ? 'Bloqueando...' : '🔒 Bloquear Dia Inteiro'}
+                  </button>
+                  {Object.values(slots[painelDia!] || {}).some(s => s.tipo === 'bloqueado') && (
+                    <button
+                      onClick={() => handleDesbloquearDia(painelDia!)}
+                      disabled={bloqueandoDia}
+                      style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                      className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                    >
+                      {bloqueandoDia ? '...' : '🔓 Desbloquear Dia'}
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => { router.push('/agendamentos/novo') }}
+                  style={{ backgroundColor: '#C5A059', color: '#002347' }}
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold"
+                >
+                  ➕ Novo Agendamento Neste Dia
+                </button>
+              </div>
             </div>
           </div>
         </div>

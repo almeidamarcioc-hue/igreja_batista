@@ -41,6 +41,7 @@ export default function PastorAgendaPage() {
   const [motivoBloqueio, setMotivoBloqueio] = useState('')
   const [bloqueando, setBloqueando] = useState(false)
   const [atualizandoStatus, setAtualizandoStatus] = useState(false)
+  const [bloqueandoDia, setBloqueandoDia] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -104,10 +105,30 @@ export default function PastorAgendaPage() {
       await fetch('/api/bloqueios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pastor_id: pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }),
+        body: JSON.stringify({ pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }),
       })
       await fetchSlots(); setPainel(null)
     } finally { setBloqueando(false) }
+  }
+
+  const handleBloquearDia = async (data: string) => {
+    setBloqueandoDia(true)
+    try {
+      await fetch('/api/bloqueios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pastorId, data, hora: 'dia', motivo: motivoBloqueio || 'Dia bloqueado' }),
+      })
+      await fetchSlots(); setPainelDia(null)
+    } finally { setBloqueandoDia(false) }
+  }
+
+  const handleDesbloquearDia = async (data: string) => {
+    setBloqueandoDia(true)
+    try {
+      await fetch(`/api/bloqueios?pastorId=${pastorId}&data=${data}`, { method: 'DELETE' })
+      await fetchSlots(); setPainelDia(null)
+    } finally { setBloqueandoDia(false) }
   }
 
   const handleDesbloquear = async () => {
@@ -217,6 +238,27 @@ export default function PastorAgendaPage() {
             {/* ── DIÁRIA ── */}
             {view === 'diaria' && (
               <div className="space-y-2 mt-1">
+                {/* Botões bloquear/desbloquear dia */}
+                <div className="flex gap-2 pb-1">
+                  <button
+                    onClick={() => handleBloquearDia(toStr(currentDate))}
+                    disabled={bloqueandoDia}
+                    style={{ backgroundColor: '#002347', color: '#fff' }}
+                    className="flex-1 py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+                  >
+                    {bloqueandoDia ? '...' : '🔒 Bloquear Dia'}
+                  </button>
+                  {Object.values(slots[toStr(currentDate)] || {}).some(s => s.tipo === 'bloqueado') && (
+                    <button
+                      onClick={() => handleDesbloquearDia(toStr(currentDate))}
+                      disabled={bloqueandoDia}
+                      style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold disabled:opacity-50"
+                    >
+                      🔓 Desbloquear
+                    </button>
+                  )}
+                </div>
                 {HORAS_DIA.map(hora => {
                   const ds = toStr(currentDate)
                   const slot = getSlot(ds, hora)
@@ -393,6 +435,36 @@ export default function PastorAgendaPage() {
                   })}
                 </div>
               )}
+
+              {/* Bloquear / Desbloquear dia inteiro */}
+              <div className="mt-4 space-y-2">
+                <input
+                  type="text"
+                  value={motivoBloqueio}
+                  onChange={(e) => setMotivoBloqueio(e.target.value)}
+                  placeholder="Motivo do bloqueio (opcional)"
+                  className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none"
+                  style={{ borderColor: '#e5e7eb' }}
+                />
+                <button
+                  onClick={() => handleBloquearDia(painelDia!)}
+                  disabled={bloqueandoDia}
+                  style={{ backgroundColor: '#002347', color: '#fff' }}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm disabled:opacity-50"
+                >
+                  {bloqueandoDia ? 'Bloqueando...' : '🔒 Bloquear Dia Inteiro'}
+                </button>
+                {Object.values(slots[painelDia!] || {}).some(s => s.tipo === 'bloqueado') && (
+                  <button
+                    onClick={() => handleDesbloquearDia(painelDia!)}
+                    disabled={bloqueandoDia}
+                    style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm disabled:opacity-50"
+                  >
+                    {bloqueandoDia ? '...' : '🔓 Desbloquear Dia Inteiro'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
