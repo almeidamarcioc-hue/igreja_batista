@@ -16,10 +16,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const duracao = searchParams.get('duracao')
+
     const conflito = await checarConflito(
       parseInt(pastorId, 10),
       data,
       hora,
+      duracao ? parseInt(duracao, 10) : 30,
       ignorarId ? parseInt(ignorarId, 10) : undefined
     )
 

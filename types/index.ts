@@ -18,6 +18,7 @@ export interface Agendamento {
   pastor_id: number
   data: string
   hora: string
+  duracao_min: number
   status: string
   recorrencia: string
   observacoes: string

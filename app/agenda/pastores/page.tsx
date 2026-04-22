@@ -499,6 +499,11 @@ export default function AgendaPastoresPage() {
                     <Row label="Fiel" value={String(painel.slot.dados.nome_fiel || '')} />
                     <Row label="Telefone" value={String(painel.slot.dados.telefone || '')} />
                     <Row label="Assunto" value={String(painel.slot.dados.assunto || '')} />
+                    <Row label="Duração" value={
+                      Number(painel.slot.dados.duracao_min) >= 60
+                        ? `${Number(painel.slot.dados.duracao_min) / 60}h${Number(painel.slot.dados.duracao_min) % 60 > 0 ? `${Number(painel.slot.dados.duracao_min) % 60}min` : ''}`
+                        : `${painel.slot.dados.duracao_min || 30} min`
+                    } />
                     {painel.slot.dados.observacoes && <Row label="Obs" value={String(painel.slot.dados.observacoes)} />}
                   </div>
 

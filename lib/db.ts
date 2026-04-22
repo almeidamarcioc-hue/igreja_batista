@@ -22,6 +22,7 @@ export interface Agendamento {
   pastor_id: number
   data: string
   hora: string
+  duracao_min: number
   status: string
   recorrencia: string
   observacoes: string
@@ -111,6 +112,7 @@ export async function initDb(): Promise<void> {
       pastor_id INTEGER REFERENCES pastores(id),
       data DATE NOT NULL,
       hora TIME NOT NULL,
+      duracao_min INTEGER DEFAULT 30,
       status VARCHAR(20) DEFAULT 'pendente',
       recorrencia VARCHAR(20) DEFAULT 'nenhuma',
       observacoes TEXT DEFAULT '',
@@ -159,7 +161,8 @@ export async function initDb(): Promise<void> {
     )
   `
 
-  // Migrate existing tables: add new address columns if missing
+  // Migrate existing tables
+  await sql`ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS duracao_min INTEGER DEFAULT 30`
   await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
   await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) DEFAULT ''`
   await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) DEFAULT ''`
@@ -278,12 +281,13 @@ export async function criarAgendamento(dados: Partial<Agendamento>): Promise<num
   const pastor_id = dados.pastor_id ?? 0
   const data = dados.data ?? ''
   const hora = dados.hora ?? ''
+  const duracao_min = dados.duracao_min ?? 30
   const status = dados.status ?? 'pendente'
   const recorrencia = dados.recorrencia ?? 'nenhuma'
   const observacoes = dados.observacoes ?? ''
   const rows = await sql`
-    INSERT INTO agendamentos (nome_fiel, telefone, assunto, pastor_id, data, hora, status, recorrencia, observacoes)
-    VALUES (${nome_fiel}, ${telefone}, ${assunto}, ${pastor_id}, ${data}::date, ${hora}::time, ${status}, ${recorrencia}, ${observacoes})
+    INSERT INTO agendamentos (nome_fiel, telefone, assunto, pastor_id, data, hora, duracao_min, status, recorrencia, observacoes)
+    VALUES (${nome_fiel}, ${telefone}, ${assunto}, ${pastor_id}, ${data}::date, ${hora}::time, ${duracao_min}, ${status}, ${recorrencia}, ${observacoes})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
@@ -452,6 +456,7 @@ export async function updateAgendamento(id: number, dados: Partial<Agendamento>)
   const pastor_id = dados.pastor_id ?? atual.pastor_id
   const data = dados.data ?? atual.data
   const hora = dados.hora ?? atual.hora
+  const duracao_min = dados.duracao_min ?? atual.duracao_min ?? 30
   const status = dados.status ?? atual.status
   const recorrencia = dados.recorrencia ?? atual.recorrencia
   const observacoes = dados.observacoes ?? atual.observacoes
@@ -467,6 +472,7 @@ export async function updateAgendamento(id: number, dados: Partial<Agendamento>)
       pastor_id = ${pastor_id},
       data = ${data}::date,
       hora = ${hora}::time,
+      duracao_min = ${duracao_min},
       status = ${status},
       recorrencia = ${recorrencia},
       observacoes = ${observacoes},
@@ -485,18 +491,21 @@ export async function checarConflito(
   pastorId: number,
   data: string,
   hora: string,
+  duracao = 30,
   ignorarId?: number
 ): Promise<Agendamento | null> {
   const sql = getDb()
+  // Verifica sobreposição de intervalos: [hora, hora+duracao) overlaps [existing_hora, existing_hora+existing_duracao)
   let rows
   if (ignorarId) {
     rows = await sql`
       SELECT * FROM agendamentos
       WHERE pastor_id = ${pastorId}
         AND data = ${data}::date
-        AND hora = ${hora}::time
         AND status NOT IN ('cancelado')
         AND id != ${ignorarId}
+        AND hora::time < (${hora}::time + (${duracao} || ' minutes')::interval)
+        AND (hora::time + (duracao_min || ' minutes')::interval) > ${hora}::time
       LIMIT 1
     `
   } else {
@@ -504,8 +513,9 @@ export async function checarConflito(
       SELECT * FROM agendamentos
       WHERE pastor_id = ${pastorId}
         AND data = ${data}::date
-        AND hora = ${hora}::time
         AND status NOT IN ('cancelado')
+        AND hora::time < (${hora}::time + (${duracao} || ' minutes')::interval)
+        AND (hora::time + (duracao_min || ' minutes')::interval) > ${hora}::time
       LIMIT 1
     `
   }
@@ -535,30 +545,32 @@ export async function getProximoHorarioLivre(
   // Hora mínima no horário de Brasília: ignora slots já passados para hoje
   const horaMin = dataBase === br.data ? br.hora : '00:00'
 
-  // Generate slots for the next 30 days, from 08:00 to 18:00, every hour
-  // Note: generate_series with time type is not supported; use integer offsets instead
+  // Gera slots de 30 em 30 min (08:00 a 18:30) para os próximos 30 dias
   const rows = await sql`
     WITH slots AS (
       SELECT
         (gs_date::date)::text AS data,
-        to_char(('08:00'::time + (gs_h * INTERVAL '1 hour')), 'HH24:MI') AS hora
+        to_char(('08:00'::time + (gs_h * INTERVAL '30 minutes')), 'HH24:MI') AS hora
       FROM
         generate_series(
           ${dataBase}::date,
           ${dataBase}::date + INTERVAL '30 days',
           INTERVAL '1 day'
         ) AS gs_date,
-        generate_series(0, 10) AS gs_h
+        generate_series(0, 21) AS gs_h
     ),
     ocupados AS (
-      SELECT data::text, hora::text
-      FROM agendamentos
-      WHERE pastor_id = ${pastorId}
-        AND status NOT IN ('cancelado')
-        AND data >= ${dataBase}::date
-        AND data <= ${dataBase}::date + INTERVAL '30 days'
+      SELECT
+        a.data::text,
+        LEFT((a.hora::time + (g.offset_min * INTERVAL '1 minute'))::text, 5) AS hora
+      FROM agendamentos a
+      CROSS JOIN generate_series(0, a.duracao_min - 1, 30) AS g(offset_min)
+      WHERE a.pastor_id = ${pastorId}
+        AND a.status NOT IN ('cancelado')
+        AND a.data >= ${dataBase}::date
+        AND a.data <= ${dataBase}::date + INTERVAL '30 days'
       UNION ALL
-      SELECT data::text, hora::text
+      SELECT data::text, LEFT(hora::text, 5) AS hora
       FROM bloqueios
       WHERE pastor_id = ${pastorId}
         AND data >= ${dataBase}::date
@@ -568,8 +580,7 @@ export async function getProximoHorarioLivre(
     FROM slots s
     WHERE NOT EXISTS (
       SELECT 1 FROM ocupados o
-      WHERE o.data = s.data
-        AND LEFT(o.hora, 5) = s.hora
+      WHERE o.data = s.data AND o.hora = s.hora
     )
     AND (s.data > ${dataBase} OR (s.data = ${dataBase} AND s.hora > ${horaMin}))
     ORDER BY s.data, s.hora
@@ -721,13 +732,24 @@ export async function getSlotsPastor(
   const sql = getDb()
 
   const agendamentosRows = await sql`
-    SELECT id, data::text, LEFT(hora::text, 5) AS hora, status, nome_fiel, telefone, assunto, observacoes
-    FROM agendamentos
-    WHERE pastor_id = ${pastorId}
-      AND data >= ${dataInicio}::date
-      AND data <= ${dataFim}::date
-      AND status NOT IN ('cancelado')
-    ORDER BY data, hora
+    SELECT
+      a.id,
+      a.data::text,
+      LEFT((a.hora::time + (g.offset_min * INTERVAL '1 minute'))::text, 5) AS hora,
+      a.status,
+      a.nome_fiel,
+      a.telefone,
+      a.assunto,
+      a.observacoes,
+      a.duracao_min,
+      a.hora::text AS hora_inicio
+    FROM agendamentos a
+    CROSS JOIN generate_series(0, a.duracao_min - 1, 30) AS g(offset_min)
+    WHERE a.pastor_id = ${pastorId}
+      AND a.data >= ${dataInicio}::date
+      AND a.data <= ${dataFim}::date
+      AND a.status NOT IN ('cancelado')
+    ORDER BY a.data, hora
   `
 
   const bloqueiosRows = await sql`

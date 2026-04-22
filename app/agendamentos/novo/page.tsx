@@ -90,6 +90,7 @@ export default function NovoAgendamentoPage() {
   const [pastorId, setPastorId] = useState('')
   const [data, setData] = useState(hoje())
   const [hora, setHora] = useState(() => horariosDisponiveis(hoje())[0] ?? '08:00')
+  const [duracao, setDuracao] = useState(30)
   const [status, setStatus] = useState('pendente')
   const [recorrencia, setRecorrencia] = useState('nenhuma')
   const [observacoes, setObservacoes] = useState('')
@@ -146,7 +147,7 @@ export default function NovoAgendamentoPage() {
     try {
       // Verificar conflito se confirmado
       if (status === 'confirmado') {
-        const resConflito = await fetch(`/api/agendamentos/conflito?pastorId=${pastorId}&data=${data}&hora=${hora}`)
+        const resConflito = await fetch(`/api/agendamentos/conflito?pastorId=${pastorId}&data=${data}&hora=${hora}&duracao=${duracao}`)
         const conflito = await resConflito.json()
         if (conflito.conflito) {
           setErro(`Conflito de horário: já existe um agendamento confirmado para este pastor neste horário.`)
@@ -156,7 +157,7 @@ export default function NovoAgendamentoPage() {
       }
 
       // Criar agendamento principal
-      const payload = { nome_fiel: nomeFiel, telefone, assunto, pastor_id: Number(pastorId), data, hora, status, recorrencia, observacoes }
+      const payload = { nome_fiel: nomeFiel, telefone, assunto, pastor_id: Number(pastorId), data, hora, duracao_min: duracao, status, recorrencia, observacoes }
       const res = await fetch('/api/agendamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -209,7 +210,8 @@ export default function NovoAgendamentoPage() {
       setAssunto('')
       setPastorId('')
       setData(hoje())
-      setHora('08:00')
+      setHora(horariosDisponiveis(hoje())[0] ?? '08:00')
+      setDuracao(30)
       setStatus('pendente')
       setRecorrencia('nenhuma')
       setObservacoes('')
@@ -312,8 +314,8 @@ export default function NovoAgendamentoPage() {
             />
           </div>
 
-          {/* Pastor, Data, Hora */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Pastor, Data, Hora, Duração */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Pastor(a) *</label>
               <select
@@ -364,6 +366,23 @@ export default function NovoAgendamentoPage() {
                 {horariosDisponiveis(data).map((h) => (
                   <option key={h} value={h}>{h}</option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Duração *</label>
+              <select
+                value={duracao}
+                onChange={(e) => setDuracao(Number(e.target.value))}
+                required
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none bg-white"
+                style={{ borderColor: '#e5e7eb' }}
+                onFocus={(e) => (e.target.style.borderColor = '#C5A059')}
+                onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
+              >
+                <option value={30}>30 min</option>
+                <option value={60}>1 hora</option>
+                <option value={90}>1h30</option>
+                <option value={120}>2 horas</option>
               </select>
             </div>
           </div>
