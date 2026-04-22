@@ -257,9 +257,10 @@ export default function NovoAgendamentoPage() {
                     type="button"
                     onClick={() => selecionarFiel(fiel)}
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b last:border-b-0"
+                    style={{ color: '#1a202c' }}
                   >
-                    <span className="font-semibold">{fiel.nome}</span>
-                    <span className="text-gray-500 ml-2">{fiel.telefone}</span>
+                    <span className="font-semibold" style={{ color: '#002347' }}>{fiel.nome}</span>
+                    <span className="ml-2" style={{ color: '#4a5568' }}>{fiel.telefone}</span>
                   </button>
                 ))}
               </div>
