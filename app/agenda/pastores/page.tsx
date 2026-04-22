@@ -69,6 +69,7 @@ export default function AgendaPastoresPage() {
   const [painelDia, setPainelDia] = useState<string | null>(null)
   const [motivoBloqueio, setMotivoBloqueio] = useState('')
   const [bloqueando, setBloqueando] = useState(false)
+  const [atualizandoStatus, setAtualizandoStatus] = useState(false)
 
   useEffect(() => {
     fetch('/api/pastores')
@@ -149,6 +150,21 @@ export default function AgendaPastoresPage() {
       await fetchSlots()
       setPainel(null)
     } catch { /* silencioso */ }
+  }
+
+  const handleAlterarStatus = async (novoStatus: string) => {
+    if (!painel?.slot) return
+    setAtualizandoStatus(true)
+    try {
+      await fetch(`/api/agendamentos/${painel.slot.dados.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: novoStatus }),
+      })
+      await fetchSlots()
+      setPainel(null)
+    } catch { /* silencioso */ }
+    finally { setAtualizandoStatus(false) }
   }
 
   const daysInMonth = (): (Date | null)[] => {
@@ -485,7 +501,41 @@ export default function AgendaPastoresPage() {
                     <Row label="Assunto" value={String(painel.slot.dados.assunto || '')} />
                     {painel.slot.dados.observacoes && <Row label="Obs" value={String(painel.slot.dados.observacoes)} />}
                   </div>
-                  <div className="flex gap-2 mt-5">
+
+                  {/* Ações de status */}
+                  <div className="mt-5 space-y-2">
+                    {painel.slot.tipo === 'pendente' && (
+                      <button
+                        onClick={() => handleAlterarStatus('confirmado')}
+                        disabled={atualizandoStatus}
+                        style={{ backgroundColor: '#166534', color: '#fff' }}
+                        className="w-full py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                      >
+                        {atualizandoStatus ? 'Atualizando...' : '✓ Confirmar Agendamento'}
+                      </button>
+                    )}
+                    {painel.slot.tipo === 'confirmado' && (
+                      <button
+                        onClick={() => handleAlterarStatus('pendente')}
+                        disabled={atualizandoStatus}
+                        style={{ backgroundColor: '#92400e', color: '#fff' }}
+                        className="w-full py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                      >
+                        {atualizandoStatus ? 'Atualizando...' : '↩ Voltar para Pendente'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleAlterarStatus('cancelado')}
+                      disabled={atualizandoStatus}
+                      style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                      className="w-full py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                    >
+                      {atualizandoStatus ? 'Atualizando...' : '🗑 Cancelar e Liberar Horário'}
+                    </button>
+                  </div>
+
+                  {/* WhatsApp */}
+                  <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => abrirWhatsApp(String(painel.slot!.dados.telefone), `Olá ${painel.slot!.dados.nome_fiel}, lembrando do seu atendimento hoje às ${painel.hora}.`)}
                       style={{ backgroundColor: '#25D366', color: '#fff' }}

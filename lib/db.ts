@@ -513,17 +513,27 @@ export async function checarConflito(
   return rows[0] as unknown as Agendamento
 }
 
+function agoraBrasil(): { data: string; hora: string } {
+  const now = new Date()
+  const fmt = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  })
+  const p = fmt.formatToParts(now)
+  const get = (t: string) => p.find((x) => x.type === t)?.value ?? '00'
+  return { data: `${get('year')}-${get('month')}-${get('day')}`, hora: `${get('hour')}:${get('minute')}` }
+}
+
 export async function getProximoHorarioLivre(
   pastorId: number,
   aPartir?: string
 ): Promise<{ data: string; hora: string } | null> {
   const sql = getDb()
-  const agora = new Date()
-  const dataBase = aPartir ?? agora.toISOString().slice(0, 10)
-  // Hora mínima: se for hoje, ignora horários passados; senão começa às 08:00
-  const horaMin = dataBase === agora.toISOString().slice(0, 10)
-    ? `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`
-    : '00:00'
+  const br = agoraBrasil()
+  const dataBase = aPartir ?? br.data
+  // Hora mínima no horário de Brasília: ignora slots já passados para hoje
+  const horaMin = dataBase === br.data ? br.hora : '00:00'
 
   // Generate slots for the next 30 days, from 08:00 to 18:00, every hour
   // Note: generate_series with time type is not supported; use integer offsets instead
