@@ -311,13 +311,17 @@ export async function criarAgendamento(dados: Partial<Agendamento>): Promise<num
   const recorrencia = dados.recorrencia ?? 'nenhuma'
   const observacoes = dados.observacoes ?? ''
 
-  // Verifica se algum slot do horário solicitado está bloqueado
+  // Verifica se algum slot do horário solicitado está bloqueado.
+  // Usa LEFT(hora::text, 5) para evitar conflito de tipos (TIME vs TEXT).
+  const [hh, mm] = hora.split(':').map(Number)
+  const endMin = hh * 60 + mm + (duracao_min as number)
+  const endHora = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`
   const bloqueados = await sql`
     SELECT id FROM bloqueios
     WHERE pastor_id = ${pastor_id}
       AND data = ${data}::date
-      AND hora >= ${hora}::time
-      AND hora < ${hora}::time + (${duracao_min} * interval '1 minute')
+      AND LEFT(hora::text, 5) >= ${hora}
+      AND LEFT(hora::text, 5) < ${endHora}
     LIMIT 1
   `
   if (bloqueados.length > 0) {
