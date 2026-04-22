@@ -161,6 +161,31 @@ export async function initDb(): Promise<void> {
     )
   `
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS horarios_atendimento (
+      dia_semana INTEGER PRIMARY KEY,
+      ativo BOOLEAN DEFAULT true,
+      inicio TIME DEFAULT '08:00',
+      intervalo_inicio TIME,
+      intervalo_fim TIME,
+      fim TIME DEFAULT '18:00'
+    )
+  `
+
+  // Seed horarios com defaults (Seg-Sex ativo, Sab/Dom inativo)
+  await sql`
+    INSERT INTO horarios_atendimento (dia_semana, ativo, inicio, intervalo_inicio, intervalo_fim, fim)
+    VALUES
+      (0, false, '08:00', '12:00', '13:00', '18:00'),
+      (1, true,  '08:00', '12:00', '13:00', '18:00'),
+      (2, true,  '08:00', '12:00', '13:00', '18:00'),
+      (3, true,  '08:00', '12:00', '13:00', '18:00'),
+      (4, true,  '08:00', '12:00', '13:00', '18:00'),
+      (5, true,  '08:00', '12:00', '13:00', '18:00'),
+      (6, false, '08:00', '12:00', '13:00', '18:00')
+    ON CONFLICT (dia_semana) DO NOTHING
+  `
+
   // Migrate existing tables
   await sql`ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS duracao_min INTEGER DEFAULT 30`
   await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
@@ -867,4 +892,49 @@ export async function updateFiel(id: number, dados: Partial<Fiel>): Promise<void
 export async function deleteFiel(id: number): Promise<void> {
   const sql = getDb()
   await sql`DELETE FROM fieis WHERE id = ${id}`
+}
+
+// ─── Horários de Atendimento ───────────────────────────────────────────────
+
+export interface HorarioAtendimento {
+  dia_semana: number
+  ativo: boolean
+  inicio: string
+  intervalo_inicio: string | null
+  intervalo_fim: string | null
+  fim: string
+}
+
+export async function getHorarios(): Promise<HorarioAtendimento[]> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT
+      dia_semana,
+      ativo,
+      LEFT(inicio::text, 5)                                                   AS inicio,
+      CASE WHEN intervalo_inicio IS NOT NULL THEN LEFT(intervalo_inicio::text, 5) END AS intervalo_inicio,
+      CASE WHEN intervalo_fim    IS NOT NULL THEN LEFT(intervalo_fim::text,    5) END AS intervalo_fim,
+      LEFT(fim::text, 5)                                                      AS fim
+    FROM horarios_atendimento
+    ORDER BY dia_semana
+  `
+  return rows as unknown as HorarioAtendimento[]
+}
+
+export async function salvarHorarios(horarios: HorarioAtendimento[]): Promise<void> {
+  const sql = getDb()
+  for (const h of horarios) {
+    const ini: string | null = h.intervalo_inicio || null
+    const ifim: string | null = h.intervalo_fim || null
+    await sql`
+      INSERT INTO horarios_atendimento (dia_semana, ativo, inicio, intervalo_inicio, intervalo_fim, fim)
+      VALUES (${h.dia_semana}, ${h.ativo}, ${h.inicio}, ${ini}, ${ifim}, ${h.fim})
+      ON CONFLICT (dia_semana) DO UPDATE SET
+        ativo            = EXCLUDED.ativo,
+        inicio           = EXCLUDED.inicio,
+        intervalo_inicio = EXCLUDED.intervalo_inicio,
+        intervalo_fim    = EXCLUDED.intervalo_fim,
+        fim              = EXCLUDED.fim
+    `
+  }
 }

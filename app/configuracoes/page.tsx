@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { Configuracoes } from '@/types'
+import { Configuracoes, HorarioAtendimento } from '@/types'
 
 type WAStatus = 'nao_configurado' | 'open' | 'close' | 'connecting' | 'error' | 'carregando'
 
@@ -17,12 +17,28 @@ const configVazia: Configuracoes = {
   msg_pastor: '',
 }
 
+const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+
+const horariosDefault: HorarioAtendimento[] = Array.from({ length: 7 }, (_, i) => ({
+  dia_semana: i,
+  ativo: i >= 1 && i <= 5,
+  inicio: '08:00',
+  intervalo_inicio: '12:00',
+  intervalo_fim: '13:00',
+  fim: '18:00',
+}))
+
 export default function ConfiguracoesPage() {
   const [config, setConfig] = useState<Configuracoes>(configVazia)
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [sucesso, setSucesso] = useState('')
   const [erro, setErro] = useState('')
+
+  // Horários de atendimento
+  const [horarios, setHorarios] = useState<HorarioAtendimento[]>(horariosDefault)
+  const [salvandoHorarios, setSalvandoHorarios] = useState(false)
+  const [sucessoHorarios, setSucessoHorarios] = useState('')
 
   // WhatsApp connection
   const [waStatus, setWaStatus] = useState<WAStatus>('carregando')
@@ -32,14 +48,42 @@ export default function ConfiguracoesPage() {
   const carregar = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/configuracoes')
-      const cfg = await res.json()
+      const [cfgRes, horRes] = await Promise.all([
+        fetch('/api/configuracoes'),
+        fetch('/api/horarios'),
+      ])
+      const cfg = await cfgRes.json()
+      const hor = await horRes.json()
       if (cfg && cfg.id) setConfig(cfg)
+      if (Array.isArray(hor) && hor.length === 7) setHorarios(hor)
     } catch {
       setErro('Erro ao carregar configurações.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSalvarHorarios = async () => {
+    setSalvandoHorarios(true)
+    setSucessoHorarios('')
+    try {
+      const res = await fetch('/api/horarios', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(horarios),
+      })
+      if (!res.ok) throw new Error('Erro ao salvar')
+      setSucessoHorarios('Horários salvos com sucesso!')
+      setTimeout(() => setSucessoHorarios(''), 3000)
+    } catch {
+      setErro('Erro ao salvar horários.')
+    } finally {
+      setSalvandoHorarios(false)
+    }
+  }
+
+  const setHorario = (dia: number, campo: keyof HorarioAtendimento, valor: string | boolean | null) => {
+    setHorarios(prev => prev.map(h => h.dia_semana === dia ? { ...h, [campo]: valor } : h))
   }
 
   const verificarStatusWA = useCallback(async () => {
@@ -156,6 +200,132 @@ export default function ConfiguracoesPage() {
             <p className="text-xs text-gray-400 mt-2">Aguardando conexão... O status atualiza automaticamente.</p>
           </div>
         )}
+      </div>
+
+      {/* Horários de Atendimento */}
+      <div className="bg-white rounded-xl shadow-sm p-5 mb-5 max-w-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h2 style={{ color: '#002347' }} className="font-bold text-base">Horários de Atendimento</h2>
+          {sucessoHorarios && <span className="text-green-600 text-xs font-semibold">{sucessoHorarios}</span>}
+        </div>
+
+        <div className="space-y-3">
+          {horarios.map((h) => (
+            <div key={h.dia_semana} className="rounded-xl border p-3" style={{ borderColor: h.ativo ? '#C5A059' : '#e5e7eb', backgroundColor: h.ativo ? '#fffbf0' : '#f9fafb' }}>
+              <div className="flex items-center gap-3 mb-2">
+                {/* Toggle ativo */}
+                <button
+                  type="button"
+                  onClick={() => setHorario(h.dia_semana, 'ativo', !h.ativo)}
+                  className="w-10 h-6 rounded-full transition-colors flex-shrink-0 relative"
+                  style={{ backgroundColor: h.ativo ? '#002347' : '#d1d5db' }}
+                >
+                  <span
+                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                    style={{ transform: h.ativo ? 'translateX(18px)' : 'translateX(2px)' }}
+                  />
+                </button>
+                <span className="font-bold text-sm w-20 flex-shrink-0" style={{ color: h.ativo ? '#002347' : '#9ca3af' }}>
+                  {DIAS_SEMANA[h.dia_semana]}
+                </span>
+                {!h.ativo && <span className="text-xs text-gray-400">Sem atendimento</span>}
+              </div>
+
+              {h.ativo && (
+                <div className="space-y-2 pl-13">
+                  {/* Turno da manhã / linha principal */}
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <label className="text-xs text-gray-500 w-12">Início</label>
+                    <input
+                      type="time"
+                      value={h.inicio}
+                      onChange={(e) => setHorario(h.dia_semana, 'inicio', e.target.value)}
+                      className="border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                      style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
+                    />
+                    <span className="text-gray-400 text-xs">até</span>
+                    <input
+                      type="time"
+                      value={h.intervalo_inicio ?? h.fim}
+                      onChange={(e) => setHorario(h.dia_semana, h.intervalo_inicio !== null ? 'intervalo_inicio' : 'fim', e.target.value)}
+                      className="border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                      style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
+                    />
+                  </div>
+
+                  {/* Toggle intervalo */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`intervalo-${h.dia_semana}`}
+                      checked={h.intervalo_inicio !== null}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setHorario(h.dia_semana, 'intervalo_inicio', '12:00')
+                          setHorario(h.dia_semana, 'intervalo_fim', '13:00')
+                        } else {
+                          setHorario(h.dia_semana, 'intervalo_inicio', null)
+                          setHorario(h.dia_semana, 'intervalo_fim', null)
+                        }
+                      }}
+                      className="rounded"
+                      style={{ accentColor: '#002347' }}
+                    />
+                    <label htmlFor={`intervalo-${h.dia_semana}`} className="text-xs text-gray-600 cursor-pointer">
+                      Intervalo / Almoço
+                    </label>
+                  </div>
+
+                  {/* Turno da tarde */}
+                  {h.intervalo_inicio !== null && (
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <label className="text-xs text-gray-500 w-12">Retorno</label>
+                      <input
+                        type="time"
+                        value={h.intervalo_fim ?? '13:00'}
+                        onChange={(e) => setHorario(h.dia_semana, 'intervalo_fim', e.target.value)}
+                        className="border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                        style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
+                      />
+                      <span className="text-gray-400 text-xs">até</span>
+                      <input
+                        type="time"
+                        value={h.fim}
+                        onChange={(e) => setHorario(h.dia_semana, 'fim', e.target.value)}
+                        className="border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                        style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Sem intervalo: campo fim separado */}
+                  {h.intervalo_inicio === null && (
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <label className="text-xs text-gray-500 w-12">Fim</label>
+                      <input
+                        type="time"
+                        value={h.fim}
+                        onChange={(e) => setHorario(h.dia_semana, 'fim', e.target.value)}
+                        className="border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                        style={{ borderColor: '#e5e7eb', color: '#1a202c' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSalvarHorarios}
+          disabled={salvandoHorarios}
+          style={{ backgroundColor: '#002347', color: '#fff' }}
+          className="w-full mt-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+        >
+          {salvandoHorarios ? 'Salvando...' : '💾 Salvar Horários'}
+        </button>
       </div>
 
       <form onSubmit={handleSalvar} className="bg-white rounded-xl shadow-sm p-5 space-y-5 max-w-2xl">

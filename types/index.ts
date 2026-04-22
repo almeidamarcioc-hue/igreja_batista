@@ -65,3 +65,12 @@ export interface Slot {
   tipo: 'confirmado' | 'pendente' | 'bloqueado'
   dados: Record<string, any>
 }
+
+export interface HorarioAtendimento {
+  dia_semana: number
+  ativo: boolean
+  inicio: string
+  intervalo_inicio: string | null
+  intervalo_fim: string | null
+  fim: string
+}
