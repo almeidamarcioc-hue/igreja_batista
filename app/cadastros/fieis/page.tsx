@@ -76,16 +76,17 @@ export default function CadastroFieisPage() {
     setSucesso('')
     try {
       if (isNovo) {
-        await fetch('/api/fieis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fielEditando) })
-        setSucesso('Fiel cadastrado com sucesso!')
+        const res = await fetch('/api/fieis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fielEditando) })
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || `Erro ${res.status}`) }
       } else {
-        await fetch(`/api/fieis/${fielEditando.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fielEditando) })
-        setSucesso('Cadastro atualizado!')
+        const res = await fetch(`/api/fieis/${fielEditando.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fielEditando) })
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || `Erro ${res.status}`) }
       }
       fecharModal()
       await carregar(termoBusca)
-    } catch {
-      setErro('Erro ao salvar cadastro.')
+      setSucesso(isNovo ? 'Fiel cadastrado com sucesso!' : 'Cadastro atualizado!')
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao salvar cadastro.')
     } finally {
       setSubmitting(false)
     }

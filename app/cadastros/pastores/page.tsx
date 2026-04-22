@@ -68,16 +68,17 @@ export default function CadastroPastoresPage() {
     setErroPastor('')
     try {
       if (isNovo) {
-        await fetch('/api/pastores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pastorEditando) })
-        setSucesso('Pastor cadastrado com sucesso!')
+        const res = await fetch('/api/pastores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pastorEditando) })
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || `Erro ${res.status}`) }
       } else {
-        await fetch(`/api/pastores/${pastorEditando.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pastorEditando) })
-        setSucesso('Pastor atualizado!')
+        const res = await fetch(`/api/pastores/${pastorEditando.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pastorEditando) })
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || `Erro ${res.status}`) }
       }
       fecharModal()
       await carregar()
-    } catch {
-      setErroPastor('Erro ao salvar pastor.')
+      setSucesso(isNovo ? 'Pastor cadastrado com sucesso!' : 'Pastor atualizado!')
+    } catch (e: unknown) {
+      setErroPastor(e instanceof Error ? e.message : 'Erro ao salvar pastor.')
     } finally {
       setSubmitting(false)
     }
