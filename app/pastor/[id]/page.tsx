@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Pastor, Slot, Configuracoes } from '@/types'
+import { Pastor, Slot, Configuracoes, Fiel } from '@/types'
 import { preencherTemplate, abrirWhatsApp as waOpen } from '@/lib/whatsapp'
 
 const HORAS_DIA = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00']
@@ -48,6 +48,10 @@ export default function PastorAgendaPage() {
   const [novoAgForm, setNovoAgForm] = useState({ nome_fiel: '', telefone: '', assunto: '', status: 'pendente', duracao_min: 30, observacoes: '' })
   const [salvandoAg, setSalvandoAg] = useState(false)
   const [erroAg, setErroAg] = useState('')
+  const [termoBusca, setTermoBusca] = useState('')
+  const [fieisBusca, setFieisBusca] = useState<Fiel[]>([])
+  const [buscando, setBuscando] = useState(false)
+  const buscaRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -156,6 +160,26 @@ export default function PastorAgendaPage() {
     } finally { setAtualizandoStatus(false) }
   }
 
+  const buscarFieis = (termo: string) => {
+    if (buscaRef.current) clearTimeout(buscaRef.current)
+    if (!termo.trim()) { setFieisBusca([]); return }
+    buscaRef.current = setTimeout(async () => {
+      setBuscando(true)
+      try {
+        const res = await fetch(`/api/fieis?termo=${encodeURIComponent(termo)}`)
+        const data = await res.json()
+        setFieisBusca(Array.isArray(data) ? data : [])
+      } catch { setFieisBusca([]) }
+      finally { setBuscando(false) }
+    }, 400)
+  }
+
+  const selecionarFiel = (fiel: Fiel) => {
+    setNovoAgForm(f => ({ ...f, nome_fiel: fiel.nome, telefone: fiel.telefone }))
+    setTermoBusca('')
+    setFieisBusca([])
+  }
+
   const handleSalvarAg = async () => {
     if (!novoAgForm.nome_fiel || !novoAgForm.telefone || !novoAgForm.assunto) {
       setErroAg('Preencha nome, telefone e assunto.')
@@ -178,6 +202,8 @@ export default function PastorAgendaPage() {
       setPainel(null)
       setNovoAg(false)
       setNovoAgForm({ nome_fiel: '', telefone: '', assunto: '', status: 'pendente', duracao_min: 30, observacoes: '' })
+      setTermoBusca('')
+      setFieisBusca([])
     } catch (e: any) {
       setErroAg(e.message || 'Erro ao salvar agendamento')
     } finally {
@@ -566,6 +592,38 @@ export default function PastorAgendaPage() {
                       </button>
 
                       <div className="space-y-2">
+                        {/* Busca de fiel cadastrado */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="🔍 Buscar fiel cadastrado..."
+                            value={termoBusca}
+                            onChange={(e) => { setTermoBusca(e.target.value); buscarFieis(e.target.value) }}
+                            className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none"
+                            style={{ borderColor: '#C5A059', backgroundColor: '#fffbf0' }}
+                          />
+                          {buscando && <span className="absolute right-3 top-3 text-xs text-gray-400">...</span>}
+                          {fieisBusca.length > 0 && (
+                            <div className="absolute z-20 left-0 right-0 bg-white border rounded-xl shadow-lg mt-1 max-h-40 overflow-y-auto" style={{ borderColor: '#e5e7eb' }}>
+                              {fieisBusca.map(f => (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  onClick={() => selecionarFiel(f)}
+                                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-sm border-b last:border-b-0"
+                                  style={{ borderColor: '#f3f4f6' }}
+                                >
+                                  <span className="font-semibold text-gray-800">{f.nome}</span>
+                                  {f.telefone && <span className="text-gray-500 text-xs ml-2">{f.telefone}</span>}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {termoBusca.length >= 2 && fieisBusca.length === 0 && !buscando && (
+                            <p className="text-xs text-gray-400 mt-1 px-1">Nenhum cadastro encontrado — preencha manualmente abaixo.</p>
+                          )}
+                        </div>
+
                         <input
                           type="text"
                           placeholder="Nome do fiel *"
