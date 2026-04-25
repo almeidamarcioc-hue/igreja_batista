@@ -66,6 +66,15 @@ export interface Slot {
   dados: Record<string, any>
 }
 
+export interface Ferias {
+  id: number
+  pastor_id: number
+  data_inicio: string
+  data_fim: string
+  motivo: string
+  data_criacao: string
+}
+
 export interface HorarioAtendimento {
   dia_semana: number
   ativo: boolean

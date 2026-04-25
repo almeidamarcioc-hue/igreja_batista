@@ -134,6 +134,17 @@ export async function initDb(): Promise<void> {
   `
 
   await sql`
+    CREATE TABLE IF NOT EXISTS ferias (
+      id SERIAL PRIMARY KEY,
+      pastor_id INTEGER REFERENCES pastores(id),
+      data_inicio DATE NOT NULL,
+      data_fim DATE NOT NULL,
+      motivo TEXT DEFAULT 'Férias',
+      data_criacao TIMESTAMP DEFAULT NOW()
+    )
+  `
+
+  await sql`
     CREATE TABLE IF NOT EXISTS fieis (
       id SERIAL PRIMARY KEY,
       nome VARCHAR(100) NOT NULL,
@@ -954,5 +965,53 @@ export async function salvarHorarios(horarios: HorarioAtendimento[]): Promise<vo
         intervalo_fim    = EXCLUDED.intervalo_fim,
         fim              = EXCLUDED.fim
     `
+  }
+}
+
+// ─── Férias ────────────────────────────────────────────────────────────────
+
+function datesBetween(start: string, end: string): string[] {
+  const dates: string[] = []
+  const d = new Date(start + 'T12:00:00')
+  const e = new Date(end + 'T12:00:00')
+  while (d <= e) {
+    dates.push(d.toISOString().slice(0, 10))
+    d.setDate(d.getDate() + 1)
+  }
+  return dates
+}
+
+export async function getFerias(pastorId: number) {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT id, pastor_id, data_inicio::text, data_fim::text, motivo, data_criacao
+    FROM ferias WHERE pastor_id = ${pastorId} ORDER BY data_inicio
+  `
+  return rows
+}
+
+export async function criarFerias(pastorId: number, dataInicio: string, dataFim: string, motivo: string): Promise<number> {
+  const sql = getDb()
+  const mot = motivo || 'Férias'
+  const rows = await sql`
+    INSERT INTO ferias (pastor_id, data_inicio, data_fim, motivo)
+    VALUES (${pastorId}, ${dataInicio}::date, ${dataFim}::date, ${mot})
+    RETURNING id
+  `
+  const id = (rows[0] as { id: number }).id
+  for (const data of datesBetween(dataInicio, dataFim)) {
+    await criarBloqueiosDia(pastorId, data, mot)
+  }
+  return id
+}
+
+export async function deletarFerias(id: number): Promise<void> {
+  const sql = getDb()
+  const rows = await sql`SELECT pastor_id, data_inicio::text, data_fim::text FROM ferias WHERE id = ${id}`
+  if (rows.length === 0) return
+  const { pastor_id, data_inicio, data_fim } = rows[0] as { pastor_id: number; data_inicio: string; data_fim: string }
+  await sql`DELETE FROM ferias WHERE id = ${id}`
+  for (const data of datesBetween(data_inicio, data_fim)) {
+    await deleteBloqueiosDia(pastor_id, data)
   }
 }

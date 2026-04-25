@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Modal from '@/components/Modal'
-import { Pastor } from '@/types'
+import { Pastor, Ferias } from '@/types'
 
 function LinkApp({ id }: { id: number }) {
   const [origem, setOrigem] = useState('')
@@ -46,6 +46,14 @@ export default function CadastroPastoresPage() {
   const [isNovo, setIsNovo] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [erroPastor, setErroPastor] = useState('')
+
+  // Modal de férias
+  const [modalFerias, setModalFerias] = useState(false)
+  const [pastorFerias, setPastorFerias] = useState<Pastor | null>(null)
+  const [ferias, setFerias] = useState<Ferias[]>([])
+  const [feriasForm, setFeriasForm] = useState({ dataInicio: '', dataFim: '', motivo: 'Férias' })
+  const [salvandoFerias, setSalvandoFerias] = useState(false)
+  const [erroFerias, setErroFerias] = useState('')
 
   const carregar = async () => {
     setLoading(true)
@@ -105,6 +113,44 @@ export default function CadastroPastoresPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const carregarFerias = async (pastorId: number) => {
+    const res = await fetch(`/api/ferias?pastorId=${pastorId}`)
+    const data = await res.json()
+    setFerias(Array.isArray(data) ? data : [])
+  }
+
+  const abrirFerias = async (p: Pastor) => {
+    setPastorFerias(p)
+    setFeriasForm({ dataInicio: '', dataFim: '', motivo: 'Férias' })
+    setErroFerias('')
+    setFerias([])
+    setModalFerias(true)
+    await carregarFerias(p.id)
+  }
+
+  const handleSalvarFerias = async () => {
+    if (!feriasForm.dataInicio || !feriasForm.dataFim) { setErroFerias('Informe data início e fim.'); return }
+    setSalvandoFerias(true); setErroFerias('')
+    try {
+      const res = await fetch('/api/ferias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pastorId: pastorFerias!.id, ...feriasForm }),
+      })
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Erro') }
+      setFeriasForm({ dataInicio: '', dataFim: '', motivo: 'Férias' })
+      await carregarFerias(pastorFerias!.id)
+    } catch (e: any) {
+      setErroFerias(e.message || 'Erro ao salvar férias')
+    } finally { setSalvandoFerias(false) }
+  }
+
+  const handleDeletarFerias = async (id: number) => {
+    if (!confirm('Remover este período de férias e desbloquear os dias?')) return
+    await fetch(`/api/ferias/${id}`, { method: 'DELETE' })
+    await carregarFerias(pastorFerias!.id)
   }
 
   const handleExcluir = async (id: number) => {
@@ -170,6 +216,7 @@ export default function CadastroPastoresPage() {
                 </div>
                 <div className="flex flex-col gap-1.5 flex-shrink-0">
                   <button onClick={() => abrirEditar(p)} className="px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>✏️</button>
+                  <button onClick={() => abrirFerias(p)} className="px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: '#fff3cd', color: '#856404' }}>🏖️</button>
                   <button onClick={() => handleExcluir(p.id)} className="px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>🗑️</button>
                 </div>
               </div>
@@ -177,6 +224,69 @@ export default function CadastroPastoresPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Férias */}
+      <Modal isOpen={modalFerias} onClose={() => setModalFerias(false)} title={`🏖️ Férias — ${pastorFerias?.nome || ''}`}>
+        <div className="space-y-4">
+          {/* Períodos existentes */}
+          {ferias.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Períodos Cadastrados</p>
+              <div className="space-y-2">
+                {ferias.map((f) => (
+                  <div key={f.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#fff3cd', border: '1px solid #ffc107' }}>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        {f.data_inicio.slice(0,10).split('-').reverse().join('/')} → {f.data_fim.slice(0,10).split('-').reverse().join('/')}
+                      </p>
+                      <p className="text-xs text-gray-500">{f.motivo}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeletarFerias(f.id)}
+                      className="text-xs px-2 py-1 rounded font-semibold ml-2 flex-shrink-0"
+                      style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t mt-4 pt-4" style={{ borderColor: '#f3f4f6' }} />
+            </div>
+          )}
+
+          {/* Novo período */}
+          <p className="text-xs font-bold text-gray-500 uppercase">Novo Período</p>
+          {erroFerias && <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-3 py-2 text-sm">{erroFerias}</div>}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Data Início *</label>
+              <input type="date" value={feriasForm.dataInicio} onChange={(e) => setFeriasForm(f => ({ ...f, dataInicio: e.target.value }))} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Data Fim *</label>
+              <input type="date" value={feriasForm.dataFim} onChange={(e) => setFeriasForm(f => ({ ...f, dataFim: e.target.value }))} className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo</label>
+            <input type="text" value={feriasForm.motivo} onChange={(e) => setFeriasForm(f => ({ ...f, motivo: e.target.value }))} placeholder="Férias" className={inputClass} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <p className="text-xs text-gray-400">Todos os horários do período serão bloqueados automaticamente na agenda.</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleSalvarFerias}
+              disabled={salvandoFerias}
+              style={{ backgroundColor: '#002347', color: '#fff' }}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+            >
+              {salvandoFerias ? 'Salvando...' : '🏖️ Registrar Férias'}
+            </button>
+            <button type="button" onClick={() => setModalFerias(false)} className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700">Fechar</button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal isOpen={modal} onClose={fecharModal} title={isNovo ? 'Novo Pastor' : 'Editar Pastor'}>
         <form onSubmit={handleSalvar} className="space-y-4">
