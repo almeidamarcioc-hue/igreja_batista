@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless'
-import { Professor, Turma, Aluno } from '@/types'
+import { Professor, Turma, Aluno, Agendamento } from '@/types'
 
 function getDb() {
   const raw = process.env.DATABASE_URL
@@ -59,6 +59,22 @@ export async function initDb() {
       estado VARCHAR(2) DEFAULT '',
       observacoes TEXT DEFAULT '',
       ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS agendamentos (
+      id SERIAL PRIMARY KEY,
+      turma_id INTEGER NOT NULL REFERENCES turmas(id) ON DELETE CASCADE,
+      aluno_id INTEGER REFERENCES alunos(id) ON DELETE SET NULL,
+      professor_id INTEGER REFERENCES professores(id) ON DELETE SET NULL,
+      data DATE NOT NULL,
+      hora TIME NOT NULL,
+      duracao_min INTEGER DEFAULT 50,
+      assunto VARCHAR(300) DEFAULT '',
+      status VARCHAR(20) DEFAULT 'confirmado',
+      observacoes TEXT DEFAULT '',
       data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
@@ -258,6 +274,126 @@ export async function updateAluno(id: number, data: Partial<Omit<Aluno, 'id' | '
 export async function deleteAluno(id: number): Promise<void> {
   const sql = getDb()
   await sql`DELETE FROM alunos WHERE id = ${id}`
+}
+
+// ─── Agendamentos ──────────────────────────────────────────────────────────
+
+export async function getAgendamentos(filtros?: { turma_id?: number; data?: string; data_inicio?: string; data_fim?: string }): Promise<Agendamento[]> {
+  const sql = getDb()
+
+  if (filtros?.turma_id && filtros?.data) {
+    const rows = await sql`
+      SELECT ag.*,
+        t.nome AS turma_nome,
+        a.nome AS aluno_nome,
+        p.nome AS professor_nome
+      FROM agendamentos ag
+      LEFT JOIN turmas t ON ag.turma_id = t.id
+      LEFT JOIN alunos a ON ag.aluno_id = a.id
+      LEFT JOIN professores p ON ag.professor_id = p.id
+      WHERE ag.turma_id = ${filtros.turma_id} AND ag.data = ${filtros.data}
+      ORDER BY ag.hora
+    `
+    return rows as Agendamento[]
+  }
+
+  if (filtros?.turma_id && filtros?.data_inicio && filtros?.data_fim) {
+    const rows = await sql`
+      SELECT ag.*,
+        t.nome AS turma_nome,
+        a.nome AS aluno_nome,
+        p.nome AS professor_nome
+      FROM agendamentos ag
+      LEFT JOIN turmas t ON ag.turma_id = t.id
+      LEFT JOIN alunos a ON ag.aluno_id = a.id
+      LEFT JOIN professores p ON ag.professor_id = p.id
+      WHERE ag.turma_id = ${filtros.turma_id}
+        AND ag.data BETWEEN ${filtros.data_inicio} AND ${filtros.data_fim}
+      ORDER BY ag.data, ag.hora
+    `
+    return rows as Agendamento[]
+  }
+
+  if (filtros?.data) {
+    const rows = await sql`
+      SELECT ag.*,
+        t.nome AS turma_nome,
+        a.nome AS aluno_nome,
+        p.nome AS professor_nome
+      FROM agendamentos ag
+      LEFT JOIN turmas t ON ag.turma_id = t.id
+      LEFT JOIN alunos a ON ag.aluno_id = a.id
+      LEFT JOIN professores p ON ag.professor_id = p.id
+      WHERE ag.data = ${filtros.data}
+      ORDER BY ag.hora
+    `
+    return rows as Agendamento[]
+  }
+
+  const rows = await sql`
+    SELECT ag.*,
+      t.nome AS turma_nome,
+      a.nome AS aluno_nome,
+      p.nome AS professor_nome
+    FROM agendamentos ag
+    LEFT JOIN turmas t ON ag.turma_id = t.id
+    LEFT JOIN alunos a ON ag.aluno_id = a.id
+    LEFT JOIN professores p ON ag.professor_id = p.id
+    ORDER BY ag.data DESC, ag.hora
+  `
+  return rows as Agendamento[]
+}
+
+export async function getAgendamento(id: number): Promise<Agendamento | null> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT ag.*,
+      t.nome AS turma_nome,
+      a.nome AS aluno_nome,
+      p.nome AS professor_nome
+    FROM agendamentos ag
+    LEFT JOIN turmas t ON ag.turma_id = t.id
+    LEFT JOIN alunos a ON ag.aluno_id = a.id
+    LEFT JOIN professores p ON ag.professor_id = p.id
+    WHERE ag.id = ${id}
+  `
+  return (rows[0] as Agendamento) ?? null
+}
+
+export async function criarAgendamento(data: Omit<Agendamento, 'id' | 'data_criacao' | 'turma_nome' | 'aluno_nome' | 'professor_nome'>): Promise<Agendamento> {
+  const sql = getDb()
+  const rows = await sql`
+    INSERT INTO agendamentos (turma_id, aluno_id, professor_id, data, hora, duracao_min, assunto, status, observacoes)
+    VALUES (${data.turma_id}, ${data.aluno_id ?? null}, ${data.professor_id ?? null},
+            ${data.data}, ${data.hora}, ${data.duracao_min ?? 50},
+            ${data.assunto}, ${data.status ?? 'confirmado'}, ${data.observacoes})
+    RETURNING *
+  `
+  return rows[0] as Agendamento
+}
+
+export async function updateAgendamento(id: number, data: Partial<Omit<Agendamento, 'id' | 'data_criacao' | 'turma_nome' | 'aluno_nome' | 'professor_nome'>>): Promise<Agendamento> {
+  const sql = getDb()
+  const rows = await sql`
+    UPDATE agendamentos SET
+      turma_id   = COALESCE(${data.turma_id ?? null}, turma_id),
+      aluno_id   = CASE WHEN ${data.aluno_id !== undefined} THEN ${data.aluno_id ?? null} ELSE aluno_id END,
+      professor_id = CASE WHEN ${data.professor_id !== undefined} THEN ${data.professor_id ?? null} ELSE professor_id END,
+      data       = COALESCE(${data.data ?? null}, data),
+      hora       = COALESCE(${data.hora ?? null}, hora),
+      duracao_min = COALESCE(${data.duracao_min ?? null}, duracao_min),
+      assunto    = COALESCE(${data.assunto ?? null}, assunto),
+      status     = COALESCE(${data.status ?? null}, status),
+      observacoes = COALESCE(${data.observacoes ?? null}, observacoes)
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rows[0] as Agendamento
+}
+
+export async function deleteAgendamento(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM agendamentos WHERE id = ${id}`
 }
 
 // ─── Stats ─────────────────────────────────────────────────────────────────

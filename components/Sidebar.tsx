@@ -22,6 +22,7 @@ type NavEntry = NavItem | NavGroup
 
 const navEntries: NavEntry[] = [
   { href: '/', icon: '🏠', label: 'Dashboard' },
+  { href: '/agenda', icon: '📅', label: 'Agenda' },
   {
     icon: '📁',
     label: 'Cadastros',

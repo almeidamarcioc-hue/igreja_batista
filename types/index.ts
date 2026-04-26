@@ -25,6 +25,23 @@ export interface Turma {
   data_criacao: string
 }
 
+export interface Agendamento {
+  id: number
+  turma_id: number
+  aluno_id: number | null
+  professor_id: number | null
+  data: string
+  hora: string
+  duracao_min: number
+  assunto: string
+  status: 'confirmado' | 'cancelado' | 'remarcado'
+  observacoes: string
+  data_criacao: string
+  turma_nome?: string
+  aluno_nome?: string
+  professor_nome?: string
+}
+
 export interface Aluno {
   id: number
   nome: string
