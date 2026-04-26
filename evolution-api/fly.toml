@@ -1,0 +1,26 @@
+app = "ibtm-whatsapp"
+primary_region = "gru"
+
+[build]
+  image = "atendai/evolution-api:latest"
+
+[env]
+  AUTHENTICATION_API_KEY = "secretaria2024ibtm"
+  PORT = "8080"
+  SERVER_URL = "https://ibtm-whatsapp.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[[mounts]]
+  source = "evolution_data"
+  destination = "/evolution/instances"

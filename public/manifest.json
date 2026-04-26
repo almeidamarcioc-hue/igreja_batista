@@ -1,15 +1,15 @@
 {
-  "name": "Agenda Pastores — IBTM",
-  "short_name": "Agenda IBTM",
-  "description": "Agenda dos Pastores da Igreja Batista Transformação",
-  "start_url": "/pastor",
+  "name": "Jeito de Viver — Centro Educacional",
+  "short_name": "Jeito de Viver",
+  "description": "Sistema de Gestão Educacional do Centro Educacional Jeito de Viver",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#002347",
-  "theme_color": "#002347",
+  "background_color": "#1F2937",
+  "theme_color": "#1F2937",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
-    { "src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

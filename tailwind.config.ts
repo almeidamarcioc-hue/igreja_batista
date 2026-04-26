@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#C5A059',
-        navy: '#002347',
+        primary: '#E07535',
+        navy: '#1F2937',
         'bg-app': '#f0f2f5',
       },
       fontFamily: {

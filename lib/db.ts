@@ -1,1017 +1,279 @@
 import { neon } from '@neondatabase/serverless'
-
-// ─── Types ─────────────────────────────────────────────────────────────────
-
-export interface Pastor {
-  id: number
-  nome: string
-  telefone: string
-  endereco: string
-  numero: string
-  bairro: string
-  cidade: string
-  estado: string
-  imagem: string
-}
-
-export interface Agendamento {
-  id: number
-  nome_fiel: string
-  telefone: string
-  assunto: string
-  pastor_id: number
-  data: string
-  hora: string
-  duracao_min: number
-  status: string
-  recorrencia: string
-  observacoes: string
-  data_criacao: string
-  lembrete_enviado: number
-  confirmacao_enviada: number
-  pastor_nome?: string
-  pastor_tel?: string
-}
-
-export interface Bloqueio {
-  id: number
-  pastor_id: number
-  data: string
-  hora: string
-  motivo: string
-  data_criacao: string
-  pastor_nome?: string
-}
-
-export interface Fiel {
-  id: number
-  nome: string
-  telefone: string
-  email: string
-  endereco: string
-  numero: string
-  bairro: string
-  cidade: string
-  estado: string
-  observacoes: string
-  data_criacao: string
-}
-
-export interface Configuracoes {
-  id: number
-  horas_lembrete: number
-  msg_confirmacao: string
-  msg_lembrete: string
-  msg_cancelamento: string
-  msg_remarcacao: string
-  msg_pastor: string
-}
-
-export interface Slot {
-  tipo: 'confirmado' | 'pendente' | 'bloqueado'
-  dados: Record<string, unknown>
-}
-
-// ─── Connection ────────────────────────────────────────────────────────────
+import { Professor, Turma, Aluno } from '@/types'
 
 function getDb() {
   const raw = process.env.DATABASE_URL
-  if (!raw) throw new Error('DATABASE_URL não configurado. Adicione esta variável de ambiente no Vercel.')
-  const url = raw
-    .replace(/[?&]channel_binding=[^&]*/g, '')
-    .replace(/\?&/, '?')
-    .replace(/[?&]$/, '')
-  return neon(url)
+  if (!raw) throw new Error('DATABASE_URL não configurado.')
+  return neon(raw)
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 
-export async function initDb(): Promise<void> {
+export async function initDb() {
   const sql = getDb()
 
   await sql`
-    CREATE TABLE IF NOT EXISTS pastores (
+    CREATE TABLE IF NOT EXISTS professores (
       id SERIAL PRIMARY KEY,
-      nome VARCHAR(100) NOT NULL,
+      nome VARCHAR(200) NOT NULL,
+      email VARCHAR(200) DEFAULT '',
       telefone VARCHAR(20) DEFAULT '',
-      endereco TEXT DEFAULT '',
-      numero VARCHAR(20) DEFAULT '',
-      bairro VARCHAR(100) DEFAULT '',
-      cidade VARCHAR(100) DEFAULT '',
-      estado VARCHAR(2) DEFAULT '',
-      imagem TEXT DEFAULT ''
-    )
-  `
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS agendamentos (
-      id SERIAL PRIMARY KEY,
-      nome_fiel VARCHAR(100) NOT NULL,
-      telefone VARCHAR(20) DEFAULT '',
-      assunto TEXT DEFAULT '',
-      pastor_id INTEGER REFERENCES pastores(id),
-      data DATE NOT NULL,
-      hora TIME NOT NULL,
-      duracao_min INTEGER DEFAULT 30,
-      status VARCHAR(20) DEFAULT 'pendente',
-      recorrencia VARCHAR(20) DEFAULT 'nenhuma',
-      observacoes TEXT DEFAULT '',
-      data_criacao TIMESTAMP DEFAULT NOW(),
-      lembrete_enviado INTEGER DEFAULT 0,
-      confirmacao_enviada INTEGER DEFAULT 0
-    )
-  `
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS bloqueios (
-      id SERIAL PRIMARY KEY,
-      pastor_id INTEGER REFERENCES pastores(id),
-      data DATE NOT NULL,
-      hora TIME NOT NULL,
-      motivo TEXT DEFAULT '',
-      data_criacao TIMESTAMP DEFAULT NOW()
-    )
-  `
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS ferias (
-      id SERIAL PRIMARY KEY,
-      pastor_id INTEGER REFERENCES pastores(id),
-      data_inicio DATE NOT NULL,
-      data_fim DATE NOT NULL,
-      motivo TEXT DEFAULT 'Férias',
-      data_criacao TIMESTAMP DEFAULT NOW()
-    )
-  `
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS fieis (
-      id SERIAL PRIMARY KEY,
-      nome VARCHAR(100) NOT NULL,
-      telefone VARCHAR(20) DEFAULT '',
-      email VARCHAR(100) DEFAULT '',
-      endereco TEXT DEFAULT '',
+      disciplina VARCHAR(200) DEFAULT '',
+      endereco VARCHAR(300) DEFAULT '',
       numero VARCHAR(20) DEFAULT '',
       bairro VARCHAR(100) DEFAULT '',
       cidade VARCHAR(100) DEFAULT '',
       estado VARCHAR(2) DEFAULT '',
       observacoes TEXT DEFAULT '',
-      data_criacao TIMESTAMP DEFAULT NOW()
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
 
   await sql`
-    CREATE TABLE IF NOT EXISTS configuracoes (
-      id INTEGER PRIMARY KEY DEFAULT 1,
-      horas_lembrete INTEGER DEFAULT 24,
-      msg_confirmacao TEXT DEFAULT '',
-      msg_lembrete TEXT DEFAULT '',
-      msg_cancelamento TEXT DEFAULT '',
-      msg_remarcacao TEXT DEFAULT '',
-      msg_pastor TEXT DEFAULT ''
+    CREATE TABLE IF NOT EXISTS turmas (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(200) NOT NULL,
+      descricao TEXT DEFAULT '',
+      professor_id INTEGER REFERENCES professores(id) ON DELETE SET NULL,
+      turno VARCHAR(20) DEFAULT 'Manhã',
+      ano_letivo VARCHAR(10) DEFAULT '',
+      ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
 
   await sql`
-    CREATE TABLE IF NOT EXISTS horarios_atendimento (
-      dia_semana INTEGER PRIMARY KEY,
-      ativo BOOLEAN DEFAULT true,
-      inicio TIME DEFAULT '08:00',
-      intervalo_inicio TIME,
-      intervalo_fim TIME,
-      fim TIME DEFAULT '18:00'
+    CREATE TABLE IF NOT EXISTS alunos (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(200) NOT NULL,
+      email VARCHAR(200) DEFAULT '',
+      telefone VARCHAR(20) DEFAULT '',
+      data_nascimento DATE,
+      turma_id INTEGER REFERENCES turmas(id) ON DELETE SET NULL,
+      responsavel VARCHAR(200) DEFAULT '',
+      telefone_responsavel VARCHAR(20) DEFAULT '',
+      endereco VARCHAR(300) DEFAULT '',
+      numero VARCHAR(20) DEFAULT '',
+      bairro VARCHAR(100) DEFAULT '',
+      cidade VARCHAR(100) DEFAULT '',
+      estado VARCHAR(2) DEFAULT '',
+      observacoes TEXT DEFAULT '',
+      ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
-  `
-
-  // Seed horarios com defaults (Seg-Sex ativo, Sab/Dom inativo)
-  await sql`
-    INSERT INTO horarios_atendimento (dia_semana, ativo, inicio, intervalo_inicio, intervalo_fim, fim)
-    VALUES
-      (0, false, '08:00', '12:00', '13:00', '18:00'),
-      (1, true,  '08:00', '12:00', '13:00', '18:00'),
-      (2, true,  '08:00', '12:00', '13:00', '18:00'),
-      (3, true,  '08:00', '12:00', '13:00', '18:00'),
-      (4, true,  '08:00', '12:00', '13:00', '18:00'),
-      (5, true,  '08:00', '12:00', '13:00', '18:00'),
-      (6, false, '08:00', '12:00', '13:00', '18:00')
-    ON CONFLICT (dia_semana) DO NOTHING
-  `
-
-  // Migrate existing tables
-  await sql`ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS duracao_min INTEGER DEFAULT 30`
-  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
-  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) DEFAULT ''`
-  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) DEFAULT ''`
-  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS estado VARCHAR(2) DEFAULT ''`
-  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS numero VARCHAR(20) DEFAULT ''`
-  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) DEFAULT ''`
-  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) DEFAULT ''`
-  await sql`ALTER TABLE fieis ADD COLUMN IF NOT EXISTS estado VARCHAR(2) DEFAULT ''`
-
-  // Insert default pastores if none exist
-  const pastoresExistentes = await sql`SELECT COUNT(*) AS cnt FROM pastores`
-  const count = Number((pastoresExistentes[0] as { cnt: string }).cnt)
-
-  if (count === 0) {
-    await sql`INSERT INTO pastores (nome, telefone, endereco, imagem) VALUES ('Haimo', '', '', '')`
-    await sql`INSERT INTO pastores (nome, telefone, endereco, imagem) VALUES ('Jou', '', '', '')`
-    await sql`INSERT INTO pastores (nome, telefone, endereco, imagem) VALUES ('Marisa', '', '', '')`
-    await sql`INSERT INTO pastores (nome, telefone, endereco, imagem) VALUES ('Sâmela', '', '', '')`
-  }
-
-  // Upsert default config with example messages
-  await sql`
-    INSERT INTO configuracoes (id, horas_lembrete, msg_confirmacao, msg_lembrete, msg_cancelamento, msg_remarcacao, msg_pastor)
-    VALUES (
-      1,
-      24,
-      'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} foi confirmado para o dia {data} às {hora}. Assunto: {assunto}. Que Deus abençoe! 🙏',
-      'Olá {nome}! Lembramos que você tem um agendamento com o(a) pastor(a) {pastor} amanhã, dia {data} às {hora}. Estamos esperando por você!',
-      'Olá {nome}! Seu agendamento com o(a) pastor(a) {pastor} para o dia {data} às {hora} foi cancelado. Entre em contato para remarcar.',
-      'Olá {nome}! Seu agendamento foi remarcado para o dia {data} às {hora} com o(a) pastor(a) {pastor}. Qualquer dúvida, estamos à disposição.',
-      'Pastor(a), novo agendamento: {nome_fiel} - Assunto: {assunto} - {data} às {hora}. Telefone: {telefone}.'
-    )
-    ON CONFLICT (id) DO UPDATE SET
-      msg_confirmacao = CASE WHEN configuracoes.msg_confirmacao = '' THEN EXCLUDED.msg_confirmacao ELSE configuracoes.msg_confirmacao END,
-      msg_lembrete    = CASE WHEN configuracoes.msg_lembrete    = '' THEN EXCLUDED.msg_lembrete    ELSE configuracoes.msg_lembrete    END,
-      msg_cancelamento= CASE WHEN configuracoes.msg_cancelamento= '' THEN EXCLUDED.msg_cancelamento ELSE configuracoes.msg_cancelamento END,
-      msg_remarcacao  = CASE WHEN configuracoes.msg_remarcacao  = '' THEN EXCLUDED.msg_remarcacao  ELSE configuracoes.msg_remarcacao  END,
-      msg_pastor      = CASE WHEN configuracoes.msg_pastor      = '' THEN EXCLUDED.msg_pastor      ELSE configuracoes.msg_pastor      END
   `
 }
 
-// ─── Pastores ──────────────────────────────────────────────────────────────
+// ─── Professores ───────────────────────────────────────────────────────────
 
-export async function getPastores(): Promise<Pastor[]> {
+export async function getProfessores(): Promise<Professor[]> {
   const sql = getDb()
-  const rows = await sql`SELECT * FROM pastores ORDER BY nome`
-  return rows as unknown as Pastor[]
+  const rows = await sql`SELECT * FROM professores ORDER BY nome`
+  return rows as Professor[]
 }
 
-export async function getPastor(id: number): Promise<Pastor | null> {
+export async function getProfessor(id: number): Promise<Professor | null> {
   const sql = getDb()
-  const rows = await sql`SELECT * FROM pastores WHERE id = ${id}`
-  if (rows.length === 0) return null
-  return rows[0] as unknown as Pastor
+  const rows = await sql`SELECT * FROM professores WHERE id = ${id}`
+  return (rows[0] as Professor) ?? null
 }
 
-export async function criarPastor(dados: Partial<Pastor>): Promise<number> {
+export async function criarProfessor(data: Omit<Professor, 'id' | 'data_criacao'>): Promise<Professor> {
   const sql = getDb()
-  const nome = dados.nome ?? ''
-  const telefone = dados.telefone ?? ''
-  const endereco = dados.endereco ?? ''
-  const numero = dados.numero ?? ''
-  const bairro = dados.bairro ?? ''
-  const cidade = dados.cidade ?? ''
-  const estado = dados.estado ?? ''
-  const imagem = dados.imagem ?? ''
   const rows = await sql`
-    INSERT INTO pastores (nome, telefone, endereco, numero, bairro, cidade, estado, imagem)
-    VALUES (${nome}, ${telefone}, ${endereco}, ${numero}, ${bairro}, ${cidade}, ${estado}, ${imagem})
-    RETURNING id
+    INSERT INTO professores (nome, email, telefone, disciplina, endereco, numero, bairro, cidade, estado, observacoes)
+    VALUES (${data.nome}, ${data.email}, ${data.telefone}, ${data.disciplina},
+            ${data.endereco}, ${data.numero}, ${data.bairro}, ${data.cidade}, ${data.estado}, ${data.observacoes})
+    RETURNING *
   `
-  return (rows[0] as { id: number }).id
+  return rows[0] as Professor
 }
 
-export async function updatePastor(id: number, dados: Partial<Pastor>): Promise<void> {
+export async function updateProfessor(id: number, data: Partial<Omit<Professor, 'id' | 'data_criacao'>>): Promise<Professor> {
   const sql = getDb()
-  const pastor = await getPastor(id)
-  if (!pastor) return
-  const nome = dados.nome ?? pastor.nome
-  const telefone = dados.telefone ?? pastor.telefone
-  const endereco = dados.endereco ?? pastor.endereco
-  const numero = dados.numero ?? pastor.numero ?? ''
-  const bairro = dados.bairro ?? pastor.bairro ?? ''
-  const cidade = dados.cidade ?? pastor.cidade ?? ''
-  const estado = dados.estado ?? pastor.estado ?? ''
-  const imagem = dados.imagem ?? pastor.imagem
-  await sql`
-    UPDATE pastores
-    SET nome = ${nome}, telefone = ${telefone}, endereco = ${endereco},
-        numero = ${numero}, bairro = ${bairro}, cidade = ${cidade}, estado = ${estado}, imagem = ${imagem}
+  const rows = await sql`
+    UPDATE professores SET
+      nome = COALESCE(${data.nome ?? null}, nome),
+      email = COALESCE(${data.email ?? null}, email),
+      telefone = COALESCE(${data.telefone ?? null}, telefone),
+      disciplina = COALESCE(${data.disciplina ?? null}, disciplina),
+      endereco = COALESCE(${data.endereco ?? null}, endereco),
+      numero = COALESCE(${data.numero ?? null}, numero),
+      bairro = COALESCE(${data.bairro ?? null}, bairro),
+      cidade = COALESCE(${data.cidade ?? null}, cidade),
+      estado = COALESCE(${data.estado ?? null}, estado),
+      observacoes = COALESCE(${data.observacoes ?? null}, observacoes)
     WHERE id = ${id}
+    RETURNING *
   `
+  return rows[0] as Professor
 }
 
-export async function deletePastor(id: number): Promise<void> {
+export async function deleteProfessor(id: number): Promise<void> {
   const sql = getDb()
-  await sql`DELETE FROM pastores WHERE id = ${id}`
+  await sql`DELETE FROM professores WHERE id = ${id}`
 }
 
-export async function pastorTemAgendamentos(id: number): Promise<boolean> {
+// ─── Turmas ────────────────────────────────────────────────────────────────
+
+export async function getTurmas(): Promise<Turma[]> {
   const sql = getDb()
   const rows = await sql`
-    SELECT COUNT(*) AS cnt FROM agendamentos
-    WHERE pastor_id = ${id} AND status NOT IN ('cancelado')
+    SELECT t.*, p.nome AS professor_nome
+    FROM turmas t
+    LEFT JOIN professores p ON t.professor_id = p.id
+    ORDER BY t.nome
   `
-  return Number((rows[0] as { cnt: string }).cnt) > 0
+  return rows as Turma[]
 }
 
-// ─── Agendamentos ──────────────────────────────────────────────────────────
-
-export async function criarAgendamento(dados: Partial<Agendamento>): Promise<number> {
+export async function getTurma(id: number): Promise<Turma | null> {
   const sql = getDb()
-  const nome_fiel = dados.nome_fiel ?? ''
-  const telefone = dados.telefone ?? ''
-  const assunto = dados.assunto ?? ''
-  const pastor_id = dados.pastor_id ?? 0
-  const data = dados.data ?? ''
-  const hora = dados.hora ?? ''
-  const duracao_min = dados.duracao_min ?? 30
-  const status = dados.status ?? 'pendente'
-  const recorrencia = dados.recorrencia ?? 'nenhuma'
-  const observacoes = dados.observacoes ?? ''
-
-  // Verifica se algum slot do horário solicitado está bloqueado.
-  // Usa LEFT(hora::text, 5) para evitar conflito de tipos (TIME vs TEXT).
-  const [hh, mm] = hora.split(':').map(Number)
-  const endMin = hh * 60 + mm + (duracao_min as number)
-  const endHora = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`
-  const bloqueados = await sql`
-    SELECT id FROM bloqueios
-    WHERE pastor_id = ${pastor_id}
-      AND data = ${data}::date
-      AND LEFT(hora::text, 5) >= ${hora}
-      AND LEFT(hora::text, 5) < ${endHora}
-    LIMIT 1
+  const rows = await sql`
+    SELECT t.*, p.nome AS professor_nome
+    FROM turmas t
+    LEFT JOIN professores p ON t.professor_id = p.id
+    WHERE t.id = ${id}
   `
-  if (bloqueados.length > 0) {
-    throw new Error('BLOQUEADO: Este horário está bloqueado para o pastor.')
+  return (rows[0] as Turma) ?? null
+}
+
+export async function criarTurma(data: Omit<Turma, 'id' | 'data_criacao' | 'professor_nome'>): Promise<Turma> {
+  const sql = getDb()
+  const rows = await sql`
+    INSERT INTO turmas (nome, descricao, professor_id, turno, ano_letivo, ativo)
+    VALUES (${data.nome}, ${data.descricao}, ${data.professor_id ?? null},
+            ${data.turno}, ${data.ano_letivo}, ${data.ativo ?? true})
+    RETURNING *
+  `
+  return rows[0] as Turma
+}
+
+export async function updateTurma(id: number, data: Partial<Omit<Turma, 'id' | 'data_criacao' | 'professor_nome'>>): Promise<Turma> {
+  const sql = getDb()
+  const rows = await sql`
+    UPDATE turmas SET
+      nome = COALESCE(${data.nome ?? null}, nome),
+      descricao = COALESCE(${data.descricao ?? null}, descricao),
+      professor_id = CASE WHEN ${data.professor_id !== undefined} THEN ${data.professor_id ?? null} ELSE professor_id END,
+      turno = COALESCE(${data.turno ?? null}, turno),
+      ano_letivo = COALESCE(${data.ano_letivo ?? null}, ano_letivo),
+      ativo = COALESCE(${data.ativo ?? null}, ativo)
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rows[0] as Turma
+}
+
+export async function deleteTurma(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM turmas WHERE id = ${id}`
+}
+
+// ─── Alunos ────────────────────────────────────────────────────────────────
+
+export async function getAlunos(filtros?: { turma_id?: number; busca?: string; ativo?: boolean }): Promise<Aluno[]> {
+  const sql = getDb()
+  let rows
+
+  if (filtros?.turma_id) {
+    rows = await sql`
+      SELECT a.*, t.nome AS turma_nome
+      FROM alunos a
+      LEFT JOIN turmas t ON a.turma_id = t.id
+      WHERE a.turma_id = ${filtros.turma_id}
+      ORDER BY a.nome
+    `
+  } else if (filtros?.busca) {
+    const busca = `%${filtros.busca}%`
+    rows = await sql`
+      SELECT a.*, t.nome AS turma_nome
+      FROM alunos a
+      LEFT JOIN turmas t ON a.turma_id = t.id
+      WHERE a.nome ILIKE ${busca} OR a.telefone ILIKE ${busca} OR a.email ILIKE ${busca}
+      ORDER BY a.nome
+    `
+  } else {
+    rows = await sql`
+      SELECT a.*, t.nome AS turma_nome
+      FROM alunos a
+      LEFT JOIN turmas t ON a.turma_id = t.id
+      ORDER BY a.nome
+    `
   }
 
-  const rows = await sql`
-    INSERT INTO agendamentos (nome_fiel, telefone, assunto, pastor_id, data, hora, duracao_min, status, recorrencia, observacoes)
-    VALUES (${nome_fiel}, ${telefone}, ${assunto}, ${pastor_id}, ${data}::date, ${hora}::time, ${duracao_min}, ${status}, ${recorrencia}, ${observacoes})
-    RETURNING id
-  `
-  return (rows[0] as { id: number }).id
+  return rows as Aluno[]
 }
 
-export async function getAgendamento(id: number): Promise<Agendamento | null> {
+export async function getAluno(id: number): Promise<Aluno | null> {
   const sql = getDb()
   const rows = await sql`
-    SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-    FROM agendamentos a
-    LEFT JOIN pastores p ON a.pastor_id = p.id
+    SELECT a.*, t.nome AS turma_nome
+    FROM alunos a
+    LEFT JOIN turmas t ON a.turma_id = t.id
     WHERE a.id = ${id}
   `
-  if (rows.length === 0) return null
-  return rows[0] as unknown as Agendamento
+  return (rows[0] as Aluno) ?? null
 }
 
-export async function getAgendamentos(opts?: {
-  pastorId?: number
-  dataInicio?: string
-  dataFim?: string
-  status?: string
-}): Promise<Agendamento[]> {
+export async function criarAluno(data: Omit<Aluno, 'id' | 'data_criacao' | 'turma_nome'>): Promise<Aluno> {
   const sql = getDb()
-  const { pastorId, dataInicio, dataFim, status } = opts ?? {}
-
-  let rows
-
-  if (pastorId && dataInicio && dataFim && status) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.pastor_id = ${pastorId}
-        AND a.data >= ${dataInicio}::date
-        AND a.data <= ${dataFim}::date
-        AND a.status = ${status}
-      ORDER BY a.data, a.hora
-    `
-  } else if (pastorId && dataInicio && dataFim) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.pastor_id = ${pastorId}
-        AND a.data >= ${dataInicio}::date
-        AND a.data <= ${dataFim}::date
-      ORDER BY a.data, a.hora
-    `
-  } else if (pastorId && status) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.pastor_id = ${pastorId}
-        AND a.status = ${status}
-      ORDER BY a.data, a.hora
-    `
-  } else if (pastorId) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.pastor_id = ${pastorId}
-      ORDER BY a.data, a.hora
-    `
-  } else if (dataInicio && dataFim && status) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.data >= ${dataInicio}::date
-        AND a.data <= ${dataFim}::date
-        AND a.status = ${status}
-      ORDER BY a.data, a.hora
-    `
-  } else if (dataInicio && dataFim) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.data >= ${dataInicio}::date
-        AND a.data <= ${dataFim}::date
-      ORDER BY a.data, a.hora
-    `
-  } else if (status) {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.status = ${status}
-      ORDER BY a.data, a.hora
-    `
-  } else {
-    rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      ORDER BY a.data, a.hora
-    `
-  }
-
-  return rows as unknown as Agendamento[]
-}
-
-export async function getAgendamentosHoje(pastorId?: number): Promise<Agendamento[]> {
-  const sql = getDb()
-  if (pastorId) {
-    const rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.data = CURRENT_DATE
-        AND a.pastor_id = ${pastorId}
-        AND a.status != 'cancelado'
-      ORDER BY a.hora
-    `
-    return rows as unknown as Agendamento[]
-  }
   const rows = await sql`
-    SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-    FROM agendamentos a
-    LEFT JOIN pastores p ON a.pastor_id = p.id
-    WHERE a.data = CURRENT_DATE
-      AND a.status != 'cancelado'
-    ORDER BY a.hora
+    INSERT INTO alunos (nome, email, telefone, data_nascimento, turma_id, responsavel,
+                        telefone_responsavel, endereco, numero, bairro, cidade, estado, observacoes, ativo)
+    VALUES (${data.nome}, ${data.email}, ${data.telefone},
+            ${data.data_nascimento || null}, ${data.turma_id ?? null},
+            ${data.responsavel}, ${data.telefone_responsavel},
+            ${data.endereco}, ${data.numero}, ${data.bairro}, ${data.cidade}, ${data.estado},
+            ${data.observacoes}, ${data.ativo ?? true})
+    RETURNING *
   `
-  return rows as unknown as Agendamento[]
+  return rows[0] as Aluno
 }
 
-export async function getAgendamentosSemana(pastorId?: number): Promise<Agendamento[]> {
+export async function updateAluno(id: number, data: Partial<Omit<Aluno, 'id' | 'data_criacao' | 'turma_nome'>>): Promise<Aluno> {
   const sql = getDb()
-  if (pastorId) {
-    const rows = await sql`
-      SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-      FROM agendamentos a
-      LEFT JOIN pastores p ON a.pastor_id = p.id
-      WHERE a.data >= CURRENT_DATE
-        AND a.data < CURRENT_DATE + INTERVAL '7 days'
-        AND a.pastor_id = ${pastorId}
-        AND a.status != 'cancelado'
-      ORDER BY a.data, a.hora
-    `
-    return rows as unknown as Agendamento[]
-  }
   const rows = await sql`
-    SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-    FROM agendamentos a
-    LEFT JOIN pastores p ON a.pastor_id = p.id
-    WHERE a.data >= CURRENT_DATE
-      AND a.data < CURRENT_DATE + INTERVAL '7 days'
-      AND a.status != 'cancelado'
-    ORDER BY a.data, a.hora
-  `
-  return rows as unknown as Agendamento[]
-}
-
-export async function updateAgendamento(id: number, dados: Partial<Agendamento>): Promise<void> {
-  const sql = getDb()
-  const atual = await getAgendamento(id)
-  if (!atual) return
-
-  const nome_fiel = dados.nome_fiel ?? atual.nome_fiel
-  const telefone = dados.telefone ?? atual.telefone
-  const assunto = dados.assunto ?? atual.assunto
-  const pastor_id = dados.pastor_id ?? atual.pastor_id
-  const data = dados.data ?? atual.data
-  const hora = dados.hora ?? atual.hora
-  const duracao_min = dados.duracao_min ?? atual.duracao_min ?? 30
-  const status = dados.status ?? atual.status
-  const recorrencia = dados.recorrencia ?? atual.recorrencia
-  const observacoes = dados.observacoes ?? atual.observacoes
-  const lembrete_enviado = dados.lembrete_enviado ?? atual.lembrete_enviado
-  const confirmacao_enviada = dados.confirmacao_enviada ?? atual.confirmacao_enviada
-
-  await sql`
-    UPDATE agendamentos
-    SET
-      nome_fiel = ${nome_fiel},
-      telefone = ${telefone},
-      assunto = ${assunto},
-      pastor_id = ${pastor_id},
-      data = ${data}::date,
-      hora = ${hora}::time,
-      duracao_min = ${duracao_min},
-      status = ${status},
-      recorrencia = ${recorrencia},
-      observacoes = ${observacoes},
-      lembrete_enviado = ${lembrete_enviado},
-      confirmacao_enviada = ${confirmacao_enviada}
+    UPDATE alunos SET
+      nome = COALESCE(${data.nome ?? null}, nome),
+      email = COALESCE(${data.email ?? null}, email),
+      telefone = COALESCE(${data.telefone ?? null}, telefone),
+      data_nascimento = CASE WHEN ${data.data_nascimento !== undefined} THEN ${data.data_nascimento || null} ELSE data_nascimento END,
+      turma_id = CASE WHEN ${data.turma_id !== undefined} THEN ${data.turma_id ?? null} ELSE turma_id END,
+      responsavel = COALESCE(${data.responsavel ?? null}, responsavel),
+      telefone_responsavel = COALESCE(${data.telefone_responsavel ?? null}, telefone_responsavel),
+      endereco = COALESCE(${data.endereco ?? null}, endereco),
+      numero = COALESCE(${data.numero ?? null}, numero),
+      bairro = COALESCE(${data.bairro ?? null}, bairro),
+      cidade = COALESCE(${data.cidade ?? null}, cidade),
+      estado = COALESCE(${data.estado ?? null}, estado),
+      observacoes = COALESCE(${data.observacoes ?? null}, observacoes),
+      ativo = COALESCE(${data.ativo ?? null}, ativo)
     WHERE id = ${id}
+    RETURNING *
   `
+  return rows[0] as Aluno
 }
 
-export async function deleteAgendamento(id: number): Promise<void> {
+export async function deleteAluno(id: number): Promise<void> {
   const sql = getDb()
-  await sql`DELETE FROM agendamentos WHERE id = ${id}`
+  await sql`DELETE FROM alunos WHERE id = ${id}`
 }
 
-export async function checarConflito(
-  pastorId: number,
-  data: string,
-  hora: string,
-  duracao = 30,
-  ignorarId?: number
-): Promise<Agendamento | null> {
+// ─── Stats ─────────────────────────────────────────────────────────────────
+
+export async function getStats(): Promise<{ totalAlunos: number; totalTurmas: number; totalProfessores: number; alunosAtivos: number }> {
   const sql = getDb()
-  // Verifica sobreposição de intervalos: [hora, hora+duracao) overlaps [existing_hora, existing_hora+existing_duracao)
-  let rows
-  if (ignorarId) {
-    rows = await sql`
-      SELECT * FROM agendamentos
-      WHERE pastor_id = ${pastorId}
-        AND data = ${data}::date
-        AND status NOT IN ('cancelado')
-        AND id != ${ignorarId}
-        AND hora::time < (${hora}::time + (${duracao} || ' minutes')::interval)
-        AND (hora::time + (duracao_min || ' minutes')::interval) > ${hora}::time
-      LIMIT 1
-    `
-  } else {
-    rows = await sql`
-      SELECT * FROM agendamentos
-      WHERE pastor_id = ${pastorId}
-        AND data = ${data}::date
-        AND status NOT IN ('cancelado')
-        AND hora::time < (${hora}::time + (${duracao} || ' minutes')::interval)
-        AND (hora::time + (duracao_min || ' minutes')::interval) > ${hora}::time
-      LIMIT 1
-    `
-  }
-  if (rows.length === 0) return null
-  return rows[0] as unknown as Agendamento
-}
-
-function agoraBrasil(): { data: string; hora: string } {
-  const now = new Date()
-  const fmt = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  })
-  const p = fmt.formatToParts(now)
-  const get = (t: string) => p.find((x) => x.type === t)?.value ?? '00'
-  return { data: `${get('year')}-${get('month')}-${get('day')}`, hora: `${get('hour')}:${get('minute')}` }
-}
-
-export async function getProximoHorarioLivre(
-  pastorId: number,
-  aPartir?: string
-): Promise<{ data: string; hora: string } | null> {
-  const sql = getDb()
-  const br = agoraBrasil()
-  const dataBase = aPartir ?? br.data
-  // Hora mínima no horário de Brasília: ignora slots já passados para hoje
-  const horaMin = dataBase === br.data ? br.hora : '00:00'
-
-  // Gera slots de 30 em 30 min (08:00 a 18:30) para os próximos 30 dias
-  const rows = await sql`
-    WITH slots AS (
-      SELECT
-        (gs_date::date)::text AS data,
-        to_char(('08:00'::time + (gs_h * INTERVAL '30 minutes')), 'HH24:MI') AS hora
-      FROM
-        generate_series(
-          ${dataBase}::date,
-          ${dataBase}::date + INTERVAL '30 days',
-          INTERVAL '1 day'
-        ) AS gs_date,
-        generate_series(0, 21) AS gs_h
-    ),
-    ocupados AS (
-      SELECT
-        a.data::text,
-        LEFT((a.hora::time + (g.offset_min * INTERVAL '1 minute'))::text, 5) AS hora
-      FROM agendamentos a
-      CROSS JOIN generate_series(0, a.duracao_min - 1, 30) AS g(offset_min)
-      WHERE a.pastor_id = ${pastorId}
-        AND a.status NOT IN ('cancelado')
-        AND a.data >= ${dataBase}::date
-        AND a.data <= ${dataBase}::date + INTERVAL '30 days'
-      UNION ALL
-      SELECT data::text, LEFT(hora::text, 5) AS hora
-      FROM bloqueios
-      WHERE pastor_id = ${pastorId}
-        AND data >= ${dataBase}::date
-        AND data <= ${dataBase}::date + INTERVAL '30 days'
-    )
-    SELECT s.data, s.hora
-    FROM slots s
-    WHERE NOT EXISTS (
-      SELECT 1 FROM ocupados o
-      WHERE o.data = s.data AND o.hora = s.hora
-    )
-    AND (s.data > ${dataBase} OR (s.data = ${dataBase} AND s.hora > ${horaMin}))
-    ORDER BY s.data, s.hora
-    LIMIT 1
-  `
-
-  if (rows.length === 0) return null
-  const row = rows[0] as { data: string; hora: string }
-  return { data: row.data, hora: row.hora }
-}
-
-// ─── Lembretes ─────────────────────────────────────────────────────────────
-
-export async function getLembretesPendentes(): Promise<Agendamento[]> {
-  const sql = getDb()
-  const config = await getConfiguracoes()
-  const horas = config.horas_lembrete
-
-  const rows = await sql`
-    SELECT a.*, p.nome AS pastor_nome, p.telefone AS pastor_tel
-    FROM agendamentos a
-    LEFT JOIN pastores p ON a.pastor_id = p.id
-    WHERE a.status IN ('confirmado', 'pendente')
-      AND a.lembrete_enviado = 0
-      AND (a.data::timestamp + a.hora::interval) <= NOW() + (${horas} || ' hours')::interval
-      AND (a.data::timestamp + a.hora::interval) > NOW()
-    ORDER BY a.data, a.hora
-  `
-  return rows as unknown as Agendamento[]
-}
-
-export async function marcarLembreteEnviado(id: number): Promise<void> {
-  const sql = getDb()
-  await sql`UPDATE agendamentos SET lembrete_enviado = 1 WHERE id = ${id}`
-}
-
-export async function marcarConfirmacaoEnviada(id: number): Promise<void> {
-  const sql = getDb()
-  await sql`UPDATE agendamentos SET confirmacao_enviada = 1 WHERE id = ${id}`
-}
-
-// ─── Configurações ─────────────────────────────────────────────────────────
-
-export async function getConfiguracoes(): Promise<Configuracoes> {
-  const sql = getDb()
-  const rows = await sql`SELECT * FROM configuracoes WHERE id = 1`
-  if (rows.length === 0) {
-    return {
-      id: 1,
-      horas_lembrete: 24,
-      msg_confirmacao: '',
-      msg_lembrete: '',
-      msg_cancelamento: '',
-      msg_remarcacao: '',
-      msg_pastor: '',
-    }
-  }
-  return rows[0] as unknown as Configuracoes
-}
-
-export async function updateConfiguracoes(dados: Partial<Configuracoes>): Promise<void> {
-  const sql = getDb()
-  const atual = await getConfiguracoes()
-  const horas_lembrete = dados.horas_lembrete ?? atual.horas_lembrete
-  const msg_confirmacao = dados.msg_confirmacao ?? atual.msg_confirmacao
-  const msg_lembrete = dados.msg_lembrete ?? atual.msg_lembrete
-  const msg_cancelamento = dados.msg_cancelamento ?? atual.msg_cancelamento
-  const msg_remarcacao = dados.msg_remarcacao ?? atual.msg_remarcacao
-  const msg_pastor = dados.msg_pastor ?? atual.msg_pastor
-
-  await sql`
-    UPDATE configuracoes
-    SET
-      horas_lembrete = ${horas_lembrete},
-      msg_confirmacao = ${msg_confirmacao},
-      msg_lembrete = ${msg_lembrete},
-      msg_cancelamento = ${msg_cancelamento},
-      msg_remarcacao = ${msg_remarcacao},
-      msg_pastor = ${msg_pastor}
-    WHERE id = 1
-  `
-}
-
-// ─── Bloqueios ─────────────────────────────────────────────────────────────
-
-export async function getBloqueios(
-  pastorId: number,
-  dataInicio: string,
-  dataFim: string
-): Promise<Bloqueio[]> {
-  const sql = getDb()
-  const rows = await sql`
-    SELECT b.*, p.nome AS pastor_nome
-    FROM bloqueios b
-    LEFT JOIN pastores p ON b.pastor_id = p.id
-    WHERE b.pastor_id = ${pastorId}
-      AND b.data >= ${dataInicio}::date
-      AND b.data <= ${dataFim}::date
-    ORDER BY b.data, b.hora
-  `
-  return rows as unknown as Bloqueio[]
-}
-
-export async function criarBloqueio(
-  pastorId: number,
-  data: string,
-  hora: string,
-  motivo?: string
-): Promise<number> {
-  const sql = getDb()
-  const mot = motivo ?? ''
-  const rows = await sql`
-    INSERT INTO bloqueios (pastor_id, data, hora, motivo)
-    VALUES (${pastorId}, ${data}::date, ${hora}::time, ${mot})
-    RETURNING id
-  `
-  return (rows[0] as { id: number }).id
-}
-
-export async function deleteBloqueio(id: number): Promise<void> {
-  const sql = getDb()
-  await sql`DELETE FROM bloqueios WHERE id = ${id}`
-}
-
-export async function criarBloqueiosDia(pastorId: number, data: string, motivo: string): Promise<void> {
-  const sql = getDb()
-  const HORAS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00']
-  await sql`DELETE FROM bloqueios WHERE pastor_id = ${pastorId} AND data = ${data}::date`
-  for (const hora of HORAS) {
-    await sql`INSERT INTO bloqueios (pastor_id, data, hora, motivo) VALUES (${pastorId}, ${data}::date, ${hora}::time, ${motivo})`
-  }
-}
-
-export async function deleteBloqueiosDia(pastorId: number, data: string): Promise<void> {
-  const sql = getDb()
-  await sql`DELETE FROM bloqueios WHERE pastor_id = ${pastorId} AND data = ${data}::date`
-}
-
-export async function getBloqueioSlot(
-  pastorId: number,
-  data: string,
-  hora: string
-): Promise<Bloqueio | null> {
-  const sql = getDb()
-  const rows = await sql`
-    SELECT b.*, p.nome AS pastor_nome
-    FROM bloqueios b
-    LEFT JOIN pastores p ON b.pastor_id = p.id
-    WHERE b.pastor_id = ${pastorId}
-      AND b.data = ${data}::date
-      AND b.hora = ${hora}::time
-    LIMIT 1
-  `
-  if (rows.length === 0) return null
-  return rows[0] as unknown as Bloqueio
-}
-
-export async function getSlotsPastor(
-  pastorId: number,
-  dataInicio: string,
-  dataFim: string
-): Promise<Map<string, Slot>> {
-  const sql = getDb()
-
-  const agendamentosRows = await sql`
-    SELECT
-      a.id,
-      a.data::text,
-      LEFT((a.hora::time + (g.offset_min * INTERVAL '1 minute'))::text, 5) AS hora,
-      a.status,
-      a.nome_fiel,
-      a.telefone,
-      a.assunto,
-      a.observacoes,
-      a.duracao_min,
-      a.hora::text AS hora_inicio
-    FROM agendamentos a
-    CROSS JOIN generate_series(0, a.duracao_min - 1, 30) AS g(offset_min)
-    WHERE a.pastor_id = ${pastorId}
-      AND a.data >= ${dataInicio}::date
-      AND a.data <= ${dataFim}::date
-      AND a.status NOT IN ('cancelado')
-    ORDER BY a.data, hora
-  `
-
-  const bloqueiosRows = await sql`
-    SELECT id, data::text, LEFT(hora::text, 5) AS hora, motivo
-    FROM bloqueios
-    WHERE pastor_id = ${pastorId}
-      AND data >= ${dataInicio}::date
-      AND data <= ${dataFim}::date
-    ORDER BY data, hora
-  `
-
-  const mapa = new Map<string, Slot>()
-
-  for (const row of agendamentosRows) {
-    const r = row as { data: string; hora: string; status: string; [key: string]: unknown }
-    const chave = `${r.data}|${r.hora}`
-    mapa.set(chave, {
-      tipo: r.status === 'confirmado' ? 'confirmado' : 'pendente',
-      dados: r as Record<string, unknown>,
-    })
-  }
-
-  for (const row of bloqueiosRows) {
-    const r = row as { data: string; hora: string; [key: string]: unknown }
-    const chave = `${r.data}|${r.hora}`
-    if (!mapa.has(chave)) {
-      mapa.set(chave, {
-        tipo: 'bloqueado',
-        dados: r as Record<string, unknown>,
-      })
-    }
-  }
-
-  return mapa
-}
-
-// ─── Fiéis ─────────────────────────────────────────────────────────────────
-
-export async function buscarFieis(termo?: string): Promise<Fiel[]> {
-  const sql = getDb()
-  if (termo && termo.trim() !== '') {
-    const like = `%${termo}%`
-    const rows = await sql`
-      SELECT * FROM fieis
-      WHERE nome ILIKE ${like} OR telefone ILIKE ${like}
-      ORDER BY nome
-    `
-    return rows as unknown as Fiel[]
-  }
-  const rows = await sql`SELECT * FROM fieis ORDER BY nome`
-  return rows as unknown as Fiel[]
-}
-
-export async function getFiel(id: number): Promise<Fiel | null> {
-  const sql = getDb()
-  const rows = await sql`SELECT * FROM fieis WHERE id = ${id}`
-  if (rows.length === 0) return null
-  return rows[0] as unknown as Fiel
-}
-
-export async function salvarFiel(dados: Partial<Fiel>): Promise<number> {
-  const sql = getDb()
-  const nome = dados.nome ?? ''
-  const telefone = dados.telefone ?? ''
-  const email = dados.email ?? ''
-  const endereco = dados.endereco ?? ''
-  const numero = dados.numero ?? ''
-  const bairro = dados.bairro ?? ''
-  const cidade = dados.cidade ?? ''
-  const estado = dados.estado ?? ''
-  const observacoes = dados.observacoes ?? ''
-  const rows = await sql`
-    INSERT INTO fieis (nome, telefone, email, endereco, numero, bairro, cidade, estado, observacoes)
-    VALUES (${nome}, ${telefone}, ${email}, ${endereco}, ${numero}, ${bairro}, ${cidade}, ${estado}, ${observacoes})
-    RETURNING id
-  `
-  return (rows[0] as { id: number }).id
-}
-
-export async function updateFiel(id: number, dados: Partial<Fiel>): Promise<void> {
-  const sql = getDb()
-  const atual = await getFiel(id)
-  if (!atual) return
-  const nome = dados.nome ?? atual.nome
-  const telefone = dados.telefone ?? atual.telefone
-  const email = dados.email ?? atual.email
-  const endereco = dados.endereco ?? atual.endereco
-  const numero = dados.numero ?? atual.numero ?? ''
-  const bairro = dados.bairro ?? atual.bairro ?? ''
-  const cidade = dados.cidade ?? atual.cidade ?? ''
-  const estado = dados.estado ?? atual.estado ?? ''
-  const observacoes = dados.observacoes ?? atual.observacoes
-  await sql`
-    UPDATE fieis
-    SET nome = ${nome}, telefone = ${telefone}, email = ${email}, endereco = ${endereco},
-        numero = ${numero}, bairro = ${bairro}, cidade = ${cidade}, estado = ${estado}, observacoes = ${observacoes}
-    WHERE id = ${id}
-  `
-}
-
-export async function deleteFiel(id: number): Promise<void> {
-  const sql = getDb()
-  await sql`DELETE FROM fieis WHERE id = ${id}`
-}
-
-// ─── Horários de Atendimento ───────────────────────────────────────────────
-
-export interface HorarioAtendimento {
-  dia_semana: number
-  ativo: boolean
-  inicio: string
-  intervalo_inicio: string | null
-  intervalo_fim: string | null
-  fim: string
-}
-
-export async function getHorarios(): Promise<HorarioAtendimento[]> {
-  const sql = getDb()
-  const rows = await sql`
-    SELECT
-      dia_semana,
-      ativo,
-      LEFT(inicio::text, 5)                                                   AS inicio,
-      CASE WHEN intervalo_inicio IS NOT NULL THEN LEFT(intervalo_inicio::text, 5) END AS intervalo_inicio,
-      CASE WHEN intervalo_fim    IS NOT NULL THEN LEFT(intervalo_fim::text,    5) END AS intervalo_fim,
-      LEFT(fim::text, 5)                                                      AS fim
-    FROM horarios_atendimento
-    ORDER BY dia_semana
-  `
-  return rows as unknown as HorarioAtendimento[]
-}
-
-export async function salvarHorarios(horarios: HorarioAtendimento[]): Promise<void> {
-  const sql = getDb()
-  for (const h of horarios) {
-    const ini: string | null = h.intervalo_inicio || null
-    const ifim: string | null = h.intervalo_fim || null
-    await sql`
-      INSERT INTO horarios_atendimento (dia_semana, ativo, inicio, intervalo_inicio, intervalo_fim, fim)
-      VALUES (${h.dia_semana}, ${h.ativo}, ${h.inicio}, ${ini}, ${ifim}, ${h.fim})
-      ON CONFLICT (dia_semana) DO UPDATE SET
-        ativo            = EXCLUDED.ativo,
-        inicio           = EXCLUDED.inicio,
-        intervalo_inicio = EXCLUDED.intervalo_inicio,
-        intervalo_fim    = EXCLUDED.intervalo_fim,
-        fim              = EXCLUDED.fim
-    `
-  }
-}
-
-// ─── Férias ────────────────────────────────────────────────────────────────
-
-function datesBetween(start: string, end: string): string[] {
-  const dates: string[] = []
-  const d = new Date(start + 'T12:00:00')
-  const e = new Date(end + 'T12:00:00')
-  while (d <= e) {
-    dates.push(d.toISOString().slice(0, 10))
-    d.setDate(d.getDate() + 1)
-  }
-  return dates
-}
-
-export async function getFerias(pastorId: number) {
-  const sql = getDb()
-  const rows = await sql`
-    SELECT id, pastor_id, data_inicio::text, data_fim::text, motivo, data_criacao
-    FROM ferias WHERE pastor_id = ${pastorId} ORDER BY data_inicio
-  `
-  return rows
-}
-
-export async function criarFerias(pastorId: number, dataInicio: string, dataFim: string, motivo: string): Promise<number> {
-  const sql = getDb()
-  const mot = motivo || 'Férias'
-  const rows = await sql`
-    INSERT INTO ferias (pastor_id, data_inicio, data_fim, motivo)
-    VALUES (${pastorId}, ${dataInicio}::date, ${dataFim}::date, ${mot})
-    RETURNING id
-  `
-  const id = (rows[0] as { id: number }).id
-  for (const data of datesBetween(dataInicio, dataFim)) {
-    await criarBloqueiosDia(pastorId, data, mot)
-  }
-  return id
-}
-
-export async function deletarFerias(id: number): Promise<void> {
-  const sql = getDb()
-  const rows = await sql`SELECT pastor_id, data_inicio::text, data_fim::text FROM ferias WHERE id = ${id}`
-  if (rows.length === 0) return
-  const { pastor_id, data_inicio, data_fim } = rows[0] as { pastor_id: number; data_inicio: string; data_fim: string }
-  await sql`DELETE FROM ferias WHERE id = ${id}`
-  for (const data of datesBetween(data_inicio, data_fim)) {
-    await deleteBloqueiosDia(pastor_id, data)
+  const [alunos, turmas, professores, ativos] = await Promise.all([
+    sql`SELECT COUNT(*) AS count FROM alunos`,
+    sql`SELECT COUNT(*) AS count FROM turmas`,
+    sql`SELECT COUNT(*) AS count FROM professores`,
+    sql`SELECT COUNT(*) AS count FROM alunos WHERE ativo = TRUE`,
+  ])
+  return {
+    totalAlunos: Number(alunos[0].count),
+    totalTurmas: Number(turmas[0].count),
+    totalProfessores: Number(professores[0].count),
+    alunosAtivos: Number(ativos[0].count),
   }
 }

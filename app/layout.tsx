@@ -4,13 +4,13 @@ import ShellClient from './ShellClient'
 import InitDb from './InitDb'
 
 export const metadata: Metadata = {
-  title: 'Secretaria IBTM',
-  description: 'Sistema de Agenda Eclesiástica',
+  title: 'Jeito de Viver — Centro Educacional',
+  description: 'Sistema de Gestão Educacional',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Agenda IBTM',
+    title: 'Jeito de Viver',
   },
   icons: { apple: '/logo.png' },
 }

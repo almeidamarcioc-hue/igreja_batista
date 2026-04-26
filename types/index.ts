@@ -1,85 +1,46 @@
-export interface Pastor {
+export interface Professor {
   id: number
   nome: string
-  telefone: string
-  endereco: string
-  numero: string
-  bairro: string
-  cidade: string
-  estado: string
-  imagem: string
-}
-
-export interface Agendamento {
-  id: number
-  nome_fiel: string
-  telefone: string
-  assunto: string
-  pastor_id: number
-  data: string
-  hora: string
-  duracao_min: number
-  status: string
-  recorrencia: string
-  observacoes: string
-  data_criacao: string
-  lembrete_enviado: number
-  confirmacao_enviada: number
-  pastor_nome?: string
-  pastor_tel?: string
-}
-
-export interface Bloqueio {
-  id: number
-  pastor_id: number
-  data: string
-  hora: string
-  motivo: string
-  pastor_nome?: string
-}
-
-export interface Fiel {
-  id: number
-  nome: string
-  telefone: string
   email: string
+  telefone: string
+  disciplina: string
   endereco: string
   numero: string
   bairro: string
   cidade: string
   estado: string
   observacoes: string
-}
-
-export interface Configuracoes {
-  id: number
-  horas_lembrete: number
-  msg_confirmacao: string
-  msg_lembrete: string
-  msg_cancelamento: string
-  msg_remarcacao: string
-  msg_pastor: string
-}
-
-export interface Slot {
-  tipo: 'confirmado' | 'pendente' | 'bloqueado'
-  dados: Record<string, any>
-}
-
-export interface Ferias {
-  id: number
-  pastor_id: number
-  data_inicio: string
-  data_fim: string
-  motivo: string
   data_criacao: string
 }
 
-export interface HorarioAtendimento {
-  dia_semana: number
+export interface Turma {
+  id: number
+  nome: string
+  descricao: string
+  professor_id: number | null
+  professor_nome?: string
+  turno: string
+  ano_letivo: string
   ativo: boolean
-  inicio: string
-  intervalo_inicio: string | null
-  intervalo_fim: string | null
-  fim: string
+  data_criacao: string
+}
+
+export interface Aluno {
+  id: number
+  nome: string
+  email: string
+  telefone: string
+  data_nascimento: string
+  turma_id: number | null
+  turma_nome?: string
+  responsavel: string
+  telefone_responsavel: string
+  endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
+  observacoes: string
+  ativo: boolean
+  data_criacao: string
 }

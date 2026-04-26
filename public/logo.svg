@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 180" width="520" height="180">
+  <!-- "Jeito" outline text -->
+  <text x="10" y="110" font-family="Arial, sans-serif" font-size="90" font-weight="bold"
+    fill="none" stroke="#9CA3AF" stroke-width="2" letter-spacing="-2">Jeito</text>
+
+  <!-- "de" small text -->
+  <text x="248" y="110" font-family="Arial, sans-serif" font-size="38" font-weight="normal"
+    fill="#9CA3AF" letter-spacing="0">de</text>
+
+  <!-- Orange rectangle behind "Viver" -->
+  <rect x="288" y="20" width="225" height="100" fill="#E07535" rx="2"/>
+
+  <!-- "Viver" white text on orange -->
+  <text x="298" y="108" font-family="Arial, sans-serif" font-size="90" font-weight="bold"
+    fill="white" letter-spacing="-2">Viver</text>
+
+  <!-- "Centro Educacional" subtitle -->
+  <text x="260" y="155" font-family="Arial, sans-serif" font-size="28" font-weight="300"
+    fill="#9CA3AF" text-anchor="middle" letter-spacing="4">Centro Educacional</text>
+</svg>

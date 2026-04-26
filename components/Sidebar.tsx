@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
 interface NavItem {
   href: string
@@ -23,14 +22,13 @@ type NavEntry = NavItem | NavGroup
 
 const navEntries: NavEntry[] = [
   { href: '/', icon: '🏠', label: 'Dashboard' },
-  { href: '/agendamentos/novo', icon: '➕', label: 'Novo Agendamento' },
-  { href: '/agenda/pastores', icon: '📅', label: 'Agenda dos Pastores' },
   {
     icon: '📁',
     label: 'Cadastros',
     children: [
-      { href: '/cadastros/fieis', icon: '🙍', label: 'Fiéis' },
-      { href: '/cadastros/pastores', icon: '👤', label: 'Pastores' },
+      { href: '/cadastros/alunos', icon: '🎒', label: 'Alunos' },
+      { href: '/cadastros/turmas', icon: '🏫', label: 'Turmas' },
+      { href: '/cadastros/professores', icon: '👨‍🏫', label: 'Professores' },
     ],
   },
   { href: '/configuracoes', icon: '⚙️', label: 'Configurações' },
@@ -67,29 +65,31 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
 
   const sidebar = (
     <aside
-      style={{ backgroundColor: '#002347', borderRight: '2px solid #C5A059' }}
+      style={{ backgroundColor: '#1F2937', borderRight: '2px solid #E07535' }}
       className="flex flex-col h-full w-64"
     >
       {/* Logo */}
-      <div className="flex items-center justify-center py-6 px-4">
+      <div className="flex items-center justify-center py-5 px-4">
         {!logoError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src="/logo.png"
-            alt="IBTM Logo"
-            width={120}
-            style={{ maxHeight: 64, objectFit: 'contain' }}
+            alt="Jeito de Viver"
+            width={160}
+            style={{ maxHeight: 72, objectFit: 'contain' }}
             onError={() => setLogoError(true)}
           />
         ) : (
           <div className="flex flex-col items-center gap-1">
-            <span className="text-3xl">⛪</span>
-            <span style={{ color: '#C5A059' }} className="text-xl font-bold tracking-widest">IBTM</span>
+            <span style={{ color: '#E07535' }} className="text-lg font-bold tracking-wide text-center leading-tight">
+              Jeito de Viver
+            </span>
+            <span className="text-xs text-gray-400">Centro Educacional</span>
           </div>
         )}
       </div>
 
-      <div style={{ borderColor: '#C5A059' }} className="border-t mx-4 opacity-40" />
+      <div style={{ borderColor: '#E07535' }} className="border-t mx-4 opacity-40" />
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2">
@@ -100,8 +100,8 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
               <div key={entry.label}>
                 <button
                   onClick={() => setCadastrosOpen((v) => !v)}
-                  style={childActive ? { color: '#C5A059' } : { color: '#a0aec0' }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+                  style={childActive ? { color: '#E07535' } : { color: '#a0aec0' }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-orange-400"
                 >
                   <span className="text-base leading-none">{entry.icon}</span>
                   <span className="flex-1 text-left">{entry.label}</span>
@@ -116,8 +116,8 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
                           key={child.href}
                           href={child.href}
                           onClick={onClose}
-                          style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
-                          className="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+                          style={active ? { color: '#E07535', backgroundColor: 'rgba(224,117,53,0.15)' } : { color: '#a0aec0' }}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 text-sm font-medium transition-all duration-150 hover:text-orange-400"
                         >
                           <span className="text-sm leading-none">{child.icon}</span>
                           <span>{child.label}</span>
@@ -136,8 +136,8 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
               key={entry.href}
               href={entry.href}
               onClick={onClose}
-              style={isActive ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+              style={isActive ? { color: '#E07535', backgroundColor: 'rgba(224,117,53,0.15)' } : { color: '#a0aec0' }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-orange-400"
             >
               <span className="text-base leading-none">{entry.icon}</span>
               <span>{entry.label}</span>
@@ -146,11 +146,11 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
         })}
       </nav>
 
-      <div style={{ borderColor: '#C5A059' }} className="border-t mx-4 opacity-40" />
+      <div style={{ borderColor: '#E07535' }} className="border-t mx-4 opacity-40" />
 
       {/* Footer */}
       <div className="px-4 py-4 text-center">
-        <p style={{ color: '#C5A059' }} className="text-xs font-semibold">
+        <p style={{ color: '#E07535' }} className="text-xs font-semibold">
           {diaSemana}, {dd}/{mm}/{yyyy}
         </p>
         <p style={{ color: '#6b7a8d' }} className="text-xs mt-1">{hh}:{min}</p>
