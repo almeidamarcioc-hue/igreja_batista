@@ -37,7 +37,7 @@ const emptyForm = {
   hora: '08:00',
   duracao_min: 50,
   assunto: '',
-  status: 'confirmado' as const,
+  status: 'confirmado' as 'confirmado' | 'cancelado' | 'remarcado',
   observacoes: '',
 }
 
