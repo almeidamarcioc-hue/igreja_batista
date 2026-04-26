@@ -1,15 +1,15 @@
 {
-  "name": "Jeito de Viver — Centro Educacional",
-  "short_name": "Jeito de Viver",
-  "description": "Sistema de Gestão Educacional do Centro Educacional Jeito de Viver",
+  "name": "Workspace IBTM — Igreja Batista Transformação",
+  "short_name": "IBTM",
+  "description": "Sistema Integrado da Igreja Batista Transformação — Secretaria e Centro Educacional",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1F2937",
-  "theme_color": "#1F2937",
+  "background_color": "#1F1F4D",
+  "theme_color": "#1F1F4D",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
-    { "src": "/logo.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/logo.png", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/ibtm-logo.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/ibtm-logo.png", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

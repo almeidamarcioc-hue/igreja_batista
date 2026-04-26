@@ -13,7 +13,7 @@ export default function PageHeader({ title, subtitle, icon, logo }: PageHeaderPr
     >
       {logo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src="/logo.png" alt="Jeito de Viver" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+        <img src="/ibtm-logo.png" alt="IBTM" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
       )}
       {!logo && icon && (
         <span className="text-3xl leading-none">{icon}</span>

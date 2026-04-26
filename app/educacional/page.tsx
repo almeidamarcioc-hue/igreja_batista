@@ -66,7 +66,7 @@ export default function EducacionalDashboard() {
 
   return (
     <div>
-      <PageHeader icon="🏫" title="Centro Educacional" subtitle="Jeito de Viver" />
+      <PageHeader icon="🏫" title="Centro Educacional" subtitle="Igreja Batista Transformação" />
 
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

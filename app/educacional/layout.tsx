@@ -22,7 +22,7 @@ export default function EducacionalLayout({ children }: { children: React.ReactN
         >
           ☰
         </button>
-        <span style={{ color: '#E07535' }} className="text-base font-bold tracking-wide">Jeito de Viver</span>
+        <span style={{ color: '#E07535' }} className="text-base font-bold tracking-wide">Centro Educacional</span>
       </div>
 
       <main className="md:pl-64 min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>

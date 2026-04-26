@@ -57,10 +57,10 @@ export default function EducacionalSidebar({ open, onClose }: { open?: boolean; 
       <div className="flex items-center justify-center py-5 px-4">
         {!logoError ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/logo.png" alt="Jeito de Viver" width={160} style={{ maxHeight: 72, objectFit: 'contain' }} onError={() => setLogoError(true)} />
+          <img src="/ibtm-logo.png" alt="IBTM" width={160} style={{ maxHeight: 72, objectFit: 'contain' }} onError={() => setLogoError(true)} />
         ) : (
           <div className="flex flex-col items-center gap-1">
-            <span style={{ color: '#E07535' }} className="text-lg font-bold tracking-wide text-center leading-tight">Jeito de Viver</span>
+            <span style={{ color: '#E07535' }} className="text-lg font-bold tracking-wide text-center leading-tight">IBTM</span>
             <span className="text-xs text-gray-400">Centro Educacional</span>
           </div>
         )}

@@ -63,7 +63,7 @@ export default function WorkspacePage() {
             onClick={() => router.push('/educacional')}
             icon="🏫"
             title="Centro Educacional"
-            desc="Jeito de Viver — alunos, turmas e professores"
+            desc="Centro Educacional — alunos, turmas e professores"
             accent="#E07535"
             bg="#1F2937"
           />
