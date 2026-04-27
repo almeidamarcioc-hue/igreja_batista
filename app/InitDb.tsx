@@ -23,8 +23,8 @@ export default function InitDb() {
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Jeito de Viver" style={{ height: 80, objectFit: 'contain' }} />
-      <p style={{ color: '#E07535', fontSize: 14, fontWeight: 600 }}>Carregando sistema...</p>
+      <img src="/ibtm-logo.png" alt="IBTM" style={{ height: 80, objectFit: 'contain' }} />
+      <p style={{ color: '#C5A059', fontSize: 14, fontWeight: 600 }}>Carregando sistema...</p>
     </div>
   )
 }
