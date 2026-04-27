@@ -260,6 +260,33 @@ export async function initDb(): Promise<void> {
       VALUES ('admin', ${hash}, 'Administrador', 'admin', '*')
     `
   }
+
+  // ── Carousel slides ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS carousel_slides (
+      id SERIAL PRIMARY KEY,
+      ordem INTEGER NOT NULL DEFAULT 0,
+      variante INTEGER NOT NULL DEFAULT 0,
+      eyebrow TEXT NOT NULL DEFAULT '',
+      titulo_antes TEXT NOT NULL DEFAULT '',
+      titulo_italico TEXT NOT NULL DEFAULT '',
+      titulo_depois TEXT NOT NULL DEFAULT '',
+      descricao TEXT NOT NULL DEFAULT '',
+      ativo BOOLEAN NOT NULL DEFAULT TRUE
+    )
+  `
+
+  const slidesExistentes = await sql`SELECT COUNT(*) AS cnt FROM carousel_slides`
+  if (Number((slidesExistentes[0] as { cnt: string }).cnt) === 0) {
+    await sql`
+      INSERT INTO carousel_slides (ordem, variante, eyebrow, titulo_antes, titulo_italico, titulo_depois, descricao, ativo)
+      VALUES
+        (0, 0, 'Bem-vindo', 'Toda boa', 'dádiva', 'vem do alto.', 'Tiago 1:17 — A força da nossa comunidade está em servir uns aos outros com alegria.', true),
+        (1, 1, 'Quartas, 19h30', 'Estudo', 'bíblico', 'de quarta-feira.', 'Encontros semanais para aprofundar a Palavra, com momentos de oração e comunhão entre irmãos.', true),
+        (2, 2, 'Acampadentro 2026', 'Três dias para', 'respirar', 'na presença d''Ele.', 'Inscrições abertas para o retiro anual da família IBTM. Programação completa em breve.', true),
+        (3, 3, 'Domingo · Culto da Família', 'Um lugar onde', 'cabe', 'a sua história.', 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.', true)
+    `
+  }
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
@@ -1295,4 +1322,33 @@ export async function updateUsuario(id: number, dados: { nome?: string; senha?: 
 export async function deleteUsuario(id: number): Promise<void> {
   const sql = getDb()
   await sql`DELETE FROM usuarios WHERE id = ${id}`
+}
+
+// ─── Carousel Slides ───────────────────────────────────────────────────────
+
+export async function getCarouselSlides() {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM carousel_slides ORDER BY ordem, id`
+  return rows
+}
+
+export async function updateCarouselSlides(slides: Array<{
+  id?: number
+  ordem: number
+  variante: number
+  eyebrow: string
+  titulo_antes: string
+  titulo_italico: string
+  titulo_depois: string
+  descricao: string
+  ativo: boolean
+}>): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM carousel_slides`
+  for (const s of slides) {
+    await sql`
+      INSERT INTO carousel_slides (ordem, variante, eyebrow, titulo_antes, titulo_italico, titulo_depois, descricao, ativo)
+      VALUES (${s.ordem}, ${s.variante}, ${s.eyebrow}, ${s.titulo_antes}, ${s.titulo_italico}, ${s.titulo_depois}, ${s.descricao}, ${s.ativo})
+    `
+  }
 }

@@ -119,6 +119,16 @@ export default function ConfiguracoesPage() {
           <div className="bg-green-900 border border-green-600 text-green-200 rounded-lg px-4 py-3 mb-4 text-sm">{sucesso}</div>
         )}
 
+        <a href="/configuracoes/carousel"
+          className="flex items-center justify-between bg-white bg-opacity-10 rounded-xl px-5 py-4 hover:bg-opacity-20 mb-4"
+          style={{ textDecoration: 'none' }}>
+          <div>
+            <p className="text-white font-semibold text-sm">Slides da Tela Inicial</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Configure os textos e fundos exibidos na página de login</p>
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 18 }}>→</span>
+        </a>
+
         <div className="bg-white bg-opacity-10 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">Usuários do Sistema</h2>

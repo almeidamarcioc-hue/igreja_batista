@@ -118,42 +118,51 @@ function DecoShapes({ variant }: { variant: number }) {
 
 // ── Slides ───────────────────────────────────────────────────────────────────
 
-const SLIDES = [
-  {
-    cls: 'slide-1',
-    eyebrow: 'Bem-vindo',
-    title: <>Toda boa <em>dádiva</em><br/>vem do alto.</>,
-    meta: 'Tiago 1:17 — A força da nossa comunidade está em servir uns aos outros com alegria.',
-  },
-  {
-    cls: 'slide-2',
-    eyebrow: 'Quartas, 19h30',
-    title: <>Estudo <em>bíblico</em><br/>de quarta-feira.</>,
-    meta: 'Encontros semanais para aprofundar a Palavra, com momentos de oração e comunhão entre irmãos.',
-  },
-  {
-    cls: 'slide-3',
-    eyebrow: 'Acampadentro 2026',
-    title: <>Três dias para <em>respirar</em><br/>na presença d&rsquo;Ele.</>,
-    meta: 'Inscrições abertas para o retiro anual da família IBTM. Programação completa em breve.',
-  },
-  {
-    cls: 'slide-4',
-    eyebrow: 'Domingo · Culto da Família',
-    title: <>Um lugar onde <em>cabe</em><br/>a sua história.</>,
-    meta: 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.',
-  },
+const VARIANT_CLS = ['slide-1', 'slide-2', 'slide-3', 'slide-4']
+
+interface SlideData {
+  variante: number
+  eyebrow: string
+  titulo_antes: string
+  titulo_italico: string
+  titulo_depois: string
+  descricao: string
+  ativo: boolean
+}
+
+const FALLBACK_SLIDES: SlideData[] = [
+  { variante: 0, eyebrow: 'Bem-vindo', titulo_antes: 'Toda boa', titulo_italico: 'dádiva', titulo_depois: 'vem do alto.', descricao: 'Tiago 1:17 — A força da nossa comunidade está em servir uns aos outros com alegria.', ativo: true },
+  { variante: 1, eyebrow: 'Quartas, 19h30', titulo_antes: 'Estudo', titulo_italico: 'bíblico', titulo_depois: 'de quarta-feira.', descricao: 'Encontros semanais para aprofundar a Palavra, com momentos de oração e comunhão entre irmãos.', ativo: true },
+  { variante: 2, eyebrow: 'Acampadentro 2026', titulo_antes: 'Três dias para', titulo_italico: 'respirar', titulo_depois: 'na presença d’Ele.', descricao: 'Inscrições abertas para o retiro anual da família IBTM. Programação completa em breve.', ativo: true },
+  { variante: 3, eyebrow: 'Domingo · Culto da Família', titulo_antes: 'Um lugar onde', titulo_italico: 'cabe', titulo_depois: 'a sua história.', descricao: 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.', ativo: true },
 ]
 
 // ── Carousel ─────────────────────────────────────────────────────────────────
 
 function MediaCarousel() {
+  const [slides, setSlides] = useState<SlideData[]>(FALLBACK_SLIDES)
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
-  const total = SLIDES.length
 
+  useEffect(() => {
+    fetch('/api/configuracoes/slides')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const ativos = data.filter((s: SlideData) => s.ativo)
+          if (ativos.length > 0) setSlides(ativos)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const total = slides.length
   const next = useCallback(() => setIdx(v => (v + 1) % total), [total])
   const prev = useCallback(() => setIdx(v => (v - 1 + total) % total), [total])
+
+  useEffect(() => {
+    if (idx >= total) setIdx(0)
+  }, [total, idx])
 
   useEffect(() => {
     if (paused) return
@@ -169,13 +178,16 @@ function MediaCarousel() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {SLIDES.map((s, i) => (
-        <div key={i} className={`ibtm-slide ${s.cls} ${i === idx ? 'is-active' : ''}`}>
-          <DecoShapes variant={i} />
+      {slides.map((s, i) => (
+        <div key={i} className={`ibtm-slide ${VARIANT_CLS[s.variante % 4]} ${i === idx ? 'is-active' : ''}`}>
+          <DecoShapes variant={s.variante % 4} />
           <div className="ibtm-slide-content">
             <div className="ibtm-slide-eyebrow">{s.eyebrow}</div>
-            <h2 className="ibtm-slide-title">{s.title}</h2>
-            <p className="ibtm-slide-meta">{s.meta}</p>
+            <h2 className="ibtm-slide-title">
+              {s.titulo_antes} <em>{s.titulo_italico}</em>
+              {s.titulo_depois && <><br />{s.titulo_depois}</>}
+            </h2>
+            <p className="ibtm-slide-meta">{s.descricao}</p>
           </div>
         </div>
       ))}
@@ -190,7 +202,7 @@ function MediaCarousel() {
 
       <div className="ibtm-carousel-chrome">
         <div className="ibtm-carousel-dots">
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               key={i}
               aria-label={`Slide ${i + 1}`}
