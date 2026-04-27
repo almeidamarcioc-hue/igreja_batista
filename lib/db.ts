@@ -250,6 +250,45 @@ export async function initDb(): Promise<void> {
 
   // Add modulos column if it doesn't exist (migration)
   await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS modulos TEXT DEFAULT '*'`
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(200) DEFAULT ''`
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS permissoes TEXT DEFAULT '[]'`
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil_id INTEGER`
+
+  // ── Perfis de acesso ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS perfis_acesso (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      descricao TEXT DEFAULT '',
+      permissoes TEXT NOT NULL DEFAULT '[]',
+      padrao BOOLEAN NOT NULL DEFAULT FALSE
+    )
+  `
+
+  const perfisExistentes = await sql`SELECT COUNT(*) AS cnt FROM perfis_acesso`
+  if (Number((perfisExistentes[0] as { cnt: string }).cnt) === 0) {
+    await sql`
+      INSERT INTO perfis_acesso (nome, descricao, permissoes, padrao) VALUES
+        ('Administrador',           'Acesso total ao sistema',                                                               '["*"]',                                                                                                                         true),
+        ('Secretaria — Completo',   'Acesso completo ao módulo Secretaria',                                                  '["secretaria.visualizar","secretaria.criar","secretaria.editar","secretaria.excluir"]',                                        true),
+        ('Secretaria — Leitura',    'Somente visualização no módulo Secretaria',                                             '["secretaria.visualizar"]',                                                                                                    true),
+        ('Educacional — Completo',  'Acesso completo ao módulo Educacional',                                                 '["educacional.visualizar","educacional.criar","educacional.editar","educacional.excluir"]',                                      true),
+        ('Educacional — Leitura',   'Somente visualização no módulo Educacional',                                            '["educacional.visualizar"]',                                                                                                   true),
+        ('Completo (sem admin)',     'Acesso completo a todos os módulos, sem acesso às configurações de sistema',            '["secretaria.visualizar","secretaria.criar","secretaria.editar","secretaria.excluir","educacional.visualizar","educacional.criar","educacional.editar","educacional.excluir"]', true)
+    `
+  }
+
+  // ── Tokens de recuperação de senha ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      token VARCHAR(64) NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
 
   // Seed admin user
   const existsAdmin = await sql`SELECT id FROM usuarios WHERE usuario = 'admin'`
@@ -1283,39 +1322,33 @@ export async function getUsuario(id: number) {
   return rows[0] ?? null
 }
 
-export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; role?: string; modulos?: string }): Promise<number> {
+export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string }): Promise<number> {
   const sql = getDb()
   const hash = hashPassword(dados.senha)
   const rows = await sql`
-    INSERT INTO usuarios (usuario, senha_hash, nome, role, modulos)
-    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'})
+    INSERT INTO usuarios (usuario, senha_hash, nome, email, role, modulos)
+    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.email ?? null}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
 }
 
-export async function updateUsuario(id: number, dados: { nome?: string; senha?: string; role?: string; modulos?: string; ativo?: boolean }): Promise<void> {
+export async function updateUsuario(id: number, dados: { nome?: string; senha?: string; email?: string | null; role?: string; modulos?: string; ativo?: boolean }): Promise<void> {
   const sql = getDb()
+  const hasEmail = 'email' in dados
   if (dados.senha) {
     const hash = hashPassword(dados.senha)
-    await sql`
-      UPDATE usuarios SET
-        nome = COALESCE(${dados.nome ?? null}, nome),
-        senha_hash = ${hash},
-        role = COALESCE(${dados.role ?? null}, role),
-        modulos = COALESCE(${dados.modulos ?? null}, modulos),
-        ativo = COALESCE(${dados.ativo ?? null}, ativo)
-      WHERE id = ${id}
-    `
+    if (hasEmail) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    }
   } else {
-    await sql`
-      UPDATE usuarios SET
-        nome = COALESCE(${dados.nome ?? null}, nome),
-        role = COALESCE(${dados.role ?? null}, role),
-        modulos = COALESCE(${dados.modulos ?? null}, modulos),
-        ativo = COALESCE(${dados.ativo ?? null}, ativo)
-      WHERE id = ${id}
-    `
+    if (hasEmail) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    }
   }
 }
 
@@ -1351,4 +1384,88 @@ export async function updateCarouselSlides(slides: Array<{
       VALUES (${s.ordem}, ${s.variante}, ${s.eyebrow}, ${s.titulo_antes}, ${s.titulo_italico}, ${s.titulo_depois}, ${s.descricao}, ${s.ativo})
     `
   }
+}
+
+// ─── Perfis de Acesso ──────────────────────────────────────────────────────
+
+export async function getPerfis() {
+  const sql = getDb()
+  return sql`SELECT * FROM perfis_acesso ORDER BY nome`
+}
+
+export async function getPerfil(id: number) {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM perfis_acesso WHERE id = ${id}`
+  return rows[0] ?? null
+}
+
+export async function criarPerfil(dados: { nome: string; descricao?: string; permissoes: string[] }): Promise<number> {
+  const sql = getDb()
+  const rows = await sql`
+    INSERT INTO perfis_acesso (nome, descricao, permissoes, padrao)
+    VALUES (${dados.nome}, ${dados.descricao ?? ''}, ${JSON.stringify(dados.permissoes)}, false)
+    RETURNING id
+  `
+  return (rows[0] as { id: number }).id
+}
+
+export async function updatePerfil(id: number, dados: { nome?: string; descricao?: string; permissoes?: string[] }): Promise<void> {
+  const sql = getDb()
+  const perfil = await getPerfil(id) as any
+  if (!perfil) return
+  const nome = dados.nome ?? perfil.nome
+  const descricao = dados.descricao ?? perfil.descricao
+  const permissoes = dados.permissoes ? JSON.stringify(dados.permissoes) : perfil.permissoes
+  await sql`UPDATE perfis_acesso SET nome = ${nome}, descricao = ${descricao}, permissoes = ${permissoes} WHERE id = ${id}`
+}
+
+export async function deletePerfil(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM perfis_acesso WHERE id = ${id} AND padrao = FALSE`
+}
+
+// ─── Password Reset Tokens ─────────────────────────────────────────────────
+
+export async function criarResetToken(userId: number, token: string): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId} AND used_at IS NULL`
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+  await sql`
+    INSERT INTO password_reset_tokens (user_id, token, expires_at)
+    VALUES (${userId}, ${token}, ${expiresAt.toISOString()})
+  `
+}
+
+export async function getResetToken(token: string) {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT t.*, u.usuario, u.nome, u.email
+    FROM password_reset_tokens t
+    JOIN usuarios u ON u.id = t.user_id
+    WHERE t.token = ${token}
+      AND t.used_at IS NULL
+      AND t.expires_at > NOW()
+  `
+  return rows[0] ?? null
+}
+
+export async function consumirResetToken(token: string, novaSenha: string): Promise<boolean> {
+  const sql = getDb()
+  const row = await getResetToken(token)
+  if (!row) return false
+  const hash = hashPassword(novaSenha)
+  await sql`UPDATE usuarios SET senha_hash = ${hash} WHERE id = ${(row as any).user_id}`
+  await sql`UPDATE password_reset_tokens SET used_at = NOW() WHERE token = ${token}`
+  return true
+}
+
+export async function getUsuarioPorEmail(email: string) {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM usuarios WHERE LOWER(email) = LOWER(${email}) AND ativo = TRUE`
+  return rows[0] ?? null
+}
+
+export async function updateUsuarioEmail(id: number, email: string): Promise<void> {
+  const sql = getDb()
+  await sql`UPDATE usuarios SET email = ${email} WHERE id = ${id}`
 }

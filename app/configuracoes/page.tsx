@@ -8,6 +8,7 @@ interface Usuario {
   id: number
   usuario: string
   nome: string
+  email: string
   role: string
   modulos: string
   ativo: boolean
@@ -20,7 +21,7 @@ const MODULOS_OPTS = [
   { value: 'secretaria,educacional', label: 'Secretaria + Educacional' },
 ]
 
-const empty = { usuario: '', nome: '', senha: '', role: 'usuario', modulos: 'secretaria', ativo: true }
+const empty = { usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'secretaria', ativo: true }
 
 export default function ConfiguracoesPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
@@ -56,7 +57,7 @@ export default function ConfiguracoesPage() {
 
   function openEdit(u: Usuario) {
     setEditing(u)
-    setForm({ usuario: u.usuario, nome: u.nome, senha: '', role: u.role, modulos: u.modulos, ativo: u.ativo })
+    setForm({ usuario: u.usuario, nome: u.nome, email: u.email ?? '', senha: '', role: u.role, modulos: u.modulos, ativo: u.ativo })
     setShowModal(true)
   }
 
@@ -67,7 +68,7 @@ export default function ConfiguracoesPage() {
     try {
       const method = editing ? 'PUT' : 'POST'
       const url = editing ? `/api/admin/usuarios/${editing.id}` : '/api/admin/usuarios'
-      const body: Record<string, any> = { usuario: form.usuario, nome: form.nome, role: form.role, modulos: form.modulos, ativo: form.ativo }
+      const body: Record<string, any> = { usuario: form.usuario, nome: form.nome, email: form.email.trim() || null, role: form.role, modulos: form.modulos, ativo: form.ativo }
       if (form.senha.trim()) body.senha = form.senha
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar')
@@ -184,6 +185,12 @@ export default function ConfiguracoesPage() {
                 <label className="block text-xs font-medium text-gray-500 mb-1">Nome Completo *</label>
                 <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
                   value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">E-mail (para recuperação de senha)</label>
+                <input type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                  placeholder="usuario@email.com"
+                  value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Usuário (login) *</label>

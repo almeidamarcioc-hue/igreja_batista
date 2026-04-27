@@ -331,6 +331,12 @@ function LoginForm() {
           <button type="submit" className="ibtm-btn-primary" disabled={loading} style={{ marginTop: 4 }}>
             {loading ? <><SpinnerIcon /> Entrando...</> : <>Entrar <ArrowRightIcon /></>}
           </button>
+
+          <div style={{ textAlign: 'center', marginTop: 2 }}>
+            <a href="/login/recuperar" style={{ fontSize: 12, color: 'var(--ibtm-ink-mute)', textDecoration: 'none' }}>
+              Esqueci minha senha
+            </a>
+          </div>
         </form>
 
         <div className="ibtm-noact" style={{ fontSize: 13, color: 'var(--ibtm-ink-mute)' }}>

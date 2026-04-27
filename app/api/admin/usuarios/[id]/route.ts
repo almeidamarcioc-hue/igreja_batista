@@ -33,8 +33,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!adminId) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
     const { id } = await params
     const body = await req.json()
-    const { nome, senha, role, modulos, ativo } = body
-    await updateUsuario(Number(id), { nome, senha: senha || undefined, role, modulos, ativo })
+    const { nome, senha, email, role, modulos, ativo } = body
+    await updateUsuario(Number(id), { nome, senha: senha || undefined, email: email !== undefined ? (email || null) : undefined, role, modulos, ativo })
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

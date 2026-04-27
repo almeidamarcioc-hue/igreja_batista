@@ -30,9 +30,9 @@ export async function POST(req: NextRequest) {
     const userId = await requireAdmin(req)
     if (!userId) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
     const body = await req.json()
-    const { usuario, nome, senha, role, modulos } = body
+    const { usuario, nome, email, senha, role, modulos } = body
     if (!usuario || !nome || !senha) return NextResponse.json({ error: 'Campos obrigatórios: usuario, nome, senha' }, { status: 400 })
-    const id = await criarUsuario({ usuario, nome, senha, role: role ?? 'usuario', modulos: modulos ?? 'secretaria' })
+    const id = await criarUsuario({ usuario, nome, email: email || null, senha, role: role ?? 'usuario', modulos: modulos ?? 'secretaria' })
     return NextResponse.json({ id }, { status: 201 })
   } catch (e: any) {
     const isDup = e.message?.includes('unique') || e.message?.includes('duplicate') || e.message?.includes('usuarios_usuario_key')
