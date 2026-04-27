@@ -6,6 +6,7 @@ import InitDb from './InitDb'
 export const metadata: Metadata = {
   title: 'Igreja Batista Transformação',
   description: 'Sistema Integrado — Secretaria e Centro Educacional',
+  metadataBase: new URL('https://igreja-batista.vercel.app'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -13,6 +14,21 @@ export const metadata: Metadata = {
     title: 'IBTM',
   },
   icons: { apple: '/logo.png' },
+  openGraph: {
+    title: 'Igreja Batista Transformação',
+    description: 'Sistema Integrado — Secretaria e Centro Educacional',
+    url: 'https://igreja-batista.vercel.app',
+    siteName: 'IBTM Workspace',
+    images: [{ url: '/ibtm-logo.png', width: 512, height: 512, alt: 'Logo IBTM' }],
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Igreja Batista Transformação',
+    description: 'Sistema Integrado — Secretaria e Centro Educacional',
+    images: ['/ibtm-logo.png'],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

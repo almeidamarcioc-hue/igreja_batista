@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireModule, unauthorized } from '@/lib/guard'
+import { requirePermission, unauthorized } from '@/lib/guard'
 import { getBloqueios, criarBloqueio, criarBloqueiosDia, deleteBloqueiosDia } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  if (!await requireModule(req, 'secretaria')) return unauthorized()
+  if (!await requirePermission(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const pastorId = Number(searchParams.get('pastorId') ?? '0')
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await requireModule(req, 'secretaria')) return unauthorized()
+  if (!await requirePermission(req, 'secretaria')) return unauthorized()
   try {
     const body = await req.json()
     const { pastorId, data, hora, motivo } = body
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!await requireModule(req, 'secretaria')) return unauthorized()
+  if (!await requirePermission(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const pastorId = Number(searchParams.get('pastorId') ?? '0')
