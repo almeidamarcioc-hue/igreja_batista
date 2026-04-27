@@ -47,6 +47,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!adminId) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
     const { id } = await params
     if (Number(id) === adminId) return NextResponse.json({ error: 'Não é possível excluir o próprio usuário.' }, { status: 400 })
+    const alvo = await getUsuario(Number(id))
+    if (alvo && (alvo as any).usuario === 'admin') {
+      return NextResponse.json({ error: 'O usuário admin padrão não pode ser excluído.' }, { status: 400 })
+    }
     await deleteUsuario(Number(id))
     return NextResponse.json({ ok: true })
   } catch (e: any) {

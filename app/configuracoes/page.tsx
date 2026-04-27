@@ -159,7 +159,9 @@ export default function ConfiguracoesPage() {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <button onClick={() => openEdit(u)} style={{ color: '#a5b4fc' }} className="text-xs font-medium hover:underline">Editar</button>
-                    <button onClick={() => setConfirmDelete(u.id)} className="text-xs text-red-400 font-medium hover:underline">Excluir</button>
+                    {u.usuario !== 'admin' && (
+                      <button onClick={() => setConfirmDelete(u.id)} className="text-xs text-red-400 font-medium hover:underline">Excluir</button>
+                    )}
                   </div>
                 </div>
               ))}
