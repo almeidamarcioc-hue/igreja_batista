@@ -39,6 +39,8 @@ type FormState = {
   assunto: string
   status: 'confirmado' | 'cancelado' | 'remarcado'
   observacoes: string
+  recorrente: boolean
+  recorrencia_semanas: number
 }
 
 const emptyForm: FormState = {
@@ -51,6 +53,8 @@ const emptyForm: FormState = {
   assunto: '',
   status: 'confirmado',
   observacoes: '',
+  recorrente: false,
+  recorrencia_semanas: 4,
 }
 
 export default function AgendaPage() {
@@ -119,6 +123,8 @@ export default function AgendaPage() {
       assunto: ag.assunto,
       status: ag.status,
       observacoes: ag.observacoes,
+      recorrente: false,
+      recorrencia_semanas: 4,
     })
     setShowModal(true)
   }
@@ -129,10 +135,14 @@ export default function AgendaPage() {
     try {
       const method = editing ? 'PUT' : 'POST'
       const url = editing ? `/api/educacional/agendamentos/${editing.id}` : '/api/educacional/agendamentos'
+      const { recorrente, recorrencia_semanas, ...rest } = form
+      const body = editing
+        ? rest
+        : { ...rest, recorrencia_semanas: recorrente ? recorrencia_semanas : 1 }
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar')
       setShowModal(false)
@@ -246,7 +256,7 @@ export default function AgendaPage() {
                   <p style={{ color: '#E07535' }} className="text-xs">{turma.turno} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
                 </div>
                 <button
-                  onClick={() => { setForm({ ...emptyForm, data: dataSel, turma_id: turma.id }); setEditing(null); setShowModal(true) }}
+                  onClick={() => { setForm({ ...emptyForm, data: dataSel, turma_id: turma.id, recorrente: false, recorrencia_semanas: 4 }); setEditing(null); setShowModal(true) }}
                   style={{ color: '#E07535' }}
                   className="text-xl font-bold hover:opacity-70 flex-shrink-0"
                   title="Adicionar agendamento nesta turma"
@@ -375,13 +385,52 @@ export default function AgendaPage() {
                 <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 resize-none" rows={2}
                   value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} />
               </div>
+
+              {!editing && (
+                <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, padding: '12px 14px' }}>
+                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={form.recorrente}
+                      onChange={e => setForm(f => ({ ...f, recorrente: e.target.checked }))}
+                      className="w-4 h-4 accent-orange-500"
+                    />
+                    <span className="text-sm font-medium text-orange-800">Aula recorrente (repetir semanalmente)</span>
+                  </label>
+                  {form.recorrente && (
+                    <div className="flex items-center gap-3 mt-1">
+                      <label className="text-sm text-orange-700 whitespace-nowrap">Repetir por</label>
+                      <input
+                        type="number"
+                        min={2}
+                        max={52}
+                        className="w-20 border border-orange-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500 text-center"
+                        value={form.recorrencia_semanas}
+                        onChange={e => setForm(f => ({ ...f, recorrencia_semanas: Math.min(52, Math.max(2, Number(e.target.value))) }))}
+                      />
+                      <span className="text-sm text-orange-700">semanas</span>
+                    </div>
+                  )}
+                  {form.recorrente && (
+                    <p className="text-xs text-orange-600 mt-2">
+                      Serão criados {form.recorrencia_semanas} agendamentos, um por semana a partir de {new Date(form.data + 'T12:00:00').toLocaleDateString('pt-BR')}.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <div className="px-5 pb-5 flex justify-end gap-3">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
               <button onClick={handleSave} disabled={saving || !form.turma_id || !form.data || !form.hora}
                 style={{ backgroundColor: '#E07535' }}
                 className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-                {saving ? 'Salvando...' : 'Salvar'}
+                {saving
+                  ? 'Salvando...'
+                  : editing
+                    ? 'Salvar'
+                    : form.recorrente
+                      ? `Criar ${form.recorrencia_semanas} agendamentos`
+                      : 'Salvar'}
               </button>
             </div>
           </div>
