@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { getPastores, criarPastor } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const rows = await getPastores()
     return NextResponse.json(rows)
@@ -14,6 +16,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const body = await req.json()
     if (!body.nome) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })

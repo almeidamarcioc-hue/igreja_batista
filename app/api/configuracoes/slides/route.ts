@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initDb, getCarouselSlides, updateCarouselSlides } from '@/lib/db'
+import { requireAuth, unauthorized } from '@/lib/guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  if (!await requireAuth(req)) return unauthorized()
   try {
     const slides = await req.json()
     if (!Array.isArray(slides)) {

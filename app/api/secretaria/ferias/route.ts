@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { getFerias, criarFerias } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const pastorId = Number(searchParams.get('pastorId') ?? searchParams.get('pastor_id') ?? '0')
@@ -16,6 +18,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const body = await req.json()
     const { pastorId, dataInicio, dataFim, motivo } = body

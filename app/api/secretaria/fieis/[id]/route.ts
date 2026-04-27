@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { getFiel, updateFiel, deleteFiel } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { id } = await params
     const fiel = await getFiel(Number(id))
@@ -16,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { id } = await params
     const body = await req.json()
@@ -27,7 +30,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { id } = await params
     await deleteFiel(Number(id))

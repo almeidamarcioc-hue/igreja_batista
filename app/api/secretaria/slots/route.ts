@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { getSlotsPastor } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const pastorId = Number(searchParams.get('pastorId') ?? '0')

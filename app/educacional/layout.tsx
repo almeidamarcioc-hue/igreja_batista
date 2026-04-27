@@ -1,33 +1,23 @@
-'use client'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { getUsuario } from '@/lib/db'
+import EducacionalShell from '@/components/EducacionalShell'
 
-import { useState } from 'react'
-import EducacionalSidebar from '@/components/EducacionalSidebar'
+export default async function EducacionalLayout({ children }: { children: React.ReactNode }) {
+  const token = (await cookies()).get(COOKIE_NAME)?.value
+  if (!token) redirect('/login')
 
-export default function EducacionalLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const userId = await verifySessionToken(token)
+  if (!userId) redirect('/login')
 
-  return (
-    <>
-      <EducacionalSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+  const user = await getUsuario(userId) as any
+  if (!user || !user.ativo) redirect('/login')
 
-      <div
-        className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center px-4 h-14"
-        style={{ backgroundColor: '#1F2937', borderBottom: '2px solid #E07535' }}
-      >
-        <button
-          onClick={() => setSidebarOpen(true)}
-          style={{ color: '#E07535' }}
-          className="text-2xl leading-none mr-3"
-          aria-label="Abrir menu"
-        >
-          ☰
-        </button>
-        <span style={{ color: '#E07535' }} className="text-base font-bold tracking-wide">Centro Educacional</span>
-      </div>
+  const modulos: string = user.modulos ?? ''
+  if (modulos !== '*' && !modulos.split(',').map((m: string) => m.trim()).includes('educacional')) {
+    redirect('/')
+  }
 
-      <main className="md:pl-64 min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
-        <div className="pt-14 md:pt-0 p-4 md:p-6">{children}</div>
-      </main>
-    </>
-  )
+  return <EducacionalShell>{children}</EducacionalShell>
 }

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { buscarFieis, salvarFiel } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const termo = searchParams.get('termo') ?? searchParams.get('busca') ?? undefined
@@ -16,6 +18,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const body = await req.json()
     if (!body.nome) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })

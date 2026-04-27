@@ -2,9 +2,8 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { getUsuario } from '@/lib/db'
-import SecretariaShell from '@/components/SecretariaShell'
 
-export default async function SecretariaLayout({ children }: { children: React.ReactNode }) {
+export default async function ConfiguracoesLayout({ children }: { children: React.ReactNode }) {
   const token = (await cookies()).get(COOKIE_NAME)?.value
   if (!token) redirect('/login')
 
@@ -13,11 +12,7 @@ export default async function SecretariaLayout({ children }: { children: React.R
 
   const user = await getUsuario(userId) as any
   if (!user || !user.ativo) redirect('/login')
+  if (user.role !== 'admin') redirect('/')
 
-  const modulos: string = user.modulos ?? ''
-  if (modulos !== '*' && !modulos.split(',').map((m: string) => m.trim()).includes('secretaria')) {
-    redirect('/')
-  }
-
-  return <SecretariaShell>{children}</SecretariaShell>
+  return <>{children}</>
 }

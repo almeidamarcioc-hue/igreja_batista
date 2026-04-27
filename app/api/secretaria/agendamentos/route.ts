@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAgendamentosPastorais, criarAgendamentoPastoral } from '@/lib/db'
+import { requireModule, unauthorized } from '@/lib/guard'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const pastorId = searchParams.get('pastorId')
@@ -24,6 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await requireModule(req, 'secretaria')) return unauthorized()
   try {
     const body = await req.json()
     const id = await criarAgendamentoPastoral(body)

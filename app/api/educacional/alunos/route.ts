@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireModule, unauthorized } from '@/lib/guard'
 import { getAlunos, criarAluno } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  if (!await requireModule(req, 'educacional')) return unauthorized()
   try {
     const { searchParams } = new URL(req.url)
     const turma_id = searchParams.get('turma_id')
@@ -20,6 +22,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await requireModule(req, 'educacional')) return unauthorized()
   try {
     const body = await req.json()
     if (!body.nome) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })
