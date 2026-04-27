@@ -32,8 +32,15 @@
 .ibtm-login-grid * { box-sizing: border-box; }
 
 @media (max-width: 900px) {
-  .ibtm-login-grid { grid-template-columns: 1fr; height: auto; overflow: auto; }
-  .ibtm-media-side { min-height: 320px; order: -1; }
+  .ibtm-login-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 40dvh 1fr;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .ibtm-media-side { min-height: 0; order: -1; }
+  .ibtm-form-side { overflow: hidden; }
+  .ibtm-verse-corner { display: none; }
 }
 
 /* ── Form side ── */
@@ -62,8 +69,20 @@
   width: 100%;
 }
 @media (max-width: 600px) {
-  .ibtm-form-inner { padding: 24px 20px 64px; }
+  .ibtm-form-inner { padding: 14px 20px; }
+  .ibtm-logo-img { width: 40px; height: 40px; }
+  .ibtm-heading { font-size: 26px; }
+  .ibtm-heading-block { margin-top: 12px; }
+  .ibtm-login-form { margin-top: 12px; gap: 10px; }
+  .ibtm-subheading { display: none; }
+  .ibtm-noact { margin-top: 10px; }
+  .ibtm-field { padding: 10px 16px; }
+  .ibtm-btn-primary { padding: 11px 20px; }
 }
+
+.ibtm-heading-block { margin-top: 28px; }
+.ibtm-login-form { margin-top: 24px; }
+.ibtm-noact { margin-top: 20px; }
 
 .ibtm-logo-stack {
   display: flex; flex-direction: row; align-items: center; gap: 14px;
@@ -189,9 +208,7 @@
   font-style: italic;
   color: var(--ibtm-primary);
 }
-@media (max-width: 900px) {
-  .ibtm-verse-corner { position: static; padding: 16px 24px; }
-}
+/* verse corner hidden on mobile via 900px rule above */
 
 /* ── Media side ── */
 .ibtm-media-side {

@@ -276,7 +276,7 @@ function LoginForm() {
           <div className="ibtm-brand-line">Igreja Batista Transformação</div>
         </div>
 
-        <div style={{ marginTop: 28 }}>
+        <div className="ibtm-heading-block">
           <h1 className="ibtm-heading">
             Acesse sua <em>conta</em>.
           </h1>
@@ -285,7 +285,7 @@ function LoginForm() {
           </p>
         </div>
 
-        <form onSubmit={submit} style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={submit} className="ibtm-login-form" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label className="ibtm-field-label">Usuário</label>
             <div className="ibtm-input-wrap">
@@ -333,7 +333,7 @@ function LoginForm() {
           </button>
         </form>
 
-        <div style={{ marginTop: 20, fontSize: 13, color: 'var(--ibtm-ink-mute)' }}>
+        <div className="ibtm-noact" style={{ fontSize: 13, color: 'var(--ibtm-ink-mute)' }}>
           Ainda não tem acesso?{' '}
           <a href="#" style={{ color: 'var(--ibtm-primary)', textDecoration: 'none', fontWeight: 500 }}>
             Fale com a secretaria
