@@ -170,7 +170,9 @@ function MediaCarousel() {
     return () => clearInterval(id)
   }, [next, paused])
 
-  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
+  const now = new Date()
+  const today = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
+  const todayShort = now.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
 
   return (
     <div
@@ -193,7 +195,10 @@ function MediaCarousel() {
       ))}
 
       <div className="ibtm-media-top">
-        <div style={{ textTransform: 'capitalize' }}>{today}</div>
+        <div>
+          <span className="ibtm-date-long" style={{ textTransform: 'capitalize' }}>{today}</span>
+          <span className="ibtm-date-short" style={{ textTransform: 'capitalize' }}>{todayShort}</span>
+        </div>
         <div className="ibtm-live">
           <span className="ibtm-live-dot" />
           <span>IBTM · Transformação</span>
