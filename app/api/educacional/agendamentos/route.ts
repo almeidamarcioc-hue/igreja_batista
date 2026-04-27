@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { requirePermission, unauthorized } from '@/lib/guard'
 import { getAgendamentosEdu, criarAgendamentoEdu } from '@/lib/db'
 
@@ -51,9 +52,10 @@ export async function POST(req: NextRequest) {
       observacoes: body.observacoes ?? '',
     }
 
+    const recorrencia_id = semanas > 1 ? randomUUID() : null
     const criados = []
     for (let i = 0; i < semanas; i++) {
-      const ag = await criarAgendamentoEdu({ ...base, data: addWeeks(body.data, i) })
+      const ag = await criarAgendamentoEdu({ ...base, data: addWeeks(body.data, i), recorrencia_id })
       criados.push(ag)
     }
 

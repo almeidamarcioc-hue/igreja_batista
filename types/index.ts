@@ -148,6 +148,7 @@ export interface AgendamentoEdu {
   assunto: string
   status: 'confirmado' | 'cancelado' | 'remarcado'
   observacoes: string
+  recorrencia_id: string | null
   data_criacao: string
   turma_nome?: string
   aluno_nome?: string

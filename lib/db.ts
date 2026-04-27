@@ -230,8 +230,11 @@ export async function initDb(): Promise<void> {
       assunto VARCHAR(300) DEFAULT '',
       status VARCHAR(20) DEFAULT 'confirmado',
       observacoes TEXT DEFAULT '',
+      recorrencia_id VARCHAR(36),
       data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
+  `
+  await sql`ALTER TABLE agendamentos_edu ADD COLUMN IF NOT EXISTS recorrencia_id VARCHAR(36)`
   `
 
   // ── Users table ──
@@ -1251,13 +1254,23 @@ export async function getAgendamentoEdu(id: number) {
 export async function criarAgendamentoEdu(data: Record<string, unknown>) {
   const sql = getDb()
   const rows = await sql`
-    INSERT INTO agendamentos_edu (turma_id, aluno_id, professor_id, data, hora, duracao_min, assunto, status, observacoes)
+    INSERT INTO agendamentos_edu (turma_id, aluno_id, professor_id, data, hora, duracao_min, assunto, status, observacoes, recorrencia_id)
     VALUES (${data.turma_id}, ${data.aluno_id ?? null}, ${data.professor_id ?? null},
             ${data.data}, ${data.hora}, ${data.duracao_min ?? 50},
-            ${data.assunto ?? ''}, ${data.status ?? 'confirmado'}, ${data.observacoes ?? ''})
+            ${data.assunto ?? ''}, ${data.status ?? 'confirmado'}, ${data.observacoes ?? ''}, ${data.recorrencia_id ?? null})
     RETURNING *
   `
   return rows[0]
+}
+
+export async function deleteAgendamentosRecorrenciaFuturos(recorrencia_id: string, data_partir: string): Promise<number> {
+  const sql = getDb()
+  const rows = await sql`
+    DELETE FROM agendamentos_edu
+    WHERE recorrencia_id = ${recorrencia_id} AND data >= ${data_partir}
+    RETURNING id
+  `
+  return rows.length
 }
 
 export async function updateAgendamentoEdu(id: number, data: Record<string, unknown>) {

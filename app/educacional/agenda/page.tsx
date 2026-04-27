@@ -40,7 +40,16 @@ type FormState = {
   status: 'confirmado' | 'cancelado' | 'remarcado'
   observacoes: string
   recorrente: boolean
+  modo_recorrencia: 'semanas' | 'data_fim'
   recorrencia_semanas: number
+  recorrencia_data_fim: string
+}
+
+function calcSemanas(inicio: string, fim: string): number {
+  const a = new Date(inicio + 'T12:00:00')
+  const b = new Date(fim + 'T12:00:00')
+  const diff = Math.round((b.getTime() - a.getTime()) / (7 * 24 * 60 * 60 * 1000))
+  return Math.max(1, diff + 1)
 }
 
 const emptyForm: FormState = {
@@ -54,7 +63,9 @@ const emptyForm: FormState = {
   status: 'confirmado',
   observacoes: '',
   recorrente: false,
+  modo_recorrencia: 'semanas',
   recorrencia_semanas: 4,
+  recorrencia_data_fim: '',
 }
 
 export default function AgendaPage() {
@@ -71,6 +82,8 @@ export default function AgendaPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [cancelRecorrencia, setCancelRecorrencia] = useState<{ recorrencia_id: string; data_partir: string; turma_nome: string } | null>(null)
+  const [cancelando, setCancelando] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -124,7 +137,9 @@ export default function AgendaPage() {
       status: ag.status,
       observacoes: ag.observacoes,
       recorrente: false,
+      modo_recorrencia: 'semanas',
       recorrencia_semanas: 4,
+      recorrencia_data_fim: '',
     })
     setShowModal(true)
   }
@@ -135,10 +150,12 @@ export default function AgendaPage() {
     try {
       const method = editing ? 'PUT' : 'POST'
       const url = editing ? `/api/educacional/agendamentos/${editing.id}` : '/api/educacional/agendamentos'
-      const { recorrente, recorrencia_semanas, ...rest } = form
-      const body = editing
-        ? rest
-        : { ...rest, recorrencia_semanas: recorrente ? recorrencia_semanas : 1 }
+      const { recorrente, modo_recorrencia, recorrencia_semanas, recorrencia_data_fim, ...rest } = form
+      const semanas = !recorrente ? 1
+        : modo_recorrencia === 'data_fim' && recorrencia_data_fim
+          ? calcSemanas(form.data, recorrencia_data_fim)
+          : recorrencia_semanas
+      const body = editing ? rest : { ...rest, recorrencia_semanas: semanas }
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -162,6 +179,25 @@ export default function AgendaPage() {
       await loadAgendamentos()
     } catch (e: any) {
       setErro(e.message)
+    }
+  }
+
+  async function handleCancelarRecorrencia() {
+    if (!cancelRecorrencia) return
+    setCancelando(true)
+    try {
+      const params = new URLSearchParams({
+        recorrencia_id: cancelRecorrencia.recorrencia_id,
+        data_partir: cancelRecorrencia.data_partir,
+      })
+      const res = await fetch(`/api/educacional/agendamentos/recorrencia?${params}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error((await res.json()).error || 'Erro ao cancelar')
+      setCancelRecorrencia(null)
+      await loadAgendamentos()
+    } catch (e: any) {
+      setErro(e.message)
+    } finally {
+      setCancelando(false)
     }
   }
 
@@ -256,7 +292,7 @@ export default function AgendaPage() {
                   <p style={{ color: '#E07535' }} className="text-xs">{turma.turno} · {ags.length} agendamento{ags.length !== 1 ? 's' : ''}</p>
                 </div>
                 <button
-                  onClick={() => { setForm({ ...emptyForm, data: dataSel, turma_id: turma.id, recorrente: false, recorrencia_semanas: 4 }); setEditing(null); setShowModal(true) }}
+                  onClick={() => { setForm({ ...emptyForm, data: dataSel, turma_id: turma.id }); setEditing(null); setShowModal(true) }}
                   style={{ color: '#E07535' }}
                   className="text-xl font-bold hover:opacity-70 flex-shrink-0"
                   title="Adicionar agendamento nesta turma"
@@ -285,6 +321,18 @@ export default function AgendaPage() {
                         <div className="flex flex-col gap-1 flex-shrink-0">
                           <button onClick={() => openEdit(ag)} style={{ color: '#E07535' }} className="text-xs font-medium hover:underline">Editar</button>
                           <button onClick={() => setConfirmDelete(ag.id)} className="text-xs text-red-500 font-medium hover:underline">Excluir</button>
+                          {ag.recorrencia_id && (
+                            <button
+                              onClick={() => setCancelRecorrencia({
+                                recorrencia_id: ag.recorrencia_id!,
+                                data_partir: ag.data.substring(0, 10),
+                                turma_nome: ag.turma_nome ?? '',
+                              })}
+                              className="text-xs text-red-400 font-medium hover:underline whitespace-nowrap"
+                            >
+                              Cancelar próximas
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2 mt-1.5">
@@ -388,7 +436,7 @@ export default function AgendaPage() {
 
               {!editing && (
                 <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, padding: '12px 14px' }}>
-                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer mb-3">
                     <input
                       type="checkbox"
                       checked={form.recorrente}
@@ -397,24 +445,60 @@ export default function AgendaPage() {
                     />
                     <span className="text-sm font-medium text-orange-800">Aula recorrente (repetir semanalmente)</span>
                   </label>
+
                   {form.recorrente && (
-                    <div className="flex items-center gap-3 mt-1">
-                      <label className="text-sm text-orange-700 whitespace-nowrap">Repetir por</label>
-                      <input
-                        type="number"
-                        min={2}
-                        max={52}
-                        className="w-20 border border-orange-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500 text-center"
-                        value={form.recorrencia_semanas}
-                        onChange={e => setForm(f => ({ ...f, recorrencia_semanas: Math.min(52, Math.max(2, Number(e.target.value))) }))}
-                      />
-                      <span className="text-sm text-orange-700">semanas</span>
-                    </div>
-                  )}
-                  {form.recorrente && (
-                    <p className="text-xs text-orange-600 mt-2">
-                      Serão criados {form.recorrencia_semanas} agendamentos, um por semana a partir de {new Date(form.data + 'T12:00:00').toLocaleDateString('pt-BR')}.
-                    </p>
+                    <>
+                      {/* Toggle modo */}
+                      <div className="flex rounded-lg overflow-hidden border border-orange-300 mb-3 w-fit">
+                        {(['semanas', 'data_fim'] as const).map(modo => (
+                          <button key={modo} type="button"
+                            onClick={() => setForm(f => ({ ...f, modo_recorrencia: modo }))}
+                            style={form.modo_recorrencia === modo
+                              ? { backgroundColor: '#E07535', color: '#fff' }
+                              : { backgroundColor: '#fff', color: '#92400e' }}
+                            className="px-3 py-1.5 text-xs font-medium transition-colors">
+                            {modo === 'semanas' ? 'Nº de semanas' : 'Data fim'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {form.modo_recorrencia === 'semanas' ? (
+                        <div className="flex items-center gap-3">
+                          <label className="text-sm text-orange-700 whitespace-nowrap">Repetir por</label>
+                          <input
+                            type="number" min={2} max={52}
+                            className="w-20 border border-orange-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500 text-center"
+                            value={form.recorrencia_semanas}
+                            onChange={e => setForm(f => ({ ...f, recorrencia_semanas: Math.min(52, Math.max(2, Number(e.target.value))) }))}
+                          />
+                          <span className="text-sm text-orange-700">semanas</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <label className="text-sm text-orange-700 whitespace-nowrap">Última aula em</label>
+                          <input
+                            type="date"
+                            min={addDays(form.data, 7)}
+                            className="border border-orange-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500"
+                            value={form.recorrencia_data_fim}
+                            onChange={e => setForm(f => ({ ...f, recorrencia_data_fim: e.target.value }))}
+                          />
+                        </div>
+                      )}
+
+                      {/* Preview */}
+                      {(() => {
+                        const semanas = form.modo_recorrencia === 'data_fim' && form.recorrencia_data_fim
+                          ? calcSemanas(form.data, form.recorrencia_data_fim)
+                          : form.recorrencia_semanas
+                        const dataFim = addDays(form.data, (semanas - 1) * 7)
+                        return semanas >= 2 ? (
+                          <p className="text-xs text-orange-600 mt-2">
+                            {semanas} aulas — de {new Date(form.data + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(dataFim + 'T12:00:00').toLocaleDateString('pt-BR')}
+                          </p>
+                        ) : null
+                      })()}
+                    </>
                   )}
                 </div>
               )}
@@ -424,13 +508,13 @@ export default function AgendaPage() {
               <button onClick={handleSave} disabled={saving || !form.turma_id || !form.data || !form.hora}
                 style={{ backgroundColor: '#E07535' }}
                 className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-                {saving
-                  ? 'Salvando...'
-                  : editing
-                    ? 'Salvar'
-                    : form.recorrente
-                      ? `Criar ${form.recorrencia_semanas} agendamentos`
-                      : 'Salvar'}
+                {saving ? 'Salvando...' : editing ? 'Salvar' : (() => {
+                  if (!form.recorrente) return 'Salvar'
+                  const semanas = form.modo_recorrencia === 'data_fim' && form.recorrencia_data_fim
+                    ? calcSemanas(form.data, form.recorrencia_data_fim)
+                    : form.recorrencia_semanas
+                  return `Criar ${semanas} aulas`
+                })()}
               </button>
             </div>
           </div>
@@ -446,6 +530,33 @@ export default function AgendaPage() {
             <div className="flex gap-3 justify-center">
               <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 rounded-lg border border-gray-300 text-sm">Cancelar</button>
               <button onClick={() => handleDelete(confirmDelete)} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600">Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelRecorrencia && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center">
+            <p className="text-2xl mb-3">🗑️</p>
+            <p className="font-semibold mb-1">Cancelar aulas futuras?</p>
+            <p className="text-sm text-gray-500 mb-2">
+              Todos os agendamentos desta série a partir de{' '}
+              <strong>{new Date(cancelRecorrencia.data_partir + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>{' '}
+              serão removidos permanentemente.
+            </p>
+            {cancelRecorrencia.turma_nome && (
+              <p className="text-xs text-gray-400 mb-5">Turma: {cancelRecorrencia.turma_nome}</p>
+            )}
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setCancelRecorrencia(null)} disabled={cancelando}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-sm">
+                Voltar
+              </button>
+              <button onClick={handleCancelarRecorrencia} disabled={cancelando}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50">
+                {cancelando ? 'Removendo...' : 'Confirmar remoção'}
+              </button>
             </div>
           </div>
         </div>
