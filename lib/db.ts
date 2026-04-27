@@ -235,7 +235,6 @@ export async function initDb(): Promise<void> {
     )
   `
   await sql`ALTER TABLE agendamentos_edu ADD COLUMN IF NOT EXISTS recorrencia_id VARCHAR(36)`
-  `
 
   // ── Users table ──
   await sql`
