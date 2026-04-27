@@ -313,7 +313,8 @@
   .ibtm-media-top { top: 16px; left: 20px; right: 20px; font-size: 10px; gap: 6px; }
   .ibtm-date-long { display: none; }
   .ibtm-date-short { display: block; }
-  .ibtm-slide { padding: 28px 20px; }
+  .ibtm-slide { padding: 28px 20px 80px; }
+  .ibtm-slide-meta { font-size: 12px; margin-top: 12px; }
 }
 @media (min-width: 601px) {
   .ibtm-date-short { display: none; }
