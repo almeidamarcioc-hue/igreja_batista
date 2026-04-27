@@ -27,22 +27,6 @@ export default function SecretariaDashboard() {
   const dataHoje = hoje()
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [resAg, resPast] = await Promise.all([
-          fetch(`/api/secretaria/agendamentos?dataInicio=${dataHoje}&dataFim=${dataHoje}`),
-          fetch('/api/secretaria/pastores'),
-        ])
-        if (!resAg.ok || !resPast.ok) throw new Error('Erro ao carregar dados')
-        setAgendamentos(Array.isArray(await resAg.clone().json()) ? await resAg.json() : [])
-        setPastores(Array.isArray(await resPast.clone().json()) ? await resPast.json() : [])
-      } catch (e: any) {
-        setErro(e.message || 'Erro desconhecido')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     async function loadData() {
       try {
         setLoading(true)
