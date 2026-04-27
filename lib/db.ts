@@ -1312,40 +1312,49 @@ export async function getUsuarioPorLogin(usuario: string) {
 
 export async function getUsuarios() {
   const sql = getDb()
-  const rows = await sql`SELECT id, usuario, nome, role, modulos, ativo, data_criacao FROM usuarios ORDER BY nome`
+  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao FROM usuarios ORDER BY nome`
   return rows
 }
 
 export async function getUsuario(id: number) {
   const sql = getDb()
-  const rows = await sql`SELECT id, usuario, nome, role, modulos, ativo, data_criacao FROM usuarios WHERE id = ${id}`
+  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao FROM usuarios WHERE id = ${id}`
   return rows[0] ?? null
 }
 
-export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string }): Promise<number> {
+export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string; perfil_id?: number | null }): Promise<number> {
   const sql = getDb()
   const hash = hashPassword(dados.senha)
   const rows = await sql`
-    INSERT INTO usuarios (usuario, senha_hash, nome, email, role, modulos)
-    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.email ?? null}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'})
+    INSERT INTO usuarios (usuario, senha_hash, nome, email, role, modulos, perfil_id)
+    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.email ?? null}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'}, ${dados.perfil_id ?? null})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
 }
 
-export async function updateUsuario(id: number, dados: { nome?: string; senha?: string; email?: string | null; role?: string; modulos?: string; ativo?: boolean }): Promise<void> {
+export async function updateUsuario(id: number, dados: { nome?: string; senha?: string; email?: string | null; role?: string; modulos?: string; perfil_id?: number | null; ativo?: boolean }): Promise<void> {
   const sql = getDb()
   const hasEmail = 'email' in dados
+  const hasPerfil = 'perfil_id' in dados
   if (dados.senha) {
     const hash = hashPassword(dados.senha)
-    if (hasEmail) {
+    if (hasEmail && hasPerfil) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, perfil_id = ${dados.perfil_id ?? null}, senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else if (hasEmail) {
       await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else if (hasPerfil) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), perfil_id = ${dados.perfil_id ?? null}, senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
     } else {
       await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), senha_hash = ${hash}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
     }
   } else {
-    if (hasEmail) {
+    if (hasEmail && hasPerfil) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, perfil_id = ${dados.perfil_id ?? null}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else if (hasEmail) {
       await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), email = ${dados.email ?? null}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
+    } else if (hasPerfil) {
+      await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), perfil_id = ${dados.perfil_id ?? null}, role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
     } else {
       await sql`UPDATE usuarios SET nome = COALESCE(${dados.nome ?? null}, nome), role = COALESCE(${dados.role ?? null}, role), modulos = COALESCE(${dados.modulos ?? null}, modulos), ativo = COALESCE(${dados.ativo ?? null}, ativo) WHERE id = ${id}`
     }
