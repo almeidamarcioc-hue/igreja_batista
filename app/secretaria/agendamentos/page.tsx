@@ -19,12 +19,20 @@ function hoje(): string {
 }
 
 const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
+let whatsappWindow: Window | null = null
 
 function abrirWhatsApp(telefone: string, mensagem: string) {
   const num = telefone.replace(/\D/g, '')
   const numero = num.startsWith('55') ? num : '55' + num
   const texto = mensagem.normalize ? mensagem.normalize('NFC') : mensagem
-  window.open(`https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`, WHATSAPP_WINDOW_NAME)
+  const url = `https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`
+
+  if (whatsappWindow && !whatsappWindow.closed) {
+    whatsappWindow.location.href = url
+    whatsappWindow.focus()
+  } else {
+    whatsappWindow = window.open(url, WHATSAPP_WINDOW_NAME)
+  }
 }
 
 export default function GerenciarAgendaPage() {

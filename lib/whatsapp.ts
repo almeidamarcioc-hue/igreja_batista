@@ -21,8 +21,16 @@ export function preencherTemplate(template: string, dados: Record<string, string
 }
 
 const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
+let whatsappWindow: Window | null = null
 
 export function abrirWhatsApp(telefone: string, mensagem: string): void {
   const url = gerarUrl(telefone, mensagem)
-  if (url) window.open(url, WHATSAPP_WINDOW_NAME, 'noopener,noreferrer')
+  if (!url) return
+
+  if (whatsappWindow && !whatsappWindow.closed) {
+    whatsappWindow.location.href = url
+    whatsappWindow.focus()
+  } else {
+    whatsappWindow = window.open(url, WHATSAPP_WINDOW_NAME)
+  }
 }
