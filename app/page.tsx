@@ -71,11 +71,11 @@ export default function WorkspacePage() {
         {hasModule('abba-store') && (
           <ModuleCard
             onClick={() => router.push('/abba-store')}
-            icon="⭐"
             title="Abba Store"
             desc="Loja da comunidade"
             accent="#3B82F6"
             bg="#1F3A93"
+            image="/abba_store.png"
           />
         )}
         {me?.role === 'admin' && (
@@ -100,8 +100,8 @@ export default function WorkspacePage() {
   )
 }
 
-function ModuleCard({ onClick, icon, title, desc, accent, bg }: {
-  onClick: () => void; icon: string; title: string; desc: string; accent: string; bg: string
+function ModuleCard({ onClick, icon, title, desc, accent, bg, image }: {
+  onClick: () => void; icon?: string; title: string; desc: string; accent: string; bg: string; image?: string
 }) {
   return (
     <button
@@ -124,7 +124,12 @@ function ModuleCard({ onClick, icon, title, desc, accent, bg }: {
         el.style.boxShadow = 'none'
       }}
     >
-      <div style={{ fontSize: 44, marginBottom: 12 }}>{icon}</div>
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt={title} style={{ width: 44, height: 44, marginBottom: 12, objectFit: 'contain' }} />
+      ) : (
+        <div style={{ fontSize: 44, marginBottom: 12 }}>{icon}</div>
+      )}
       <p style={{ color: accent, fontWeight: 700, fontSize: 17, marginBottom: 8 }}>{title}</p>
       <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.5 }}>{desc}</p>
     </button>
