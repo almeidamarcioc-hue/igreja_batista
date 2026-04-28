@@ -169,3 +169,114 @@ export interface Usuario {
   ativo: boolean
   data_criacao: string
 }
+
+// ─── Financial types ───────────────────────────────────────────────────────
+
+export interface Ministerio {
+  id: number
+  nome: string
+  descricao: string
+  orcamento_anual: number
+  responsavel: string
+  ativa: boolean
+  data_criacao: string
+}
+
+export interface Conta {
+  id: number
+  tipo: 'bancaria' | 'caixa'
+  nome: string
+  instituicao?: string
+  agencia?: string
+  numero_conta?: string
+  saldo_inicial: number
+  saldo_atual: number
+  ministerio_id?: number
+  ministerio_nome?: string
+  ativa: boolean
+  data_criacao: string
+  data_atualizacao: string
+}
+
+export interface ContaReceber {
+  id: number
+  descricao: string
+  tipo: 'dizimo' | 'oferta' | 'doacao' | 'evento' | 'outro'
+  ministerio_id?: number
+  ministerio_nome?: string
+  conta_id: number
+  conta_nome?: string
+  valor: number
+  data_vencimento: string
+  data_recebimento?: string
+  forma_pagamento: string
+  status: 'aberto' | 'recebido' | 'cancelado'
+  observacoes: string
+  data_criacao: string
+  data_atualizacao: string
+}
+
+export interface ContaPagar {
+  id: number
+  descricao: string
+  tipo: 'aluguel' | 'energia' | 'salario' | 'compra' | 'outro'
+  fornecedor?: string
+  ministerio_id?: number
+  ministerio_nome?: string
+  conta_id: number
+  conta_nome?: string
+  valor: number
+  data_vencimento: string
+  data_pagamento?: string
+  forma_pagamento: string
+  status: 'pendente' | 'pago' | 'cancelado'
+  observacoes: string
+  data_criacao: string
+  data_atualizacao: string
+}
+
+export interface HistoricoSaldo {
+  id: number
+  conta_id: number
+  saldo_anterior: number
+  saldo_novo: number
+  tipo_movimento: 'recebimento' | 'pagamento' | 'ajuste'
+  referencia_id?: number
+  descricao: string
+  data_criacao: string
+}
+
+// Dashboard types
+export interface SaldoConta {
+  id: number
+  nome: string
+  tipo: 'bancaria' | 'caixa'
+  saldo_inicial: number
+  saldo_atual: number
+  recebido_este_mes: number
+  pago_este_mes: number
+  ministerio?: string
+  ultima_atualizacao: string
+}
+
+export interface Cobertura30Dias {
+  data_consulta: string
+  saldo_atual: number
+  entrada_esperada_30d: number
+  saida_esperada_30d: number
+  diferenca: number
+  dias_de_caixa: number
+  cobertura_ok: boolean
+  alertas: string[]
+}
+
+export interface SaudeMinisterio {
+  id: number
+  nome: string
+  saldo_atual: number
+  orcamento_anual: number
+  gasto_ano: number
+  percentual_utilizado: number
+  status: 'verde' | 'amarelo' | 'vermelho'
+  tendencia: 'subindo' | 'descendo' | 'estavel'
+}

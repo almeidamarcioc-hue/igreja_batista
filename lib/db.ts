@@ -329,6 +329,100 @@ export async function initDb(): Promise<void> {
         (3, 3, 'Domingo · Culto da Família', 'Um lugar onde', 'cabe', 'a sua história.', 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.', true)
     `
   }
+
+  // ── Financial tables ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS ministerios (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL UNIQUE,
+      descricao TEXT DEFAULT '',
+      orcamento_anual DECIMAL(14,2) DEFAULT 0,
+      responsavel VARCHAR(100) DEFAULT '',
+      ativa BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS contas (
+      id SERIAL PRIMARY KEY,
+      tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('bancaria', 'caixa')),
+      nome VARCHAR(100) NOT NULL,
+      instituicao VARCHAR(100) DEFAULT '',
+      agencia VARCHAR(20) DEFAULT '',
+      numero_conta VARCHAR(30) DEFAULT '',
+      saldo_inicial DECIMAL(12,2) DEFAULT 0,
+      saldo_atual DECIMAL(12,2) DEFAULT 0,
+      ministerio_id INTEGER REFERENCES ministerios(id) ON DELETE SET NULL,
+      ativa BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW(),
+      data_atualizacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS contas_receber (
+      id SERIAL PRIMARY KEY,
+      descricao VARCHAR(200) NOT NULL,
+      tipo VARCHAR(50) NOT NULL CHECK (tipo IN ('dizimo', 'oferta', 'doacao', 'evento', 'outro')),
+      ministerio_id INTEGER REFERENCES ministerios(id) ON DELETE SET NULL,
+      conta_id INTEGER NOT NULL REFERENCES contas(id) ON DELETE RESTRICT,
+      valor DECIMAL(12,2) NOT NULL,
+      data_vencimento DATE NOT NULL,
+      data_recebimento DATE,
+      forma_pagamento VARCHAR(30) DEFAULT '',
+      status VARCHAR(20) DEFAULT 'aberto' CHECK (status IN ('aberto', 'recebido', 'cancelado')),
+      observacoes TEXT DEFAULT '',
+      data_criacao TIMESTAMPTZ DEFAULT NOW(),
+      data_atualizacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS contas_pagar (
+      id SERIAL PRIMARY KEY,
+      descricao VARCHAR(200) NOT NULL,
+      tipo VARCHAR(50) NOT NULL CHECK (tipo IN ('aluguel', 'energia', 'salario', 'compra', 'outro')),
+      fornecedor VARCHAR(150) DEFAULT '',
+      ministerio_id INTEGER REFERENCES ministerios(id) ON DELETE SET NULL,
+      conta_id INTEGER NOT NULL REFERENCES contas(id) ON DELETE RESTRICT,
+      valor DECIMAL(12,2) NOT NULL,
+      data_vencimento DATE NOT NULL,
+      data_pagamento DATE,
+      forma_pagamento VARCHAR(30) DEFAULT '',
+      status VARCHAR(20) DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado')),
+      observacoes TEXT DEFAULT '',
+      data_criacao TIMESTAMPTZ DEFAULT NOW(),
+      data_atualizacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS historico_saldo (
+      id SERIAL PRIMARY KEY,
+      conta_id INTEGER NOT NULL REFERENCES contas(id) ON DELETE CASCADE,
+      saldo_anterior DECIMAL(12,2),
+      saldo_novo DECIMAL(12,2),
+      tipo_movimento VARCHAR(30) CHECK (tipo_movimento IN ('recebimento', 'pagamento', 'ajuste')),
+      referencia_id INTEGER,
+      descricao TEXT DEFAULT '',
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  // Seed ministérios padrão
+  const ministeriosExistentes = await sql`SELECT COUNT(*) AS cnt FROM ministerios`
+  if (Number((ministeriosExistentes[0] as { cnt: string }).cnt) === 0) {
+    await sql`
+      INSERT INTO ministerios (nome, descricao, orcamento_anual, responsavel, ativa) VALUES
+        ('Geral', 'Fundo geral da igreja', 0, '', true),
+        ('Louvor', 'Ministério de Louvor e Adoração', 0, '', true),
+        ('Infantil', 'Ministério Infantil', 0, '', true),
+        ('Jovens', 'Ministério de Jovens', 0, '', true),
+        ('Missões', 'Ministério de Missões', 0, '', true),
+        ('Educacional', 'Ministério Educacional', 0, '', true)
+    `
+  }
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
