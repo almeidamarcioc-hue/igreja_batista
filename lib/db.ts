@@ -1199,7 +1199,7 @@ export async function getAgendamentosEdu(filtros?: {
     return rows
   }
 
-  if (filtros?.turma_id && filtros?.data_inicio && filtros?.data_fim) {
+  if (filtros?.data_inicio && filtros?.data_fim && filtros?.turma_id) {
     const rows = await sql`
       SELECT ag.*, t.nome AS turma_nome, a.nome AS aluno_nome, p.nome AS professor_nome
       FROM agendamentos_edu ag
@@ -1208,6 +1208,19 @@ export async function getAgendamentosEdu(filtros?: {
       LEFT JOIN professores p ON ag.professor_id = p.id
       WHERE ag.turma_id = ${filtros.turma_id}
         AND ag.data BETWEEN ${filtros.data_inicio} AND ${filtros.data_fim}
+      ORDER BY ag.data, ag.hora
+    `
+    return rows
+  }
+
+  if (filtros?.data_inicio && filtros?.data_fim) {
+    const rows = await sql`
+      SELECT ag.*, t.nome AS turma_nome, a.nome AS aluno_nome, p.nome AS professor_nome
+      FROM agendamentos_edu ag
+      LEFT JOIN turmas t ON ag.turma_id = t.id
+      LEFT JOIN alunos a ON ag.aluno_id = a.id
+      LEFT JOIN professores p ON ag.professor_id = p.id
+      WHERE ag.data BETWEEN ${filtros.data_inicio} AND ${filtros.data_fim}
       ORDER BY ag.data, ag.hora
     `
     return rows
