@@ -21,6 +21,20 @@ function hoje(): string {
 const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
 let whatsappWindow: Window | null = null
 
+function obterJanelaWhatsApp(url: string): Window | null {
+  try {
+    const existing = window.open('', WHATSAPP_WINDOW_NAME)
+    if (existing && !existing.closed) {
+      existing.location.href = url
+      existing.focus()
+      return existing
+    }
+  } catch {
+    // se não for possível acessar a aba existente, criamos uma nova
+  }
+  return window.open(url, WHATSAPP_WINDOW_NAME)
+}
+
 function abrirWhatsApp(telefone: string, mensagem: string) {
   const num = telefone.replace(/\D/g, '')
   const numero = num.startsWith('55') ? num : '55' + num
@@ -31,7 +45,7 @@ function abrirWhatsApp(telefone: string, mensagem: string) {
     whatsappWindow.location.href = url
     whatsappWindow.focus()
   } else {
-    whatsappWindow = window.open(url, WHATSAPP_WINDOW_NAME)
+    whatsappWindow = obterJanelaWhatsApp(url)
   }
 }
 
