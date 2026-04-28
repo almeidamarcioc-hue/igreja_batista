@@ -8,8 +8,7 @@ export function gerarUrl(telefone: string, mensagem: string): string | null {
   const numero = formatarTelefone(telefone)
   if (numero.length < 12) return null
   const texto = mensagem.normalize ? mensagem.normalize('NFC') : mensagem
-  const params = new URLSearchParams({ text: texto })
-  return `https://api.whatsapp.com/send?phone=${numero}&${params.toString()}`
+  return `https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`
 }
 
 export function preencherTemplate(template: string, dados: Record<string, string>): string {

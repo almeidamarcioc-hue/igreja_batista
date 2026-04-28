@@ -22,8 +22,7 @@ function abrirWhatsApp(telefone: string, mensagem: string) {
   const num = telefone.replace(/\D/g, '')
   const numero = num.startsWith('55') ? num : '55' + num
   const texto = mensagem.normalize ? mensagem.normalize('NFC') : mensagem
-  const params = new URLSearchParams({ text: texto })
-  window.open(`https://api.whatsapp.com/send?phone=${numero}&${params.toString()}`, '_blank')
+  window.open(`https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`, '_blank')
 }
 
 export default function GerenciarAgendaPage() {
