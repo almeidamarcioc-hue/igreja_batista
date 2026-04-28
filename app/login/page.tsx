@@ -127,14 +127,15 @@ interface SlideData {
   titulo_italico: string
   titulo_depois: string
   descricao: string
+  imagem_fundo: string
   ativo: boolean
 }
 
 const FALLBACK_SLIDES: SlideData[] = [
-  { variante: 0, eyebrow: 'Bem-vindo', titulo_antes: 'Toda boa', titulo_italico: 'dádiva', titulo_depois: 'vem do alto.', descricao: 'Tiago 1:17 — A força da nossa comunidade está em servir uns aos outros com alegria.', ativo: true },
-  { variante: 1, eyebrow: 'Quartas, 19h30', titulo_antes: 'Estudo', titulo_italico: 'bíblico', titulo_depois: 'de quarta-feira.', descricao: 'Encontros semanais para aprofundar a Palavra, com momentos de oração e comunhão entre irmãos.', ativo: true },
-  { variante: 2, eyebrow: 'Acampadentro 2026', titulo_antes: 'Três dias para', titulo_italico: 'respirar', titulo_depois: 'na presença d’Ele.', descricao: 'Inscrições abertas para o retiro anual da família IBTM. Programação completa em breve.', ativo: true },
-  { variante: 3, eyebrow: 'Domingo · Culto da Família', titulo_antes: 'Um lugar onde', titulo_italico: 'cabe', titulo_depois: 'a sua história.', descricao: 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.', ativo: true },
+  { variante: 0, eyebrow: 'Bem-vindo', titulo_antes: 'Toda boa', titulo_italico: 'dádiva', titulo_depois: 'vem do alto.', descricao: 'Tiago 1:17 — A força da nossa comunidade está em servir uns aos outros com alegria.', imagem_fundo: '', ativo: true },
+  { variante: 1, eyebrow: 'Quartas, 19h30', titulo_antes: 'Estudo', titulo_italico: 'bíblico', titulo_depois: 'de quarta-feira.', descricao: 'Encontros semanais para aprofundar a Palavra, com momentos de oração e comunhão entre irmãos.', imagem_fundo: '', ativo: true },
+  { variante: 2, eyebrow: 'Acampadentro 2026', titulo_antes: 'Três dias para', titulo_italico: 'respirar', titulo_depois: 'na presença d\'Ele.', descricao: 'Inscrições abertas para o retiro anual da família IBTM. Programação completa em breve.', imagem_fundo: '', ativo: true },
+  { variante: 3, eyebrow: 'Domingo · Culto da Família', titulo_antes: 'Um lugar onde', titulo_italico: 'cabe', titulo_depois: 'a sua história.', descricao: 'Cultos às 9h, 11h e 19h. Ministério infantil, jovens e família — para todas as idades.', imagem_fundo: '', ativo: true },
 ]
 
 // ── Carousel ─────────────────────────────────────────────────────────────────
@@ -181,7 +182,12 @@ function MediaCarousel() {
       onMouseLeave={() => setPaused(false)}
     >
       {slides.map((s, i) => (
-        <div key={i} className={`ibtm-slide ${VARIANT_CLS[s.variante % 4]} ${i === idx ? 'is-active' : ''}`}>
+        <div key={i} className={`ibtm-slide ${VARIANT_CLS[s.variante % 4]} ${i === idx ? 'is-active' : ''}`}
+          style={{
+            backgroundImage: s.imagem_fundo ? `url(${s.imagem_fundo})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}>
           <DecoShapes variant={s.variante % 4} />
           <div className="ibtm-slide-content">
             <div className="ibtm-slide-eyebrow">{s.eyebrow}</div>
