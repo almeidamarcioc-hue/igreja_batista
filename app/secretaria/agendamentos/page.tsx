@@ -106,11 +106,11 @@ export default function GerenciarAgendaPage() {
       setSucesso('Agendamento atualizado!')
       if (status === 'cancelado' && oldStatus !== 'cancelado') {
         const msg = (config?.msg_cancelamento || `Olá ${nomeFiel}, seu agendamento foi cancelado.`).replace('{nome_fiel}', nomeFiel).replace('{data}', data).replace('{hora}', hora)
-        abrirWhatsApp(telefone, msg)
+        waOpen(telefone, msg)
       }
       if ((data !== oldData || hora !== oldHora) && status !== 'cancelado') {
         const msg = (config?.msg_remarcacao || `Olá ${nomeFiel}, seu agendamento foi remarcado para ${data} às ${hora}.`).replace('{nome_fiel}', nomeFiel).replace('{data}', data).replace('{hora}', hora)
-        abrirWhatsApp(telefone, msg)
+        waOpen(telefone, msg)
       }
       await carregarAgendamentos()
       setSelecionado(null)
