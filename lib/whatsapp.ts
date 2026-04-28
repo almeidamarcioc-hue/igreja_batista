@@ -20,7 +20,7 @@ export function preencherTemplate(template: string, dados: Record<string, string
   return resultado
 }
 
-const WHATSAPP_WINDOW_NAME = 'whatsapp_notificacao'
+const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
 
 export function abrirWhatsApp(telefone: string, mensagem: string): void {
   const url = gerarUrl(telefone, mensagem)
