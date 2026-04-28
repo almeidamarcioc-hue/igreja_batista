@@ -18,11 +18,13 @@ function hoje(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
+
 function abrirWhatsApp(telefone: string, mensagem: string) {
   const num = telefone.replace(/\D/g, '')
   const numero = num.startsWith('55') ? num : '55' + num
   const texto = mensagem.normalize ? mensagem.normalize('NFC') : mensagem
-  window.open(`https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`, '_blank')
+  window.open(`https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`, WHATSAPP_WINDOW_NAME)
 }
 
 export default function GerenciarAgendaPage() {
