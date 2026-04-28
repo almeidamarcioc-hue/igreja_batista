@@ -126,7 +126,7 @@ function ModuleCard({ onClick, icon, title, desc, accent, bg, image }: {
     >
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt={title} style={{ width: 44, height: 44, marginBottom: 12, objectFit: 'contain' }} />
+        <img src={image} alt={title} style={{ width: 80, height: 80, marginBottom: 12, objectFit: 'contain' }} />
       ) : (
         <div style={{ fontSize: 44, marginBottom: 12 }}>{icon}</div>
       )}

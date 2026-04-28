@@ -11,6 +11,7 @@ interface Slide {
   titulo_italico: string
   titulo_depois: string
   descricao: string
+  imagem_fundo: string
   ativo: boolean
 }
 
@@ -36,6 +37,7 @@ const emptySlide = (): Slide => ({
   titulo_italico: '',
   titulo_depois: '',
   descricao: '',
+  imagem_fundo: '',
   ativo: true,
 })
 
@@ -265,6 +267,10 @@ function SlideCard({
             placeholder="Texto de apoio abaixo do título"
             onChange={v => onChange('descricao', v)}
             multiline />
+
+          <Field label="Imagem de fundo" value={slide.imagem_fundo}
+            placeholder="https://exemplo.com/imagem.jpg"
+            onChange={v => onChange('imagem_fundo', v)} />
         </div>
 
         {/* Right: gradient picker + preview */}
@@ -300,6 +306,9 @@ function SlideCard({
               className="block mb-2">Pré-visualização</label>
             <div style={{
               background: GRAD_STYLES[slide.variante],
+              backgroundImage: slide.imagem_fundo ? `url(${slide.imagem_fundo})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               borderRadius: 10, padding: '20px 18px', minHeight: 110,
               display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
             }}>

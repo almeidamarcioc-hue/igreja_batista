@@ -313,6 +313,7 @@ export async function initDb(): Promise<void> {
       titulo_italico TEXT NOT NULL DEFAULT '',
       titulo_depois TEXT NOT NULL DEFAULT '',
       descricao TEXT NOT NULL DEFAULT '',
+      imagem_fundo TEXT NOT NULL DEFAULT '',
       ativo BOOLEAN NOT NULL DEFAULT TRUE
     )
   `
@@ -1408,14 +1409,15 @@ export async function updateCarouselSlides(slides: Array<{
   titulo_italico: string
   titulo_depois: string
   descricao: string
+  imagem_fundo: string
   ativo: boolean
 }>): Promise<void> {
   const sql = getDb()
   await sql`DELETE FROM carousel_slides`
   for (const s of slides) {
     await sql`
-      INSERT INTO carousel_slides (ordem, variante, eyebrow, titulo_antes, titulo_italico, titulo_depois, descricao, ativo)
-      VALUES (${s.ordem}, ${s.variante}, ${s.eyebrow}, ${s.titulo_antes}, ${s.titulo_italico}, ${s.titulo_depois}, ${s.descricao}, ${s.ativo})
+      INSERT INTO carousel_slides (ordem, variante, eyebrow, titulo_antes, titulo_italico, titulo_depois, descricao, imagem_fundo, ativo)
+      VALUES (${s.ordem}, ${s.variante}, ${s.eyebrow}, ${s.titulo_antes}, ${s.titulo_italico}, ${s.titulo_depois}, ${s.descricao}, ${s.imagem_fundo}, ${s.ativo})
     `
   }
 }
