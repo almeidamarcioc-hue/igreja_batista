@@ -21,30 +21,22 @@ export function preencherTemplate(template: string, dados: Record<string, string
 }
 
 const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
-let whatsappWindow: Window | null = null
-
-function obterJanelaWhatsApp(url: string): Window | null {
-  try {
-    const existing = window.open('', WHATSAPP_WINDOW_NAME)
-    if (existing && !existing.closed) {
-      existing.location.href = url
-      existing.focus()
-      return existing
-    }
-  } catch {
-    // se não for possível acessar a aba existente, criamos uma nova
-  }
-  return window.open(url, WHATSAPP_WINDOW_NAME)
-}
 
 export function abrirWhatsApp(telefone: string, mensagem: string): void {
   const url = gerarUrl(telefone, mensagem)
   if (!url) return
 
-  if (whatsappWindow && !whatsappWindow.closed) {
-    whatsappWindow.location.href = url
-    whatsappWindow.focus()
-  } else {
-    whatsappWindow = obterJanelaWhatsApp(url)
+  try {
+    const existingWindow = window.open('', WHATSAPP_WINDOW_NAME)
+    if (existingWindow && !existingWindow.closed) {
+      existingWindow.location.href = url
+      existingWindow.focus()
+      return
+    }
+  } catch {
+    // ignore and open a new window if recovery fails
   }
+
+  const whatsappWindow = window.open(url, WHATSAPP_WINDOW_NAME)
+  if (whatsappWindow) whatsappWindow.focus()
 }

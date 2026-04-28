@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { AgendamentoPastoral, Pastor, Configuracoes } from '@/types'
+import { abrirWhatsApp as waOpen } from '@/lib/whatsapp'
 
 const HORARIOS = Array.from({ length: 22 }, (_, i) => {
   const totalMin = 8 * 60 + i * 30
@@ -18,36 +19,6 @@ function hoje(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const WHATSAPP_WINDOW_NAME = 'whatsapp-messages'
-let whatsappWindow: Window | null = null
-
-function obterJanelaWhatsApp(url: string): Window | null {
-  try {
-    const existing = window.open('', WHATSAPP_WINDOW_NAME)
-    if (existing && !existing.closed) {
-      existing.location.href = url
-      existing.focus()
-      return existing
-    }
-  } catch {
-    // se não for possível acessar a aba existente, criamos uma nova
-  }
-  return window.open(url, WHATSAPP_WINDOW_NAME)
-}
-
-function abrirWhatsApp(telefone: string, mensagem: string) {
-  const num = telefone.replace(/\D/g, '')
-  const numero = num.startsWith('55') ? num : '55' + num
-  const texto = mensagem.normalize ? mensagem.normalize('NFC') : mensagem
-  const url = `https://web.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(texto)}`
-
-  if (whatsappWindow && !whatsappWindow.closed) {
-    whatsappWindow.location.href = url
-    whatsappWindow.focus()
-  } else {
-    whatsappWindow = obterJanelaWhatsApp(url)
-  }
-}
 
 export default function GerenciarAgendaPage() {
   const [agendamentos, setAgendamentos] = useState<AgendamentoPastoral[]>([])
