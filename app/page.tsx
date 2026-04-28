@@ -71,11 +71,11 @@ export default function WorkspacePage() {
         {hasModule('abba-store') && (
           <ModuleCard
             onClick={() => router.push('/abba-store')}
+            icon="⭐"
             title="Abba Store"
             desc="Loja da comunidade"
             accent="#3B82F6"
             bg="#1F3A93"
-            image="/abba_store.png"
           />
         )}
         {me?.role === 'admin' && (
