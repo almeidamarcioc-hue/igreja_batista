@@ -114,7 +114,7 @@ export default function NovaReceitaPage() {
             <input
               type="number"
               value={form.valor}
-              onChange={(e) => setForm({ ...form, valor: e.target.value })}
+              onChange={(e) => setForm({ ...form, valor: parseFloat(e.target.value) })}
               step="0.01"
               className="w-full p-3 border rounded"
               required

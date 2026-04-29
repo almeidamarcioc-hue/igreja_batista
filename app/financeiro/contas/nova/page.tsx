@@ -105,7 +105,7 @@ export default function NovaContaPage() {
           <input
             type="number"
             value={form.saldo_inicial}
-            onChange={(e) => setForm({ ...form, saldo_inicial: e.target.value })}
+            onChange={(e) => setForm({ ...form, saldo_inicial: parseFloat(e.target.value) })}
             step="0.01"
             className="w-full p-3 border rounded"
             required

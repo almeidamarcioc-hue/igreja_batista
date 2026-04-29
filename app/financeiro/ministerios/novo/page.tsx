@@ -72,7 +72,7 @@ export default function NovoMinisterioPage() {
             <input
               type="number"
               value={form.orcamento_anual}
-              onChange={(e) => setForm({ ...form, orcamento_anual: e.target.value })}
+              onChange={(e) => setForm({ ...form, orcamento_anual: parseFloat(e.target.value) })}
               step="0.01"
               className="w-full p-3 border rounded"
               required
