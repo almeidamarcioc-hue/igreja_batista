@@ -6,9 +6,10 @@ import {
 } from '@/lib/financeiro'
 
 // GET /api/financeiro/contas-pagar/[id]
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     const conta = await getContaPagar(id)
     
     if (!conta) {
@@ -23,9 +24,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT /api/financeiro/contas-pagar/[id]
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     const dados = await req.json()
     await updateContaPagar(id, dados)
     return NextResponse.json({ success: true })
@@ -36,9 +38,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE /api/financeiro/contas-pagar/[id]
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     await deleteContaPagar(id)
     return NextResponse.json({ success: true })
   } catch (error) {

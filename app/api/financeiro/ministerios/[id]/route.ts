@@ -6,9 +6,10 @@ import {
 } from '@/lib/financeiro'
 
 // GET /api/financeiro/ministerios/[id] - Obter um ministério
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     const ministerio = await getMinisterio(id)
     
     if (!ministerio) {
@@ -23,9 +24,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT /api/financeiro/ministerios/[id] - Atualizar ministério
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     const dados = await req.json()
     await updateMinisterio(id, dados)
     return NextResponse.json({ success: true })
@@ -36,9 +38,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE /api/financeiro/ministerios/[id] - Deletar ministério
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     await deleteMinisterio(id)
     return NextResponse.json({ success: true })
   } catch (error) {
