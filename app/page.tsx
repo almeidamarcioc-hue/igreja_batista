@@ -78,6 +78,16 @@ export default function WorkspacePage() {
             bg="#1F3A93"
           />
         )}
+        {hasModule('financeiro') && (
+          <ModuleCard
+            onClick={() => router.push('/financeiro')}
+            icon="💰"
+            title="Financeiro"
+            desc="Receitas, despesas e contas"
+            accent="#10B981"
+            bg="#064E3B"
+          />
+        )}
         {me?.role === 'admin' && (
           <ModuleCard
             onClick={() => router.push('/configuracoes')}
