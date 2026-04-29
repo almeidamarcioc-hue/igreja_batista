@@ -37,11 +37,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// DELETE /api/financeiro/contas-receber/[id]Promise<{ id: string }> }) {
+// DELETE /api/financeiro/contas-receber/[id]
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idStr } = await params
-    const id = parseInt(idStr
-    const id = parseInt(params.id)
+    const id = parseInt(idStr)
     await deleteContaReceber(id)
     return NextResponse.json({ success: true })
   } catch (error) {
