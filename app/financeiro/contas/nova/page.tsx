@@ -61,7 +61,7 @@ export default function NovaContaPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Nome</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Nome</label>
           <input
             type="text"
             value={form.nome}
@@ -74,7 +74,7 @@ export default function NovaContaPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Tipo</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Tipo</label>
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value })}
@@ -86,7 +86,7 @@ export default function NovaContaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Ministério</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Ministério</label>
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
@@ -101,7 +101,7 @@ export default function NovaContaPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Saldo Inicial</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Saldo Inicial</label>
           <input
             type="number"
             value={form.saldo_inicial}
@@ -115,7 +115,7 @@ export default function NovaContaPage() {
         {form.tipo === 'bancaria' && (
           <>
             <div>
-              <label className="block text-sm font-medium mb-2">Banco</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">Banco</label>
               <input
                 type="text"
                 value={form.banco}
@@ -127,7 +127,7 @@ export default function NovaContaPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Agência</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">Agência</label>
                 <input
                   type="text"
                   value={form.agencia}
@@ -138,7 +138,7 @@ export default function NovaContaPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Conta</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">Conta</label>
                 <input
                   type="text"
                   value={form.conta}
@@ -150,7 +150,7 @@ export default function NovaContaPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Titular</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">Titular</label>
               <input
                 type="text"
                 value={form.titular}

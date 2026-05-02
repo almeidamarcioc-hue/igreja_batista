@@ -17,12 +17,17 @@ export default function FinanceiroLayout({ children }: { children: React.ReactNo
           {open ? '◀' : '▶'}
         </button>
 
-        <nav className="flex-1 space-y-2 p-4">
+        <nav className="flex-1 space-y-4 p-4 overflow-y-auto">
           <NavLink href="/financeiro" icon="📊" label="Dashboard" open={open} />
-          <NavLink href="/financeiro/receitas" icon="⬆️" label="Receitas" open={open} />
-          <NavLink href="/financeiro/despesas" icon="⬇️" label="Despesas" open={open} />
-          <NavLink href="/financeiro/contas" icon="🏦" label="Contas" open={open} />
-          <NavLink href="/financeiro/ministerios" icon="⛪" label="Ministérios" open={open} />
+
+          {open && <MenuGroup label="Lançamentos" />}
+          <NavLink href="/financeiro/receitas" icon="⬆️" label="Receitas" open={open} submenu />
+          <NavLink href="/financeiro/despesas" icon="⬇️" label="Despesas" open={open} submenu />
+
+          {open && <MenuGroup label="Cadastros" />}
+          <NavLink href="/financeiro/contas" icon="🏦" label="Contas" open={open} submenu />
+          <NavLink href="/financeiro/ministerios" icon="⛪" label="Ministérios" open={open} submenu />
+
           <NavLink href="/financeiro/relatorios" icon="📈" label="Relatórios" open={open} />
         </nav>
 
@@ -49,14 +54,22 @@ export default function FinanceiroLayout({ children }: { children: React.ReactNo
   )
 }
 
-function NavLink({ href, icon, label, open }: any) {
+function NavLink({ href, icon, label, open, submenu }: any) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition-colors"
+      className={`flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition-colors ${submenu ? 'pl-8' : ''}`}
     >
       <span className="text-xl">{icon}</span>
       {open && <span className="text-sm">{label}</span>}
     </Link>
+  )
+}
+
+function MenuGroup({ label }: any) {
+  return (
+    <div className="px-3 py-2 mt-2">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
+    </div>
   )
 }

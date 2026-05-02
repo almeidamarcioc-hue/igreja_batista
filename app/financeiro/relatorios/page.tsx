@@ -66,7 +66,7 @@ export default function RelatoriosPage() {
       {/* Filtros de data */}
       <div className="bg-white p-6 rounded-lg shadow flex gap-4 items-end">
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Data Início</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Data Início</label>
           <input
             type="date"
             value={dataInicio}
@@ -75,7 +75,7 @@ export default function RelatoriosPage() {
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Data Fim</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Data Fim</label>
           <input
             type="date"
             value={dataFim}

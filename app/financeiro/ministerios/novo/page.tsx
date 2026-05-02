@@ -44,7 +44,7 @@ export default function NovoMinisterioPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Nome</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Nome</label>
           <input
             type="text"
             value={form.nome}
@@ -56,7 +56,7 @@ export default function NovoMinisterioPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Descrição</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Descrição</label>
           <textarea
             value={form.descricao}
             onChange={(e) => setForm({ ...form, descricao: e.target.value })}
@@ -68,7 +68,7 @@ export default function NovoMinisterioPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Orçamento Anual</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Orçamento Anual</label>
             <input
               type="number"
               value={form.orcamento_anual}
@@ -80,7 +80,7 @@ export default function NovoMinisterioPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Responsável</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Responsável</label>
             <input
               type="text"
               value={form.responsavel}

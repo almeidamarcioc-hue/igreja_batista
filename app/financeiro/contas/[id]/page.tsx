@@ -95,7 +95,7 @@ export default function EditarContaPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Nome</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Nome</label>
           <input
             type="text"
             value={form.nome}
@@ -108,7 +108,7 @@ export default function EditarContaPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Tipo</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Tipo</label>
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value as 'bancaria' | 'caixa' })}
@@ -120,7 +120,7 @@ export default function EditarContaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Ministério</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Ministério</label>
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
@@ -137,7 +137,7 @@ export default function EditarContaPage() {
         {form.tipo === 'bancaria' && (
           <>
             <div>
-              <label className="block text-sm font-medium mb-2">Instituição Bancária</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">Instituição Bancária</label>
               <input
                 type="text"
                 value={form.instituicao}
@@ -149,7 +149,7 @@ export default function EditarContaPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Agência</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">Agência</label>
                 <input
                   type="text"
                   value={form.agencia}
@@ -160,7 +160,7 @@ export default function EditarContaPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Número da Conta</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">Número da Conta</label>
                 <input
                   type="text"
                   value={form.numero_conta}

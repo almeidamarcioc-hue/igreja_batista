@@ -68,7 +68,7 @@ export default function NovaReceitaPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Descrição</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Descrição</label>
           <input
             type="text"
             value={form.descricao}
@@ -80,7 +80,7 @@ export default function NovaReceitaPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Tipo</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Tipo</label>
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value })}
@@ -94,7 +94,7 @@ export default function NovaReceitaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Ministério</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Ministério</label>
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
@@ -110,7 +110,7 @@ export default function NovaReceitaPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Valor</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Valor</label>
             <input
               type="number"
               value={form.valor}
@@ -122,7 +122,7 @@ export default function NovaReceitaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Data Vencimento</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Data Vencimento</label>
             <input
               type="date"
               value={form.data_vencimento}
@@ -135,7 +135,7 @@ export default function NovaReceitaPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Conta</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Conta</label>
             <select
               value={form.conta_id}
               onChange={(e) => setForm({ ...form, conta_id: e.target.value })}
@@ -149,7 +149,7 @@ export default function NovaReceitaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Forma Pagamento</label>
+            <label className="block text-sm font-medium mb-2 text-gray-900">Forma Pagamento</label>
             <select
               value={form.forma_pagamento}
               onChange={(e) => setForm({ ...form, forma_pagamento: e.target.value })}
@@ -164,7 +164,7 @@ export default function NovaReceitaPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Observações</label>
+          <label className="block text-sm font-medium mb-2 text-gray-900">Observações</label>
           <textarea
             value={form.observacoes}
             onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
