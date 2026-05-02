@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://igreja-batista.vercel.app'),
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
+    icon: '/ibtm-logo.png',
+    apple: '/ibtm-logo.png',
   },
   appleWebApp: {
     capable: true,
