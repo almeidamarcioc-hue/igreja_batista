@@ -67,21 +67,21 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
 
   const sidebar = (
     <aside style={{ backgroundColor: '#002347', borderRight: '2px solid #C5A059' }} className="flex flex-col h-full w-64">
-      <div className="flex items-center justify-center py-8 px-4">
+      <div className="flex items-center justify-center py-6 px-4">
         {!logoError ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/ibtm-logo.png" alt="IBTM" width={140} style={{ maxHeight: 80, objectFit: 'contain' }} onError={() => setLogoError(true)} />
+          <img src="/ibtm-logo.png" alt="IBTM" width={120} style={{ maxHeight: 64, objectFit: 'contain' }} onError={() => setLogoError(true)} />
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-4xl">💰</span>
-            <span style={{ color: '#C5A059' }} className="text-lg font-bold tracking-widest">IBTM</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-3xl">💰</span>
+            <span style={{ color: '#C5A059' }} className="text-xl font-bold tracking-widest">IBTM</span>
           </div>
         )}
       </div>
 
-      <div style={{ borderColor: '#C5A059' }} className="border-t mx-6 opacity-30" />
+      <div style={{ borderColor: '#C5A059' }} className="border-t mx-4 opacity-40" />
 
-      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+      <nav className="flex-1 overflow-y-auto py-4 px-2">
         {navEntries.map((entry) => {
           if (isGroup(entry)) {
             const childActive = entry.children.some((c) => pathname.startsWith(c.href))
@@ -91,14 +91,14 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
                 <button
                   onClick={() => toggleGroup(entry.label)}
                   style={childActive ? { color: '#C5A059' } : { color: '#a0aec0' }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-150 hover:bg-slate-700"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
                 >
                   <span className="text-base leading-none">{entry.icon}</span>
                   <span className="flex-1 text-left">{entry.label}</span>
                   <span className="text-xs opacity-60">{isOpen ? '▲' : '▼'}</span>
                 </button>
                 {isOpen && (
-                  <div className="mt-2 pl-2 space-y-1">
+                  <div className="pl-4 mb-1">
                     {entry.children.map((child) => {
                       const active = pathname.startsWith(child.href)
                       return (
@@ -107,9 +107,9 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
                           href={child.href}
                           onClick={onClose}
                           style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
-                          className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 hover:text-yellow-300 block"
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
                         >
-                          <span className="text-base leading-none">{child.icon}</span>
+                          <span className="text-sm leading-none">{child.icon}</span>
                           <span>{child.label}</span>
                         </Link>
                       )
@@ -127,7 +127,7 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
               href={entry.href}
               onClick={onClose}
               style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 hover:text-yellow-300 block"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
             >
               <span className="text-base leading-none">{entry.icon}</span>
               <span>{entry.label}</span>
@@ -136,34 +136,27 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
         })}
       </nav>
 
-      <div style={{ borderColor: '#C5A059' }} className="border-t mx-6 opacity-30" />
+      <div style={{ borderColor: '#C5A059' }} className="border-t mx-4 opacity-40" />
 
-      <div style={{ color: '#a0aec0' }} className="p-5 text-center text-xs font-medium">
-        <div className="mb-3">{dd}/{mm}/{yyyy}</div>
-        <div className="font-mono text-sm">{hh}:{min}</div>
-      </div>
-
-      <div className="px-4 pb-6">
-        <Link
-          href="/"
-          onClick={onClose}
-          style={{ backgroundColor: '#C5A059', color: '#002347' }}
-          className="w-full py-3 px-4 rounded-lg text-sm font-bold text-center transition-all duration-150 hover:opacity-90 block"
-        >
-          ← Voltar
-        </Link>
+      <div className="px-4 py-4 text-center">
+        <p style={{ color: '#C5A059' }} className="text-xs font-semibold">{dd}/{mm}/{yyyy}</p>
+        <p style={{ color: '#6b7a8d' }} className="text-xs mt-1">{hh}:{min}</p>
+        <div className="flex gap-3 justify-center mt-3">
+          <Link href="/" style={{ color: '#C5A059' }} className="text-xs hover:underline">← Voltar</Link>
+        </div>
       </div>
     </aside>
   )
 
   return (
     <>
+      <div className="hidden md:block fixed top-0 left-0 h-full w-64 z-50">{sidebar}</div>
       {open && (
-        <div onClick={onClose} className="fixed inset-0 bg-black/50 z-20 md:hidden" />
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={onClose} />
+          <div className="fixed top-0 left-0 h-full w-64 z-50 md:hidden">{sidebar}</div>
+        </>
       )}
-      <div className={`fixed md:static inset-y-0 left-0 z-20 transform md:transform-none transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        {sidebar}
-      </div>
     </>
   )
 }
