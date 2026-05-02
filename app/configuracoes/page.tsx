@@ -29,6 +29,7 @@ interface Perfil {
 const MODULOS_PERM = [
   { key: 'secretaria', label: 'Secretaria' },
   { key: 'educacional', label: 'Educacional' },
+  { key: 'financeiro', label: 'Financeiro' },
 ]
 
 const ACOES_PERM = [
@@ -56,7 +57,11 @@ const MODULOS_OPTS = [
   { value: '*', label: 'Todos os módulos' },
   { value: 'secretaria', label: 'Secretaria' },
   { value: 'educacional', label: 'Educacional' },
+  { value: 'financeiro', label: 'Financeiro' },
   { value: 'secretaria,educacional', label: 'Secretaria + Educacional' },
+  { value: 'secretaria,financeiro', label: 'Secretaria + Financeiro' },
+  { value: 'educacional,financeiro', label: 'Educacional + Financeiro' },
+  { value: 'secretaria,educacional,financeiro', label: 'Todos' },
 ]
 
 const emptyUser = { usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'secretaria', perfil_id: null as number | null, ativo: true }
