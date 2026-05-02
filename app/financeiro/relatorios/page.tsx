@@ -61,7 +61,7 @@ export default function RelatoriosPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold">📈 Relatórios</h2>
+      <h2 className="text-3xl font-bold text-gray-900">📈 Relatórios</h2>
 
       {/* Filtros de data */}
       <div className="bg-white p-6 rounded-lg shadow flex gap-4 items-end">

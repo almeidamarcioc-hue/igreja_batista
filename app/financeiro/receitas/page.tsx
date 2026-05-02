@@ -42,7 +42,7 @@ export default function ReceitasPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">📥 Receitas</h2>
+        <h2 className="text-3xl font-bold text-gray-900">📥 Receitas</h2>
         <Link
           href="/financeiro/receitas/nova"
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"

@@ -32,7 +32,7 @@ export default function ContasPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">🏦 Contas</h2>
+        <h2 className="text-3xl font-bold text-gray-900">🏦 Contas</h2>
         <Link
           href="/financeiro/contas/nova"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

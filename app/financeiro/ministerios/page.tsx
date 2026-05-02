@@ -32,7 +32,7 @@ export default function MinisteriosPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">⛪ Ministérios</h2>
+        <h2 className="text-3xl font-bold text-gray-900">⛪ Ministérios</h2>
         <Link
           href="/financeiro/ministerios/novo"
           className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"

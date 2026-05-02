@@ -42,7 +42,7 @@ export default function DespesasPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">📤 Despesas</h2>
+        <h2 className="text-3xl font-bold text-gray-900">📤 Despesas</h2>
         <Link
           href="/financeiro/despesas/nova"
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
