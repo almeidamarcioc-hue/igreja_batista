@@ -211,7 +211,7 @@ export default function RelatoriosPage() {
                           </span>
                         </td>
                         <td className="p-3 text-gray-900">{r.ministerio_nome || '—'}</td>
-                        <td className="text-right p-3 font-medium text-gray-900">R$ {r.valor.toFixed(2)}</td>
+                        <td className="text-right p-3 font-medium text-gray-900">R$ {Number(r.valor).toFixed(2)}</td>
                         <td className="text-center p-3">
                           <span
                             className={`text-xs px-2 py-1 rounded font-bold
@@ -269,7 +269,7 @@ export default function RelatoriosPage() {
                         </td>
                         <td className="p-3 text-gray-900">{d.fornecedor || '—'}</td>
                         <td className="p-3 text-gray-900">{d.ministerio_nome || '—'}</td>
-                        <td className="text-right p-3 font-medium text-gray-900">R$ {d.valor.toFixed(2)}</td>
+                        <td className="text-right p-3 font-medium text-gray-900">R$ {Number(d.valor).toFixed(2)}</td>
                         <td className="text-center p-3">
                           <span
                             className={`text-xs px-2 py-1 rounded font-bold
@@ -321,7 +321,7 @@ export default function RelatoriosPage() {
                       <tr key={m.id} className="border-t hover:bg-gray-50">
                         <td className="p-3 font-medium text-gray-900">{m.nome}</td>
                         <td className="text-right p-3 text-gray-900">R$ {m.saldo_atual.toFixed(2)}</td>
-                        <td className="text-right p-3 text-gray-900">R$ {m.orcamento_anual.toFixed(2)}</td>
+                        <td className="text-right p-3 text-gray-900">R$ {Number(m.orcamento_anual).toFixed(2)}</td>
                         <td className="text-right p-3 text-gray-900">R$ {m.gasto_ano.toFixed(2)}</td>
                         <td className="text-right p-3 font-bold text-gray-900">{m.percentual_utilizado.toFixed(1)}%</td>
                         <td className="text-center p-3">

@@ -51,7 +51,7 @@ export default function FinanceiroDashboard() {
           <div>
             <div className="text-gray-900 text-sm">Diferença</div>
             <div className={`text-3xl font-bold ${cobertura_30dias.diferenca >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              R$ {Math.abs(cobertura_30dias.diferenca).toFixed(2)}
+              R$ {Math.abs(Number(cobertura_30dias.diferenca)).toFixed(2)}
             </div>
           </div>
           <div>
@@ -85,8 +85,8 @@ export default function FinanceiroDashboard() {
             {saude_ministerios.map((m: any) => (
               <tr key={m.id} className="border-t hover:bg-gray-50">
                 <td className="p-3 font-medium text-gray-900">{m.nome}</td>
-                <td className="text-right p-3 text-gray-900">R$ {m.saldo_atual.toFixed(2)}</td>
-                <td className="text-right p-3 text-gray-900">{m.percentual_utilizado.toFixed(1)}%</td>
+                <td className="text-right p-3 text-gray-900">R$ {Number(m.saldo_atual).toFixed(2)}</td>
+                <td className="text-right p-3 text-gray-900">{Number(m.percentual_utilizado).toFixed(1)}%</td>
                 <td className="text-center p-3">
                   <span className={`px-3 py-1 rounded text-white text-xs font-bold
                     ${m.status === 'verde' ? 'bg-green-500' : ''}
@@ -124,9 +124,9 @@ export default function FinanceiroDashboard() {
                     {c.tipo}
                   </span>
                 </td>
-                <td className="text-right p-3 font-bold text-gray-900">R$ {c.saldo_atual.toFixed(2)}</td>
-                <td className="text-right p-3 text-green-600">R$ {c.recebido_este_mes.toFixed(2)}</td>
-                <td className="text-right p-3 text-red-600">R$ {c.pago_este_mes.toFixed(2)}</td>
+                <td className="text-right p-3 font-bold text-gray-900">R$ {Number(c.saldo_atual).toFixed(2)}</td>
+                <td className="text-right p-3 text-green-600">R$ {Number(c.recebido_este_mes).toFixed(2)}</td>
+                <td className="text-right p-3 text-red-600">R$ {Number(c.pago_este_mes).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
@@ -141,7 +141,7 @@ function KPICard({ title, value, subtitle }: any) {
     <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
       <div className="text-gray-900 text-sm font-medium">{title}</div>
       <div className="text-2xl font-bold mt-2 text-gray-900">
-        {typeof value === 'number' ? `R$ ${value.toFixed(2)}` : value}
+        {typeof value === 'number' ? `R$ ${Number(value).toFixed(2)}` : value}
       </div>
       <div className="text-gray-700 text-xs mt-1">{subtitle}</div>
     </div>

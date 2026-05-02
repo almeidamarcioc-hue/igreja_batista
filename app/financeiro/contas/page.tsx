@@ -71,7 +71,7 @@ export default function ContasPage() {
                   </td>
                   <td className="p-4 text-sm text-gray-900">{c.ministerio_nome}</td>
                   <td className="p-4 text-right font-bold text-gray-900">R$ {c.saldo_atual.toFixed(2)}</td>
-                  <td className="p-4 text-right text-gray-900">R$ {c.saldo_inicial.toFixed(2)}</td>
+                  <td className="p-4 text-right text-gray-900">R$ {Number(c.saldo_inicial).toFixed(2)}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded text-white text-xs font-bold
                       ${c.ativa ? 'bg-green-500' : 'bg-gray-500'}

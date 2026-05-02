@@ -64,7 +64,7 @@ export default function MinisteriosPage() {
                 <tr key={m.id} className="hover:bg-gray-50">
                   <td className="p-4 font-medium text-gray-900">{m.nome}</td>
                   <td className="p-4 text-sm text-gray-900">{m.descricao || '-'}</td>
-                  <td className="p-4 text-right font-bold text-gray-900">R$ {m.orcamento_anual.toFixed(2)}</td>
+                  <td className="p-4 text-right font-bold text-gray-900">R$ {Number(m.orcamento_anual).toFixed(2)}</td>
                   <td className="p-4 text-sm text-gray-900">{m.responsavel || '-'}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded text-white text-xs font-bold
