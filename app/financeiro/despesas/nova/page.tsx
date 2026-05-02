@@ -65,7 +65,7 @@ export default function NovaDespesaPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">Nova Despesa</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Nova Despesa</h2>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
@@ -74,7 +74,7 @@ export default function NovaDespesaPage() {
             type="text"
             value={form.descricao}
             onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             required
           />
         </div>
@@ -85,7 +85,7 @@ export default function NovaDespesaPage() {
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="aluguel">Aluguel</option>
               <option value="energia">Energia</option>
@@ -100,7 +100,7 @@ export default function NovaDespesaPage() {
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="">Nenhum</option>
               {ministerios.map(m => (
@@ -118,7 +118,7 @@ export default function NovaDespesaPage() {
               value={form.valor}
               onChange={(e) => setForm({ ...form, valor: parseFloat(e.target.value) })}
               step="0.01"
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
               required
             />
           </div>
@@ -129,7 +129,7 @@ export default function NovaDespesaPage() {
               type="text"
               value={form.fornecedor}
               onChange={(e) => setForm({ ...form, fornecedor: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             />
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function NovaDespesaPage() {
               type="date"
               value={form.data_vencimento}
               onChange={(e) => setForm({ ...form, data_vencimento: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
               required
             />
           </div>
@@ -151,7 +151,7 @@ export default function NovaDespesaPage() {
             <select
               value={form.forma_pagamento}
               onChange={(e) => setForm({ ...form, forma_pagamento: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="dinheiro">Dinheiro</option>
               <option value="pix">PIX</option>
@@ -166,7 +166,7 @@ export default function NovaDespesaPage() {
           <select
             value={form.conta_id}
             onChange={(e) => setForm({ ...form, conta_id: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             required
           >
             {contas.map(c => (
@@ -180,7 +180,7 @@ export default function NovaDespesaPage() {
           <textarea
             value={form.observacoes}
             onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             rows={3}
           />
         </div>

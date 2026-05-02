@@ -55,11 +55,11 @@ export default function DespesasPage() {
       <div className="bg-white p-4 rounded-lg shadow space-y-3">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
+            <label className="block text-sm font-medium mb-1 text-gray-900">Status</label>
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="w-full p-2 border rounded text-sm"
+              className="w-full p-2 border rounded text-sm text-gray-900"
             >
               <option value="">Todos</option>
               <option value="pendente">Pendente</option>
@@ -68,21 +68,21 @@ export default function DespesasPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Data Início</label>
+            <label className="block text-sm font-medium mb-1 text-gray-900">Data Início</label>
             <input
               type="date"
               value={filter.dataInicio}
               onChange={(e) => setFilter({ ...filter, dataInicio: e.target.value })}
-              className="w-full p-2 border rounded text-sm"
+              className="w-full p-2 border rounded text-sm text-gray-900"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Data Fim</label>
+            <label className="block text-sm font-medium mb-1 text-gray-900">Data Fim</label>
             <input
               type="date"
               value={filter.dataFim}
               onChange={(e) => setFilter({ ...filter, dataFim: e.target.value })}
-              className="w-full p-2 border rounded text-sm"
+              className="w-full p-2 border rounded text-sm text-gray-900"
             />
           </div>
         </div>
@@ -91,28 +91,28 @@ export default function DespesasPage() {
       {/* Tabela */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-4 text-center">Carregando...</div>
+          <div className="p-4 text-center text-gray-900">Carregando...</div>
         ) : despesas.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">Nenhuma despesa encontrada</div>
+          <div className="p-4 text-center text-gray-900">Nenhuma despesa encontrada</div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4 font-medium text-sm">Descrição</th>
-                <th className="text-left p-4 font-medium text-sm">Tipo</th>
-                <th className="text-right p-4 font-medium text-sm">Valor</th>
-                <th className="text-left p-4 font-medium text-sm">Data Vencimento</th>
-                <th className="text-center p-4 font-medium text-sm">Status</th>
-                <th className="text-center p-4 font-medium text-sm">Ações</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Descrição</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Tipo</th>
+                <th className="text-right p-4 font-medium text-sm text-gray-900">Valor</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Data Vencimento</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Status</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {despesas.map(d => (
                 <tr key={d.id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium">{d.descricao}</td>
-                  <td className="p-4 text-sm">{d.tipo}</td>
-                  <td className="p-4 text-right font-bold">R$ {d.valor.toFixed(2)}</td>
-                  <td className="p-4 text-sm">{new Date(d.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                  <td className="p-4 font-medium text-gray-900">{d.descricao}</td>
+                  <td className="p-4 text-sm text-gray-900">{d.tipo}</td>
+                  <td className="p-4 text-right font-bold text-gray-900">R$ {d.valor.toFixed(2)}</td>
+                  <td className="p-4 text-sm text-gray-900">{new Date(d.data_vencimento).toLocaleDateString('pt-BR')}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded text-white text-xs font-bold
                       ${d.status === 'pendente' ? 'bg-orange-500' : ''}

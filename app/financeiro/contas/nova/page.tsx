@@ -57,7 +57,7 @@ export default function NovaContaPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">Nova Conta</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Nova Conta</h2>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
@@ -66,7 +66,7 @@ export default function NovaContaPage() {
             type="text"
             value={form.nome}
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             placeholder="Ex: Conta Principal"
             required
           />
@@ -78,7 +78,7 @@ export default function NovaContaPage() {
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="bancaria">Bancária</option>
               <option value="caixa">Caixa</option>
@@ -90,7 +90,7 @@ export default function NovaContaPage() {
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
               required
             >
               {ministerios.map(m => (
@@ -107,7 +107,7 @@ export default function NovaContaPage() {
             value={form.saldo_inicial}
             onChange={(e) => setForm({ ...form, saldo_inicial: parseFloat(e.target.value) })}
             step="0.01"
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             required
           />
         </div>
@@ -120,7 +120,7 @@ export default function NovaContaPage() {
                 type="text"
                 value={form.banco}
                 onChange={(e) => setForm({ ...form, banco: e.target.value })}
-                className="w-full p-3 border rounded"
+                className="w-full p-3 border rounded text-gray-900"
                 placeholder="Ex: Banco do Brasil"
               />
             </div>
@@ -132,7 +132,7 @@ export default function NovaContaPage() {
                   type="text"
                   value={form.agencia}
                   onChange={(e) => setForm({ ...form, agencia: e.target.value })}
-                  className="w-full p-3 border rounded"
+                  className="w-full p-3 border rounded text-gray-900"
                   placeholder="0001"
                 />
               </div>
@@ -143,7 +143,7 @@ export default function NovaContaPage() {
                   type="text"
                   value={form.conta}
                   onChange={(e) => setForm({ ...form, conta: e.target.value })}
-                  className="w-full p-3 border rounded"
+                  className="w-full p-3 border rounded text-gray-900"
                   placeholder="123456-7"
                 />
               </div>
@@ -155,7 +155,7 @@ export default function NovaContaPage() {
                 type="text"
                 value={form.titular}
                 onChange={(e) => setForm({ ...form, titular: e.target.value })}
-                className="w-full p-3 border rounded"
+                className="w-full p-3 border rounded text-gray-900"
                 placeholder="Nome do titular"
               />
             </div>

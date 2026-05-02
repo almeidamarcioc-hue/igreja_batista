@@ -40,7 +40,7 @@ export default function NovoMinisterioPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">Novo Ministério</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Novo Ministério</h2>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
@@ -49,7 +49,7 @@ export default function NovoMinisterioPage() {
             type="text"
             value={form.nome}
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             placeholder="Ex: Ministério de Louvor"
             required
           />
@@ -60,7 +60,7 @@ export default function NovoMinisterioPage() {
           <textarea
             value={form.descricao}
             onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             rows={3}
             placeholder="Descrição do ministério"
           />
@@ -74,7 +74,7 @@ export default function NovoMinisterioPage() {
               value={form.orcamento_anual}
               onChange={(e) => setForm({ ...form, orcamento_anual: parseFloat(e.target.value) })}
               step="0.01"
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
               required
             />
           </div>
@@ -85,7 +85,7 @@ export default function NovoMinisterioPage() {
               type="text"
               value={form.responsavel}
               onChange={(e) => setForm({ ...form, responsavel: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
               placeholder="Nome do responsável"
             />
           </div>

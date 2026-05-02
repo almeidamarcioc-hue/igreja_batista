@@ -44,34 +44,34 @@ export default function ContasPage() {
       {/* Tabela */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-4 text-center">Carregando...</div>
+          <div className="p-4 text-center text-gray-900">Carregando...</div>
         ) : contas.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">Nenhuma conta encontrada</div>
+          <div className="p-4 text-center text-gray-900">Nenhuma conta encontrada</div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4 font-medium text-sm">Nome</th>
-                <th className="text-left p-4 font-medium text-sm">Tipo</th>
-                <th className="text-left p-4 font-medium text-sm">Ministério</th>
-                <th className="text-right p-4 font-medium text-sm">Saldo</th>
-                <th className="text-right p-4 font-medium text-sm">Saldo Inicial</th>
-                <th className="text-center p-4 font-medium text-sm">Status</th>
-                <th className="text-center p-4 font-medium text-sm">Ações</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Nome</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Tipo</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Ministério</th>
+                <th className="text-right p-4 font-medium text-sm text-gray-900">Saldo</th>
+                <th className="text-right p-4 font-medium text-sm text-gray-900">Saldo Inicial</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Status</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {contas.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium">{c.nome}</td>
+                  <td className="p-4 font-medium text-gray-900">{c.nome}</td>
                   <td className="p-4 text-sm">
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                       {c.tipo}
                     </span>
                   </td>
-                  <td className="p-4 text-sm">{c.ministerio_nome}</td>
-                  <td className="p-4 text-right font-bold">R$ {c.saldo_atual.toFixed(2)}</td>
-                  <td className="p-4 text-right">R$ {c.saldo_inicial.toFixed(2)}</td>
+                  <td className="p-4 text-sm text-gray-900">{c.ministerio_nome}</td>
+                  <td className="p-4 text-right font-bold text-gray-900">R$ {c.saldo_atual.toFixed(2)}</td>
+                  <td className="p-4 text-right text-gray-900">R$ {c.saldo_inicial.toFixed(2)}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded text-white text-xs font-bold
                       ${c.ativa ? 'bg-green-500' : 'bg-gray-500'}

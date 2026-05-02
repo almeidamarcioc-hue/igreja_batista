@@ -91,7 +91,7 @@ export default function EditarContaPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">Editar Conta</h2>
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Editar Conta</h2>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow space-y-6">
         <div>
@@ -100,7 +100,7 @@ export default function EditarContaPage() {
             type="text"
             value={form.nome}
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-gray-900"
             placeholder="Ex: Conta Principal"
             required
           />
@@ -112,7 +112,7 @@ export default function EditarContaPage() {
             <select
               value={form.tipo}
               onChange={(e) => setForm({ ...form, tipo: e.target.value as 'bancaria' | 'caixa' })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="bancaria">Bancária</option>
               <option value="caixa">Caixa</option>
@@ -124,7 +124,7 @@ export default function EditarContaPage() {
             <select
               value={form.ministerio_id}
               onChange={(e) => setForm({ ...form, ministerio_id: e.target.value })}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 border rounded text-gray-900"
             >
               <option value="">Nenhum</option>
               {ministerios.map(m => (
@@ -142,7 +142,7 @@ export default function EditarContaPage() {
                 type="text"
                 value={form.instituicao}
                 onChange={(e) => setForm({ ...form, instituicao: e.target.value })}
-                className="w-full p-3 border rounded"
+                className="w-full p-3 border rounded text-gray-900"
                 placeholder="Ex: Banco do Brasil"
               />
             </div>
@@ -154,7 +154,7 @@ export default function EditarContaPage() {
                   type="text"
                   value={form.agencia}
                   onChange={(e) => setForm({ ...form, agencia: e.target.value })}
-                  className="w-full p-3 border rounded"
+                  className="w-full p-3 border rounded text-gray-900"
                   placeholder="0001"
                 />
               </div>
@@ -165,7 +165,7 @@ export default function EditarContaPage() {
                   type="text"
                   value={form.numero_conta}
                   onChange={(e) => setForm({ ...form, numero_conta: e.target.value })}
-                  className="w-full p-3 border rounded"
+                  className="w-full p-3 border rounded text-gray-900"
                   placeholder="123456-7"
                 />
               </div>

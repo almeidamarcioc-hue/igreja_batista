@@ -44,28 +44,28 @@ export default function MinisteriosPage() {
       {/* Tabela */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-4 text-center">Carregando...</div>
+          <div className="p-4 text-center text-gray-900">Carregando...</div>
         ) : ministerios.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">Nenhum ministério encontrado</div>
+          <div className="p-4 text-center text-gray-900">Nenhum ministério encontrado</div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4 font-medium text-sm">Nome</th>
-                <th className="text-left p-4 font-medium text-sm">Descrição</th>
-                <th className="text-right p-4 font-medium text-sm">Orçamento Anual</th>
-                <th className="text-left p-4 font-medium text-sm">Responsável</th>
-                <th className="text-center p-4 font-medium text-sm">Status</th>
-                <th className="text-center p-4 font-medium text-sm">Ações</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Nome</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Descrição</th>
+                <th className="text-right p-4 font-medium text-sm text-gray-900">Orçamento Anual</th>
+                <th className="text-left p-4 font-medium text-sm text-gray-900">Responsável</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Status</th>
+                <th className="text-center p-4 font-medium text-sm text-gray-900">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {ministerios.map(m => (
                 <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium">{m.nome}</td>
-                  <td className="p-4 text-sm text-gray-600">{m.descricao || '-'}</td>
-                  <td className="p-4 text-right font-bold">R$ {m.orcamento_anual.toFixed(2)}</td>
-                  <td className="p-4 text-sm">{m.responsavel || '-'}</td>
+                  <td className="p-4 font-medium text-gray-900">{m.nome}</td>
+                  <td className="p-4 text-sm text-gray-900">{m.descricao || '-'}</td>
+                  <td className="p-4 text-right font-bold text-gray-900">R$ {m.orcamento_anual.toFixed(2)}</td>
+                  <td className="p-4 text-sm text-gray-900">{m.responsavel || '-'}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded text-white text-xs font-bold
                       ${m.ativa ? 'bg-green-500' : 'bg-gray-500'}
