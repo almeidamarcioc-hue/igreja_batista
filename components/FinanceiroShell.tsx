@@ -25,8 +25,8 @@ export default function FinanceiroShell({ children }: { children: React.ReactNod
         <span style={{ color: '#C5A059' }} className="text-base font-bold tracking-wide">Financeiro IBTM</span>
       </div>
 
-      <main className="md:pl-64 min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
-        <div className="pt-14 md:pt-0 p-4 md:p-6">{children}</div>
+      <main className="md:pl-64 min-h-screen w-full" style={{ backgroundColor: '#f0f2f5' }}>
+        <div className="pt-14 md:pt-0 p-6 md:p-8 max-w-full">{children}</div>
       </main>
     </>
   )
