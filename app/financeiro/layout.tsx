@@ -1,75 +1,23 @@
-'use client'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { getUsuario } from '@/lib/db'
+import FinanceiroShell from '@/components/FinanceiroShell'
 
-import Link from 'next/link'
-import { useState } from 'react'
+export default async function FinanceiroLayout({ children }: { children: React.ReactNode }) {
+  const token = (await cookies()).get(COOKIE_NAME)?.value
+  if (!token) redirect('/login')
 
-export default function FinanceiroLayout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(true)
+  const userId = await verifySessionToken(token)
+  if (!userId) redirect('/login')
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className={`${open ? 'w-64' : 'w-20'} bg-slate-800 text-white transition-all duration-300 flex flex-col`}>
-        <button
-          onClick={() => setOpen(!open)}
-          className="p-4 hover:bg-slate-700"
-        >
-          {open ? '◀' : '▶'}
-        </button>
+  const user = await getUsuario(userId) as any
+  if (!user || !user.ativo) redirect('/login')
 
-        <nav className="flex-1 space-y-4 p-4 overflow-y-auto">
-          <NavLink href="/financeiro" icon="📊" label="Dashboard" open={open} />
+  const modulos: string = user.modulos ?? ''
+  if (modulos !== '*' && !modulos.split(',').map((m: string) => m.trim()).includes('financeiro')) {
+    redirect('/')
+  }
 
-          {open && <MenuGroup label="Lançamentos" />}
-          <NavLink href="/financeiro/receitas" icon="⬆️" label="Receitas" open={open} submenu />
-          <NavLink href="/financeiro/despesas" icon="⬇️" label="Despesas" open={open} submenu />
-
-          {open && <MenuGroup label="Cadastros" />}
-          <NavLink href="/financeiro/contas" icon="🏦" label="Contas" open={open} submenu />
-          <NavLink href="/financeiro/ministerios" icon="⛪" label="Ministérios" open={open} submenu />
-
-          <NavLink href="/financeiro/relatorios" icon="📈" label="Relatórios" open={open} />
-        </nav>
-
-        <div className="p-4 border-t border-slate-700">
-          <Link href="/" className="text-sm hover:bg-slate-700 p-2 block rounded">
-            ← Voltar
-          </Link>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-900">💰 Módulo Financeiro</h1>
-        </header>
-
-        <main className="flex-1 overflow-auto">
-          <div className="p-8">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-}
-
-function NavLink({ href, icon, label, open, submenu }: any) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition-colors ${submenu ? 'pl-8' : ''}`}
-    >
-      <span className="text-xl">{icon}</span>
-      {open && <span className="text-sm">{label}</span>}
-    </Link>
-  )
-}
-
-function MenuGroup({ label }: any) {
-  return (
-    <div className="px-3 py-2 mt-2">
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
-    </div>
-  )
+  return <FinanceiroShell>{children}</FinanceiroShell>
 }
