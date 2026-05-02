@@ -8,12 +8,15 @@ export const metadata: Metadata = {
   description: 'Sistema Integrado — Secretaria e Centro Educacional',
   metadataBase: new URL('https://igreja-batista.vercel.app'),
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'IBTM',
   },
-  icons: { apple: '/logo.png' },
   openGraph: {
     title: 'Igreja Batista Transformação',
     description: 'Sistema Integrado — Secretaria e Centro Educacional',

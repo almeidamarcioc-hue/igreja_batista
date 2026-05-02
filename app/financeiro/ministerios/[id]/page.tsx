@@ -14,6 +14,7 @@ export default function EditarMinisterioPage() {
     descricao: '',
     orcamento_anual: 0,
     responsavel: '',
+    ativa: true,
   })
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function EditarMinisterioPage() {
         descricao: ministerio.descricao || '',
         orcamento_anual: ministerio.orcamento_anual || 0,
         responsavel: ministerio.responsavel || '',
+        ativa: ministerio.ativa !== false,
       })
     } catch (err) {
       alert('Erro ao carregar ministério')
@@ -49,8 +51,11 @@ export default function EditarMinisterioPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
+          nome: form.nome,
+          descricao: form.descricao,
           orcamento_anual: parseFloat(form.orcamento_anual.toString()),
+          responsavel: form.responsavel,
+          ativa: form.ativa,
         }),
       })
 
@@ -126,6 +131,18 @@ export default function EditarMinisterioPage() {
               placeholder="Nome do responsável"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.ativa}
+              onChange={(e) => setForm({ ...form, ativa: e.target.checked })}
+              className="w-5 h-5 rounded border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-900">Ministério Ativo</span>
+          </label>
         </div>
 
         <div className="flex gap-4">

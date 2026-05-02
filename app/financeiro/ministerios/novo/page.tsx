@@ -11,6 +11,7 @@ export default function NovoMinisterioPage() {
     descricao: '',
     orcamento_anual: 0,
     responsavel: '',
+    ativa: true,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,6 +90,18 @@ export default function NovoMinisterioPage() {
               placeholder="Nome do responsável"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.ativa}
+              onChange={(e) => setForm({ ...form, ativa: e.target.checked })}
+              className="w-5 h-5 rounded border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-900">Ministério Ativo</span>
+          </label>
         </div>
 
         <div className="flex gap-4">
