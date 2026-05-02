@@ -90,7 +90,7 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
               <div key={entry.label} className="mb-4">
                 <button
                   onClick={() => toggleGroup(entry.label)}
-                  style={childActive ? { color: '#C5A059' } : { color: '#a0aec0' }}
+                  style={childActive ? { color: '#C5A059' } : { color: '#e8e8e8' }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
                 >
                   <span className="text-base leading-none">{entry.icon}</span>
@@ -106,7 +106,7 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
                           key={child.href}
                           href={child.href}
                           onClick={onClose}
-                          style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
+                          style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#e8e8e8' }}
                           className="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
                         >
                           <span className="text-sm leading-none">{child.icon}</span>
@@ -126,7 +126,7 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
               key={entry.href}
               href={entry.href}
               onClick={onClose}
-              style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#a0aec0' }}
+              style={active ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#e8e8e8' }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
             >
               <span className="text-base leading-none">{entry.icon}</span>
@@ -140,7 +140,7 @@ export default function FinanceiroSidebar({ open, onClose }: { open?: boolean; o
 
       <div className="px-4 py-4 text-center">
         <p style={{ color: '#C5A059' }} className="text-xs font-semibold">{dd}/{mm}/{yyyy}</p>
-        <p style={{ color: '#6b7a8d' }} className="text-xs mt-1">{hh}:{min}</p>
+        <p style={{ color: '#d0d0d0' }} className="text-xs mt-1">{hh}:{min}</p>
         <div className="flex gap-3 justify-center mt-3">
           <Link href="/" style={{ color: '#C5A059' }} className="text-xs hover:underline">← Voltar</Link>
         </div>
