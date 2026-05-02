@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { verifySessionToken, createSessionToken, COOKIE_NAME } from '@/lib/session'
 
 // Paths that never require authentication
 const PUBLIC_PATHS = [
@@ -47,7 +47,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next()
+  // Renovar token (rolling session)
+  const newToken = await createSessionToken(userId)
+  const response = NextResponse.next()
+  response.cookies.set(COOKIE_NAME, newToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 20 * 60, // 20 minutos
+    path: '/',
+  })
+  return response
 }
 
 export const config = {

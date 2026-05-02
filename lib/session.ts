@@ -1,4 +1,5 @@
 export const COOKIE_NAME = 'jdv_session'
+export const INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000 // 20 minutos
 const SESSION_SECRET = process.env.SESSION_SECRET ?? 'jdv-change-me-in-production-2024'
 
 async function getKey(): Promise<CryptoKey> {
@@ -33,7 +34,7 @@ export async function verifySessionToken(token: string): Promise<number | null> 
     if (!valid) return null
     const dotIdx = payload.indexOf('.')
     const ts = Number(payload.substring(dotIdx + 1))
-    if (Date.now() - ts > 30 * 24 * 60 * 60 * 1000) return null
+    if (Date.now() - ts > INACTIVITY_TIMEOUT_MS) return null
     return Number(payload.substring(0, dotIdx))
   } catch {
     return null
