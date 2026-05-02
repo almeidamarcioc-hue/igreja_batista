@@ -54,7 +54,8 @@ export async function updateMinisterio(id: number, dados: Partial<Ministerio>): 
       nome = COALESCE(${dados.nome ?? null}, nome),
       descricao = COALESCE(${dados.descricao ?? null}, descricao),
       orcamento_anual = COALESCE(${dados.orcamento_anual ?? null}, orcamento_anual),
-      responsavel = COALESCE(${dados.responsavel ?? null}, responsavel)
+      responsavel = COALESCE(${dados.responsavel ?? null}, responsavel),
+      ativa = COALESCE(${dados.ativa ?? null}, ativa)
     WHERE id = ${id}
   `
 }
