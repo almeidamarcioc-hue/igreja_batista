@@ -1,0 +1,14 @@
+# Ignore other projects in the monorepo
+../secretaria-web
+../secretaria-web/**
+../Secretaria
+../Secretaria/**
+../Ministérios
+../Ministérios/**
+
+# Ignore common files
+README.md
+.git
+.gitignore
+.env.example
+.DS_Store
