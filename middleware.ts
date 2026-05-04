@@ -4,6 +4,7 @@ import { verifySessionToken, createSessionToken, COOKIE_NAME } from '@/lib/sessi
 // Paths that never require authentication
 const PUBLIC_PATHS = [
   '/login',
+  '/pastor/login',
   '/api/auth/login',
   '/api/auth/logout',
   '/api/auth/forgot-password',
@@ -14,6 +15,7 @@ const PUBLIC_PATHS = [
   '/ibtm-logo',
   '/logo',
   '/manifest',
+  '/sw',
 ]
 
 function isPublic(pathname: string): boolean {
@@ -43,7 +45,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
     const loginUrl = req.nextUrl.clone()
-    loginUrl.pathname = '/login'
+    loginUrl.pathname = pathname.startsWith('/pastor') ? '/pastor/login' : '/login'
     return NextResponse.redirect(loginUrl)
   }
 
