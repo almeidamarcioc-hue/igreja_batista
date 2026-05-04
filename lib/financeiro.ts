@@ -26,7 +26,7 @@ function getDb() {
 
 export async function getMinisterios(): Promise<Ministerio[]> {
   const sql = getDb()
-  const rows = await sql`SELECT * FROM ministerios WHERE ativa = TRUE ORDER BY nome`
+  const rows = await sql`SELECT * FROM ministerios ORDER BY ativa DESC, nome`
   return rows as Ministerio[]
 }
 
