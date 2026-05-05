@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: 'Agenda Pastoral — IBTM',
   description: 'Aplicativo de agenda dos pastores',
   manifest: '/manifest-pastor.json',
+  icons: {
+    icon: '/ibtm-logo.png',
+    apple: '/ibtm-logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -23,7 +27,10 @@ export default function PastorLayout({ children }: { children: React.ReactNode }
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Agenda IBTM" />
-        <link rel="apple-touch-icon" href="/ibtm-logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/ibtm-logo.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/ibtm-logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/ibtm-logo.png" />
+        <link rel="shortcut icon" href="/ibtm-logo.png" />
         {typeof window !== 'undefined' && (
           <script
             dangerouslySetInnerHTML={{

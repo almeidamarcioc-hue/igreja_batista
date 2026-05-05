@@ -12,19 +12,13 @@
   "icons": [
     {
       "src": "/ibtm-logo.png",
-      "sizes": "192x192",
+      "sizes": "900x900 192x192 512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "/ibtm-logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/ibtm-logo.png",
-      "sizes": "192x192",
+      "sizes": "900x900 192x192 512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
