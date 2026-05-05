@@ -27,10 +27,12 @@ export default function PastorLayout({ children }: { children: React.ReactNode }
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Agenda IBTM" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" sizes="180x180" href="/ibtm-logo.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/ibtm-logo.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/ibtm-logo.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/ibtm-logo.png" />
-        <link rel="shortcut icon" href="/ibtm-logo.png" />
         {typeof window !== 'undefined' && (
           <script
             dangerouslySetInnerHTML={{
