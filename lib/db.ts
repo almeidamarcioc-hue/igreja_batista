@@ -29,9 +29,15 @@ export async function initDb(): Promise<void> {
       bairro VARCHAR(100) DEFAULT '',
       cidade VARCHAR(100) DEFAULT '',
       estado VARCHAR(2) DEFAULT '',
-      imagem TEXT DEFAULT ''
+      imagem TEXT DEFAULT '',
+      usuario VARCHAR(100),
+      usuario_id INTEGER
     )
   `
+
+  // Add usuario columns if they don't exist (migration)
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS usuario VARCHAR(100)`
+  await sql`ALTER TABLE pastores ADD COLUMN IF NOT EXISTS usuario_id INTEGER`
 
   await sql`
     CREATE TABLE IF NOT EXISTS agendamentos (

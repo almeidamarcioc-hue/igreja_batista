@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, unauthorized } from '@/lib/guard'
-import { getPastores, criarPastor } from '@/lib/db'
+import { getPastores, criarPastor, criarUsuario } from '@/lib/db'
+import { neon } from '@neondatabase/serverless'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,29 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     if (!body.nome) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })
+
+    const sql = neon(process.env.DATABASE_URL || '')
     const id = await criarPastor(body)
+
+    // Se informou usuário e senha, criar usuário do sistema com acesso à agenda
+    if (body.usuario?.trim() && (body.senha as string)?.trim()) {
+      try {
+        const usuarioId = await criarUsuario({
+          usuario: body.usuario.trim(),
+          senha: body.senha,
+          nome: body.nome,
+          role: 'pastor',
+          modulos: 'pastor',
+        })
+
+        // Atualizar pastor com o usuario_id
+        await sql`UPDATE pastores SET usuario_id = ${usuarioId} WHERE id = ${id}`
+      } catch (err) {
+        // Se falhar ao criar usuário, apenas log mas não falha a criação do pastor
+        console.error('Erro ao criar usuário do pastor:', err)
+      }
+    }
+
     return NextResponse.json({ id }, { status: 201 })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro'

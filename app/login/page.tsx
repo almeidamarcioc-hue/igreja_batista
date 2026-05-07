@@ -265,7 +265,8 @@ function LoginForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Falha ao entrar')
       flashToast(`Bem-vindo, ${data.nome}.`, 'ok')
-      setTimeout(() => router.push('/'), 600)
+      // Redirecionar para URL retornada pela API (pastor -> /pastor/agenda, outros -> /)
+      setTimeout(() => router.push(data.redirectUrl || '/'), 600)
     } catch (err: any) {
       flashToast(err?.message || 'Falha ao entrar', 'warn')
     } finally {

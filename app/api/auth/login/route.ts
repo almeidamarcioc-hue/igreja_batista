@@ -18,7 +18,17 @@ export async function POST(req: NextRequest) {
     }
 
     const token = await createSessionToken(user.id)
-    const res = NextResponse.json({ ok: true, nome: user.nome })
+
+    // Verificar se é um pastor (role = 'pastor')
+    const isPastor = user.role === 'pastor'
+
+    const res = NextResponse.json({
+      ok: true,
+      nome: user.nome,
+      role: user.role,
+      isPastor,
+      redirectUrl: isPastor ? '/pastor/agenda' : '/'
+    })
     res.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

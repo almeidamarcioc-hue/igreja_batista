@@ -218,6 +218,14 @@ export default function CadastroPastoresPage() {
             <div><label className="block text-sm font-semibold text-gray-700 mb-1">Estado</label><input type="text" value={pastorEditando.estado ?? ''} onChange={e => setPastorEditando(p => ({ ...p, estado: e.target.value.toUpperCase().slice(0,2) }))} placeholder="SP" maxLength={2} className={inputCls} style={iStyle} onFocus={onFocus} onBlur={onBlur} /></div>
           </div>
           <div><label className="block text-sm font-semibold text-gray-700 mb-1">URL da Foto</label><input type="url" value={pastorEditando.imagem ?? ''} onChange={e => setPastorEditando(p => ({ ...p, imagem: e.target.value }))} placeholder="https://..." className={inputCls} style={iStyle} onFocus={onFocus} onBlur={onBlur} /></div>
+
+          <div className="border-t pt-4 mt-4">
+            <p className="text-xs text-gray-500 mb-3">📱 Acesso à Agenda Mobile (opcional)</p>
+            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Usuário para Login</label><input type="text" value={pastorEditando.usuario ?? ''} onChange={e => setPastorEditando(p => ({ ...p, usuario: e.target.value }))} placeholder="ex: joao.silva" className={inputCls} style={iStyle} onFocus={onFocus} onBlur={onBlur} /></div>
+            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Senha</label><input type="password" value={(pastorEditando as any).senha ?? ''} onChange={e => setPastorEditando(p => ({ ...p, senha: e.target.value } as any))} placeholder="••••••••" className={inputCls} style={iStyle} onFocus={onFocus} onBlur={onBlur} /></div>
+            <p className="text-xs text-gray-500 mt-2">Deixe vazio para não criar acesso à agenda mobile</p>
+          </div>
+
           <div className="flex gap-2 pt-2">
             <button type="submit" disabled={submitting} style={{ backgroundColor: '#002347', color: '#fff' }} className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50">{submitting ? 'Salvando...' : '💾 Salvar'}</button>
             <button type="button" onClick={fecharModal} className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700">Cancelar</button>
