@@ -138,7 +138,7 @@ export default function PastorAgendaPage() {
       <div style={{ backgroundColor: '#002347', color: '#fff', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>📅 Minha Agenda</h1>
-          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 20 }}>⚙️</button>
+          <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/pastor/login') }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>Sair</button>
         </div>
 
         {/* Controles */}

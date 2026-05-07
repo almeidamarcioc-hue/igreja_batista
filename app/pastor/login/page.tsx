@@ -74,9 +74,8 @@ export default function PastorLoginPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Falha ao entrar')
       flashToast(`Bem-vindo, ${data.nome}.`, 'ok')
-      setTimeout(() => {
-        window.location.href = '/pastor/agenda'
-      }, 600)
+      // Redireciona direto para agenda dos pastores
+      router.push('/pastor/agenda')
     } catch (err: any) {
       flashToast(err?.message || 'Falha ao entrar', 'warn')
     } finally {
