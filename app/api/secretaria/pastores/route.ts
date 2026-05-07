@@ -38,8 +38,11 @@ export async function POST(req: NextRequest) {
     // Se informou usuário e senha, criar usuário do sistema com acesso à agenda
     if (body.usuario?.trim() && (body.senha as string)?.trim()) {
       try {
-        const usuarioId = await criarUsuario({
-          usuario: body.usuario.trim(),
+        const usuarioTrim = body.usuario.trim()
+
+        // Verificar se usuário já existe
+        const usuarioExistente = await criarUsuario({
+          usuario: usuarioTrim,
           senha: body.senha,
           nome: body.nome,
           role: 'pastor',
@@ -48,10 +51,19 @@ export async function POST(req: NextRequest) {
 
         // Atualizar pastor com o usuario_id
         const sql = getDb()
-        await sql`UPDATE pastores SET usuario_id = ${usuarioId} WHERE id = ${id}`
-      } catch (err) {
-        // Se falhar ao criar usuário, apenas log mas não falha a criação do pastor
+        await sql`UPDATE pastores SET usuario_id = ${usuarioExistente} WHERE id = ${id}`
+
+        return NextResponse.json({
+          id,
+          usuarioId: usuarioExistente,
+          mensagem: 'Pastor e usuário criados com sucesso'
+        }, { status: 201 })
+      } catch (err: any) {
         console.error('Erro ao criar usuário do pastor:', err)
+        // Retornar erro ao cliente
+        return NextResponse.json({
+          error: `Erro ao criar usuário: ${err.message}`
+        }, { status: 400 })
       }
     }
 
