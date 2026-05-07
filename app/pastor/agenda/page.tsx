@@ -16,11 +16,12 @@ function toDateStr(d: Date): string {
 }
 function addDays(d: Date, n: number): Date { const r = new Date(d); r.setDate(r.getDate() + n); return r }
 function startOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), 1) }
+function endOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth() + 1, 0) }
 
 function formatDateLabel(d: Date, view: string): string {
   if (view === 'mensal') return `${MESES_PT[d.getMonth()]} ${d.getFullYear()}`
   if (view === 'semanal') {
-    const ini = startOfMonth(d); const fim = addDays(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - 1)
+    const ini = startOfMonth(d); const fim = endOfMonth(d)
     return `${String(ini.getDate()).padStart(2,'0')}/${String(ini.getMonth()+1).padStart(2,'0')} – ${String(fim.getDate()).padStart(2,'0')}/${String(fim.getMonth()+1).padStart(2,'0')}/${fim.getFullYear()}`
   }
   return `${DIAS_SEMANA_PT[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
@@ -133,57 +134,69 @@ export default function PastorAgendaPage() {
   const hoje = toDateStr(new Date())
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ backgroundColor: '#002347', color: '#fff', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>📅 Minha Agenda</h1>
-          <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/pastor/login') }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>Sair</button>
-        </div>
-
-        {/* Controles */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 12 }}>
-          <div style={{ flex: 1, minWidth: 100 }}>
-            <select value={pastorId ?? ''} onChange={e => setPastorId(e.target.value ? Number(e.target.value) : null)}
-              style={{ width: '100%', border: '1px solid #fff', borderRadius: 4, padding: '6px 8px', backgroundColor: '#1a1a3e', color: '#fff', fontSize: 12 }}>
-              <option value="">— Selecione —</option>
-              {pastores.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-            </select>
+      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 20px' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div>
+              <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>📅 Agenda dos Pastores</h1>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Visualização mensal, semanal e diária</p>
+            </div>
+            <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/pastor/login') }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: '8px 12px' }}>Sair</button>
           </div>
-          <button onClick={() => setCurrentDate(new Date())} style={{ backgroundColor: '#C5A059', color: '#002347', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Hoje</button>
+
+          {/* Controles */}
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: 1 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>Pastor(a)</label>
+              <select value={pastorId ?? ''} onChange={e => setPastorId(e.target.value ? Number(e.target.value) : null)}
+                style={{ border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 12px', backgroundColor: '#fff', color: '#1f2937', fontSize: 13, minWidth: 200 }}>
+                <option value="">— Selecione —</option>
+                {pastores.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setView('mensal')} style={{ backgroundColor: view === 'mensal' ? '#002347' : '#fff', color: view === 'mensal' ? '#fff' : '#374151', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mensal</button>
+              <button onClick={() => setView('semanal')} style={{ backgroundColor: view === 'semanal' ? '#002347' : '#fff', color: view === 'semanal' ? '#fff' : '#374151', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Semanal</button>
+              <button onClick={() => setView('diaria')} style={{ backgroundColor: view === 'diaria' ? '#002347' : '#fff', color: view === 'diaria' ? '#fff' : '#374151', border: '1px solid #d1d5db', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Diária</button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Conteúdo */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
-        {!pastorId && <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Selecione um pastor</div>}
-        {loading && pastorId && <LoadingSpinner />}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+          {!pastorId && <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999', fontSize: 16 }}>Selecione um pastor para visualizar a agenda</div>}
+          {loading && pastorId && <LoadingSpinner />}
 
-        {!loading && pastorId && (
-          <div>
-            {/* Navegação */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
-              <button onClick={() => setCurrentDate(navigate(currentDate, view, -1))} style={{ backgroundColor: '#002347', color: '#fff', border: 'none', borderRadius: 4, width: 32, height: 32, cursor: 'pointer', fontWeight: 600 }}>◀</button>
-              <span style={{ color: '#002347', fontWeight: 600, fontSize: 13, flex: 1, textAlign: 'center', minWidth: 120 }}>{formatDateLabel(currentDate, view)}</span>
-              <button onClick={() => setCurrentDate(navigate(currentDate, view, 1))} style={{ backgroundColor: '#002347', color: '#fff', border: 'none', borderRadius: 4, width: 32, height: 32, cursor: 'pointer', fontWeight: 600 }}>▶</button>
-              <button onClick={() => setView(view === 'mensal' ? 'diaria' : 'mensal')} style={{ backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                {view === 'mensal' ? 'Dia' : 'Mês'}
-              </button>
-            </div>
+          {!loading && pastorId && (
+            <div>
+              {/* Navegação */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 16, backgroundColor: '#fff', padding: '16px', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <button onClick={() => setCurrentDate(navigate(currentDate, view, -1))} style={{ backgroundColor: '#002347', color: '#fff', border: 'none', borderRadius: 6, width: 40, height: 40, cursor: 'pointer', fontWeight: 700, fontSize: 18 }}>◀</button>
+                <span style={{ color: '#002347', fontWeight: 700, fontSize: 18, flex: 1, textAlign: 'center', minWidth: 200 }}>{formatDateLabel(currentDate, view)}</span>
+                <button onClick={() => setCurrentDate(navigate(currentDate, view, 1))} style={{ backgroundColor: '#002347', color: '#fff', border: 'none', borderRadius: 6, width: 40, height: 40, cursor: 'pointer', fontWeight: 700, fontSize: 18 }}>▶</button>
+                <button onClick={() => setCurrentDate(new Date())} style={{ backgroundColor: '#C5A059', color: '#002347', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Hoje</button>
+                <button onClick={() => window.location.reload()} style={{ backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 6, width: 40, height: 40, cursor: 'pointer', fontWeight: 600, fontSize: 16 }}>⟲</button>
+              </div>
 
             {/* Mensal */}
             {view === 'mensal' && (
-              <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
-                  {DIAS_SEMANA_PT.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#6b7280', padding: '4px 0' }}>{d}</div>)}
+              <div style={{ backgroundColor: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, marginBottom: 12 }}>
+                  {DIAS_SEMANA_PT.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#6b7280', padding: '8px 0' }}>{d}</div>)}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
                   {daysInMonth().map((day, i) => {
                     if (!day) return <div key={`empty-${i}`} />
                     const ds = toDateStr(day)
                     const daySlots = slots[ds] || {}
-                    const agendamentos = Object.entries(daySlots).filter(([, s]) => s.tipo !== 'bloqueado').length
-                    const bloqueios = Object.entries(daySlots).filter(([, s]) => s.tipo === 'bloqueado').length
+                    const confirmados = Object.entries(daySlots).filter(([, s]) => s.tipo === 'confirmado').length
+                    const pendentes = Object.entries(daySlots).filter(([, s]) => s.tipo === 'pendente').length
+                    const bloqueados = Object.entries(daySlots).filter(([, s]) => s.tipo === 'bloqueado').length
                     const isToday = ds === hoje
                     return (
                       <div key={ds} onClick={() => { setCurrentDate(day); setView('diaria') }}
@@ -191,20 +204,21 @@ export default function PastorAgendaPage() {
                           border: isToday ? '2px solid #C5A059' : '1px solid #e5e7eb',
                           backgroundColor: isToday ? '#fffbf0' : '#fff',
                           cursor: 'pointer',
-                          minHeight: 60,
-                          padding: 6,
-                          borderRadius: 6,
+                          minHeight: 80,
+                          padding: 12,
+                          borderRadius: 8,
                           display: 'flex',
                           flexDirection: 'column',
-                          fontSize: 11,
+                          fontSize: 12,
+                          transition: 'box-shadow 0.2s'
                         }}
                       >
-                        <span style={{ fontWeight: 600, color: isToday ? '#C5A059' : '#374151', marginBottom: 4 }}>{day.getDate()}</span>
-                        {agendamentos + bloqueios > 0 && (
-                          <span style={{ backgroundColor: '#002347', color: '#C5A059', padding: '2px 4px', borderRadius: 3, fontSize: 10, fontWeight: 600, alignSelf: 'flex-start' }}>
-                            {agendamentos + bloqueios}
-                          </span>
-                        )}
+                        <span style={{ fontWeight: 700, color: isToday ? '#C5A059' : '#1f2937', marginBottom: 8, fontSize: 14 }}>{day.getDate()}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {confirmados > 0 && <span style={{ fontSize: 11, color: '#166534', display: 'flex', alignItems: 'center', gap: 4 }}>✓ {confirmados} confirmado{confirmados > 1 ? 's' : ''}</span>}
+                          {pendentes > 0 && <span style={{ fontSize: 11, color: '#92400e', display: 'flex', alignItems: 'center', gap: 4 }}>⏱ {pendentes} pendente{pendentes > 1 ? 's' : ''}</span>}
+                          {bloqueados > 0 && <span style={{ fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>🔒 {bloqueados} bloqueado{bloqueados > 1 ? 's' : ''}</span>}
+                        </div>
                       </div>
                     )
                   })}
@@ -214,43 +228,63 @@ export default function PastorAgendaPage() {
 
             {/* Diária */}
             {view === 'diaria' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#002347', margin: 0, padding: '8px 0 4px 0' }}>
-                  {String(currentDate.getDate()).padStart(2,'0')}/{String(currentDate.getMonth()+1).padStart(2,'0')}/{currentDate.getFullYear()}
+              <div style={{ backgroundColor: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#1f2937', margin: '0 0 20px 0' }}>
+                  {DIAS_SEMANA_PT[currentDate.getDay()]}, {String(currentDate.getDate()).padStart(2,'0')}/{String(currentDate.getMonth()+1).padStart(2,'0')}/{currentDate.getFullYear()}
                 </p>
-                {HORAS_DIA.map(hora => {
-                  const ds = toDateStr(currentDate)
-                  const slot = getSlot(ds, hora)
-                  const cor = slot ? slotColor(slot.tipo) : { bg: '#f9fafb', border: '#e5e7eb', text: '#9ca3af' }
-                  return (
-                    <div key={hora} style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#666', minWidth: 50, display: 'flex', alignItems: 'center' }}>{hora}</span>
-                      <button
-                        onClick={() => abrirPainel(ds, hora)}
-                        style={{
-                          flex: 1,
-                          backgroundColor: cor.bg,
-                          borderColor: cor.border,
-                          color: cor.text,
-                          border: `1px solid ${cor.border}`,
-                          borderRadius: 6,
-                          padding: '8px 10px',
-                          fontSize: 12,
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {slot ? (slot.tipo === 'bloqueado' ? `🔒 ${slot.dados.motivo || ''}` : `${slot.dados.nome_fiel} — ${slot.dados.assunto}`) : 'Livre'}
-                      </button>
-                    </div>
-                  )
-                })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {HORAS_DIA.map(hora => {
+                    const ds = toDateStr(currentDate)
+                    const slot = getSlot(ds, hora)
+                    const cor = slot ? slotColor(slot.tipo) : { bg: '#f9fafb', border: '#e5e7eb', text: '#9ca3af' }
+                    return (
+                      <div key={hora} style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#6b7280', minWidth: 60, display: 'flex', alignItems: 'center' }}>{hora}</span>
+                        <button
+                          onClick={() => abrirPainel(ds, hora)}
+                          style={{
+                            flex: 1,
+                            backgroundColor: cor.bg,
+                            borderColor: cor.border,
+                            color: cor.text,
+                            border: `2px solid ${cor.border}`,
+                            borderRadius: 8,
+                            padding: '12px 14px',
+                            fontSize: 13,
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            fontFamily: 'inherit',
+                            transition: 'box-shadow 0.2s'
+                          }}
+                        >
+                          {slot ? (slot.tipo === 'bloqueado' ? `🔒 ${slot.dados.motivo || 'Bloqueado'}` : `${slot.dados.nome_fiel} — ${slot.dados.assunto}`) : 'Livre'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
-          </div>
-        )}
+
+            {/* Legenda */}
+            <div style={{ display: 'flex', gap: 16, marginTop: 20, padding: '12px 16px', backgroundColor: '#fff', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 12, height: 12, backgroundColor: '#22c55e', borderRadius: 3 }} />
+                <span style={{ fontSize: 12, color: '#6b7280' }}>Confirmado</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 12, height: 12, backgroundColor: '#f59e0b', borderRadius: 3 }} />
+                <span style={{ fontSize: 12, color: '#6b7280' }}>Pendente</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 12, height: 12, backgroundColor: '#9ca3af', borderRadius: 3 }} />
+                <span style={{ fontSize: 12, color: '#6b7280' }}>Bloqueado</span>
+              </div>
+            </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Painel Slot */}
