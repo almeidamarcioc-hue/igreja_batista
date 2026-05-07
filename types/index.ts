@@ -10,6 +10,8 @@ export interface Pastor {
   cidade: string
   estado: string
   imagem: string
+  usuario?: string
+  usuario_id?: number
 }
 
 export interface AgendamentoPastoral {
