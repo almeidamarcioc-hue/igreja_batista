@@ -79,7 +79,7 @@ export default function PastorAgendaPage() {
       } else {
         dataInicio = toDateStr(currentDate); dataFim = dataInicio
       }
-      const res = await fetch(`/api/secretaria/slots?pastorId=${pastorId}&dataInicio=${dataInicio}&dataFim=${dataFim}&_t=${Date.now()}`)
+      const res = await fetch(`/api/pastor/slots?pastorId=${pastorId}&dataInicio=${dataInicio}&dataFim=${dataFim}&_t=${Date.now()}`)
       setSlots(await res.json() || {})
     } catch { /* silencioso */ }
     finally { setLoading(false) }
@@ -100,14 +100,14 @@ export default function PastorAgendaPage() {
     if (!painel || !pastorId) return
     setBloqueando(true)
     try {
-      await fetch('/api/secretaria/bloqueios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }) })
+      await fetch('/api/pastor/bloqueios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pastorId, data: painel.data, hora: painel.hora, motivo: motivoBloqueio }) })
       await fetchSlots(); setPainel(null)
     } finally { setBloqueando(false) }
   }
 
   const handleDesbloquear = async () => {
     if (!painel?.slot || painel.slot.tipo !== 'bloqueado') return
-    await fetch(`/api/secretaria/bloqueios/${painel.slot.dados.id}`, { method: 'DELETE' })
+    await fetch(`/api/pastor/bloqueios/${painel.slot.dados.id}`, { method: 'DELETE' })
     await fetchSlots(); setPainel(null)
   }
 
@@ -115,7 +115,7 @@ export default function PastorAgendaPage() {
     if (!painel?.slot) return
     setAtualizandoStatus(true)
     try {
-      await fetch(`/api/secretaria/agendamentos/${painel.slot.dados.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) })
+      await fetch(`/api/pastor/agendamentos/${painel.slot.dados.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) })
       await fetchSlots(); setPainel(null)
     } finally { setAtualizandoStatus(false) }
   }
