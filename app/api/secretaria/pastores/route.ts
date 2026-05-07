@@ -40,13 +40,13 @@ export async function POST(req: NextRequest) {
       try {
         const usuarioTrim = body.usuario.trim()
 
-        // Verificar se usuário já existe
+        // Criar usuário com acesso admin da secretaria
         const usuarioExistente = await criarUsuario({
           usuario: usuarioTrim,
           senha: body.senha,
           nome: body.nome,
-          role: 'pastor',
-          modulos: 'pastor',
+          role: 'admin',
+          modulos: 'secretaria',
         })
 
         // Atualizar pastor com o usuario_id

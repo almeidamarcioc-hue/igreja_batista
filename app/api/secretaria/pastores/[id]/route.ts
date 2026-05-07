@@ -41,13 +41,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       try {
         const usuarioTrim = body.usuario.trim()
 
-        // Criar o usuário
+        // Criar usuário com acesso admin da secretaria
         const usuarioId = await criarUsuario({
           usuario: usuarioTrim,
           senha: body.senha,
           nome: body.nome,
-          role: 'pastor',
-          modulos: 'pastor',
+          role: 'admin',
+          modulos: 'secretaria',
         })
 
         // Atualizar pastor com o usuario_id
