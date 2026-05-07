@@ -47,7 +47,7 @@ export default function PastorAgendaPage() {
   const [pastores, setPastores] = useState<Pastor[]>([])
   const [pastorId, setPastorId] = useState<number | null>(null)
   const [config, setConfig] = useState<Configuracoes | null>(null)
-  const [view, setView] = useState<'mensal' | 'diaria'>('mensal')
+  const [view, setView] = useState<'mensal' | 'semanal' | 'diaria'>('mensal')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [slots, setSlots] = useState<Record<string, Record<string, Slot>>>({})
   const [loading, setLoading] = useState(false)
