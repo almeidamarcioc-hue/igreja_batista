@@ -58,8 +58,8 @@ export default function PastorAgendaPage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/auth/me').then(r => r.ok ? r.json() : null),
-      fetch('/api/secretaria/pastores').then(r => r.json()),
-      fetch('/api/secretaria/configuracoes').then(r => r.json()),
+      fetch('/api/pastor/pastores').then(r => r.json()),
+      fetch('/api/pastor/configuracoes').then(r => r.json()),
     ]).then(([me, pasts, cfg]) => {
       setPastores(Array.isArray(pasts) ? pasts : [])
       if (cfg?.id) setConfig(cfg)
