@@ -12,8 +12,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Preencha usuário e senha.' }, { status: 400 })
     }
 
-    const user = await getUsuarioPorLogin(String(usuario))
-    if (!user || !verifyPassword(String(senha), user.senha_hash)) {
+    const user = await getUsuarioPorLogin(String(usuario).trim())
+    if (!user) {
+      console.log(`Usuário não encontrado: "${usuario}"`)
+      return NextResponse.json({ error: 'Usuário ou senha incorretos.' }, { status: 401 })
+    }
+
+    if (!verifyPassword(String(senha), user.senha_hash)) {
+      console.log(`Senha incorreta para usuário: "${usuario}"`)
       return NextResponse.json({ error: 'Usuário ou senha incorretos.' }, { status: 401 })
     }
 
