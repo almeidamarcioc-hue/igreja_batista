@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/admin/criar-pastor',
+  '/api/admin/check-usuario',
   '/api/init',
   '/_next',
   '/favicon',
