@@ -20,7 +20,7 @@ function LinkApp({ id }: { id: number }) {
   )
 }
 
-const pastorVazio: Partial<Pastor> = { nome: '', telefone: '', endereco: '', numero: '', bairro: '', cidade: '', estado: '', imagem: '' }
+const pastorVazio: Partial<Pastor> & { senha?: string } = { nome: '', telefone: '', endereco: '', numero: '', bairro: '', cidade: '', estado: '', imagem: '', usuario: '', senha: '' }
 const inputCls = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none'
 const iStyle = { borderColor: '#e5e7eb' }
 const onFocus = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor = '#C5A059' }
