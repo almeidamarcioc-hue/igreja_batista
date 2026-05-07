@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, unauthorized } from '@/lib/guard'
 import { getPastores, criarPastor, criarUsuario } from '@/lib/db'
-import { neon } from '@neondatabase/serverless'
 
 export const dynamic = 'force-dynamic'
+
+// Helper para obter conexão do banco
+function getDb() {
+  const raw = process.env.DATABASE_URL
+  if (!raw) throw new Error('DATABASE_URL não configurado.')
+  const { neon } = require('@neondatabase/serverless')
+  const url = raw
+    .replace(/[?&]channel_binding=[^&]*/g, '')
+    .replace(/\?&/, '?')
+    .replace(/[?&]$/, '')
+  return neon(url)
+}
 
 export async function GET(req: NextRequest) {
   if (!await requirePermission(req, 'secretaria')) return unauthorized()
@@ -22,7 +33,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     if (!body.nome) return NextResponse.json({ error: 'Nome é obrigatório.' }, { status: 400 })
 
-    const sql = neon(process.env.DATABASE_URL || '')
     const id = await criarPastor(body)
 
     // Se informou usuário e senha, criar usuário do sistema com acesso à agenda
@@ -37,6 +47,7 @@ export async function POST(req: NextRequest) {
         })
 
         // Atualizar pastor com o usuario_id
+        const sql = getDb()
         await sql`UPDATE pastores SET usuario_id = ${usuarioId} WHERE id = ${id}`
       } catch (err) {
         // Se falhar ao criar usuário, apenas log mas não falha a criação do pastor
