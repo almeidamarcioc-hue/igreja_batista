@@ -54,10 +54,14 @@ export default function AgendaPastoresPage() {
   const [loading, setLoading] = useState(false)
   const [painel, setPainel] = useState<{ data: string; hora: string; slot: Slot | null } | null>(null)
   const [painelDia, setPainelDia] = useState<string | null>(null)
+  const [painelPeriodo, setPainelPeriodo] = useState<{ data: string } | null>(null)
+  const [horaInicio, setHoraInicio] = useState('')
+  const [horaFim, setHoraFim] = useState('')
   const [motivoBloqueio, setMotivoBloqueio] = useState('')
   const [bloqueando, setBloqueando] = useState(false)
   const [atualizandoStatus, setAtualizandoStatus] = useState(false)
   const [bloqueandoDia, setBloqueandoDia] = useState(false)
+  const [bloqueandoPeriodo, setBloqueandoPeriodo] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -133,6 +137,19 @@ export default function AgendaPastoresPage() {
     if (!painel?.slot || painel.slot.tipo !== 'bloqueado') return
     await fetch(`/api/secretaria/bloqueios/${painel.slot.dados.id}`, { method: 'DELETE' })
     await fetchSlots(); setPainel(null)
+  }
+
+  const handleBloquearPeriodo = async () => {
+    if (!painelPeriodo || !pastorId || !horaInicio || !horaFim) return
+    setBloqueandoPeriodo(true)
+    try {
+      await fetch('/api/secretaria/bloqueios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pastorId, data: painelPeriodo.data, horaInicio, horaFim, motivo: motivoBloqueio })
+      })
+      await fetchSlots(); setPainelPeriodo(null); setHoraInicio(''); setHoraFim(''); setMotivoBloqueio('')
+    } finally { setBloqueandoPeriodo(false) }
   }
 
   const handleAlterarStatus = async (novoStatus: string) => {
@@ -369,11 +386,16 @@ export default function AgendaPastoresPage() {
             </div>
             <div className="px-5 py-5 flex-1">
               {!painel.slot && (
-                <div>
-                  <p className="text-green-600 font-semibold mb-4">✓ Horário Livre</p>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo do bloqueio</label>
-                  <input type="text" value={motivoBloqueio} onChange={e => setMotivoBloqueio(e.target.value)} placeholder="Ex: Reunião interna" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none mb-3" style={{ borderColor: '#e5e7eb' }} />
-                  <button onClick={handleBloquear} disabled={bloqueando} style={{ backgroundColor: '#002347', color: '#fff' }} className="w-full py-2 rounded-lg font-semibold text-sm">{bloqueando ? 'Bloqueando...' : '🔒 Bloquear Horário'}</button>
+                <div className="space-y-3">
+                  <p className="text-green-600 font-semibold">✓ Horário Livre</p>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo do bloqueio</label>
+                    <input type="text" value={motivoBloqueio} onChange={e => setMotivoBloqueio(e.target.value)} placeholder="Ex: Reunião interna" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ borderColor: '#e5e7eb' }} />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleBloquear} disabled={bloqueando} style={{ backgroundColor: '#002347', color: '#fff' }} className="flex-1 py-2 rounded-lg font-semibold text-sm">{bloqueando ? '...' : '🔒 Horário'}</button>
+                    <button onClick={() => { setPainelPeriodo({ data: painel.data }); setPainel(null); setMotivoBloqueio('') }} style={{ backgroundColor: '#5B7C99', color: '#fff' }} className="flex-1 py-2 rounded-lg font-semibold text-sm">📅 Período</button>
+                  </div>
                 </div>
               )}
               {painel.slot?.tipo === 'bloqueado' && (
@@ -419,6 +441,50 @@ export default function AgendaPastoresPage() {
                   <button onClick={() => setPainel(null)} className="w-full mt-2 py-2 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700">Fechar</button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Painel Período */}
+      {painelPeriodo && (
+        <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={e => { if (e.target === e.currentTarget) setPainelPeriodo(null) }}>
+          <div className="ml-auto w-96 bg-white h-full shadow-2xl flex flex-col overflow-y-auto">
+            <div style={{ backgroundColor: '#002347', borderBottom: '2px solid #C5A059' }} className="flex items-center justify-between px-5 py-4">
+              <div>
+                <p className="text-white font-bold">Bloquear Período</p>
+                <p style={{ color: '#C5A059' }} className="text-xs">{painelPeriodo.data.split('-').reverse().join('/')}</p>
+              </div>
+              <button onClick={() => setPainelPeriodo(null)} className="text-white text-2xl leading-none">×</button>
+            </div>
+            <div className="px-5 py-5 flex-1">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Hora Inicial</label>
+                  <select value={horaInicio} onChange={e => setHoraInicio(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ borderColor: '#e5e7eb' }}>
+                    <option value="">— Selecione —</option>
+                    {HORAS_DIA.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Hora Final</label>
+                  <select value={horaFim} onChange={e => setHoraFim(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ borderColor: '#e5e7eb' }}>
+                    <option value="">— Selecione —</option>
+                    {HORAS_DIA.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo (opcional)</label>
+                  <input type="text" value={motivoBloqueio} onChange={e => setMotivoBloqueio(e.target.value)} placeholder="Ex: Reunião importante" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ borderColor: '#e5e7eb' }} />
+                </div>
+                {horaInicio && horaFim && (
+                  <div style={{ backgroundColor: '#fef3c7', border: '1px solid #f59e0b' }} className="rounded-lg px-3 py-2 text-sm">
+                    <p className="text-gray-700">Período: <span className="font-semibold">{horaInicio} às {horaFim}</span></p>
+                  </div>
+                )}
+                <button onClick={handleBloquearPeriodo} disabled={bloqueandoPeriodo || !horaInicio || !horaFim} style={{ backgroundColor: '#002347', color: '#fff' }} className="w-full py-2 rounded-lg font-semibold text-sm disabled:opacity-50">{bloqueandoPeriodo ? 'Bloqueando...' : '🔒 Bloquear Período'}</button>
+                <button onClick={() => setPainelPeriodo(null)} className="w-full py-2 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700">Cancelar</button>
+              </div>
             </div>
           </div>
         </div>
