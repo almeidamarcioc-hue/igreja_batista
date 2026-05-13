@@ -361,9 +361,10 @@ export default function AgendaPastoresPage() {
               <div className="mt-5 space-y-2">
                 <input type="text" value={motivoBloqueio} onChange={e => setMotivoBloqueio(e.target.value)} placeholder="Motivo do bloqueio (opcional)" className="w-full border rounded-lg px-3 py-1.5 text-sm focus:outline-none" style={{ borderColor: '#e5e7eb' }} />
                 <div className="flex gap-2">
-                  <button onClick={() => handleBloquearDia(painelDia!)} disabled={bloqueandoDia} style={{ backgroundColor: '#002347', color: '#fff' }} className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">🔒 Bloquear Dia</button>
+                  <button onClick={() => handleBloquearDia(painelDia!)} disabled={bloqueandoDia} style={{ backgroundColor: '#002347', color: '#fff' }} className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">🔒 Dia</button>
+                  <button onClick={() => { setPainelPeriodo({ data: painelDia! }); setPainelDia(null); setMotivoBloqueio('') }} style={{ backgroundColor: '#5B7C99', color: '#fff' }} className="flex-1 py-2 rounded-lg text-sm font-semibold">📅 Período</button>
                   {Object.values(slots[painelDia!] || {}).some(s => s.tipo === 'bloqueado') && (
-                    <button onClick={() => handleDesbloquearDia(painelDia!)} disabled={bloqueandoDia} style={{ backgroundColor: '#ef4444', color: '#fff' }} className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">🔓 Desbloquear</button>
+                    <button onClick={() => handleDesbloquearDia(painelDia!)} disabled={bloqueandoDia} style={{ backgroundColor: '#ef4444', color: '#fff' }} className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">🔓</button>
                   )}
                 </div>
                 <button onClick={() => router.push('/secretaria/agendamentos/novo')} style={{ backgroundColor: '#C5A059', color: '#002347' }} className="w-full py-2.5 rounded-lg text-sm font-semibold">➕ Novo Agendamento</button>
