@@ -30,34 +30,48 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const sql = getDb()
         const servoId = body.servo_facilitador_id ? Number(body.servo_facilitador_id) : null
 
-        console.log('Updating servo assignment:', { id, servoId })
+        console.log('[SERVO] Updating servo assignment:', { id, servoId })
 
-        const updateResult = await sql`
+        // First, get current salvo data
+        const currentSalvo = await getSalvo(id)
+        console.log('[SERVO] Current salvo:', currentSalvo ? 'found' : 'not found')
+
+        if (!currentSalvo) {
+          console.log('[SERVO] Salvo not found with id:', id)
+          return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
+        }
+
+        // Update servo assignment
+        console.log('[SERVO] Running UPDATE query')
+        await sql`
           UPDATE salvos
           SET servo_facilitador_id = ${servoId},
               data_atribuicao = CASE WHEN ${servoId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
           WHERE id = ${id}
-          RETURNING id, servo_facilitador_id
         `
+        console.log('[SERVO] UPDATE completed')
 
-        console.log('Update result:', updateResult)
-
-        if (!updateResult || updateResult.length === 0) {
-          return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
-        }
-
+        // Fetch updated salvo
+        console.log('[SERVO] Fetching updated salvo')
         const updated = await getSalvo(id)
-        console.log('Fetched updated salvo:', updated)
+        console.log('[SERVO] Updated salvo found:', updated ? 'yes' : 'no')
 
         if (!updated) {
-          return NextResponse.json({ error: 'Salvo não encontrado após atualização' }, { status: 404 })
+          console.log('[SERVO] Failed to fetch updated salvo')
+          // Return the current salvo with updated servo info
+          return NextResponse.json({
+            ...currentSalvo,
+            servo_facilitador_id: servoId
+          })
         }
 
+        console.log('[SERVO] Success, returning updated salvo')
         return NextResponse.json(updated)
       } catch (servoError: unknown) {
-        const msg = servoError instanceof Error ? servoError.message : 'Erro ao associar servo'
-        console.error('Error in servo association:', msg, servoError)
-        return NextResponse.json({ error: msg }, { status: 500 })
+        const msg = servoError instanceof Error ? servoError.message : 'Erro desconhecido ao associar servo'
+        const stack = servoError instanceof Error ? servoError.stack : ''
+        console.error('[SERVO] Error in servo association:', { msg, stack, servoError })
+        return NextResponse.json({ error: `${msg}. Verifique os logs do servidor.` }, { status: 500 })
       }
     }
 
