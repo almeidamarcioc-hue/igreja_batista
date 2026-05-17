@@ -29,6 +29,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       const sql = getDb()
       const servoId = body.servo_facilitador_id ? Number(body.servo_facilitador_id) : null
 
+      console.log('Updating servo assignment:', { id, servoId })
+
       await sql`
         UPDATE salvos
         SET servo_facilitador_id = ${servoId},
@@ -36,7 +38,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         WHERE id = ${id}
       `
 
+      console.log('Update successful, fetching updated record')
       const updated_salvo = await getSalvo(id)
+      console.log('Fetched updated salvo:', updated_salvo)
+
+      if (!updated_salvo) {
+        console.error('Failed to fetch updated salvo after update')
+        return NextResponse.json({ error: 'Salvo não encontrado após atualização' }, { status: 404 })
+      }
+
       return NextResponse.json(updated_salvo)
     }
 
