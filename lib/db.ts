@@ -1811,10 +1811,22 @@ export async function updateSalvo(id: number, dados: Record<string, unknown>): P
   const bairro = (dados.bairro as string) ?? ''
   const cidade = (dados.cidade as string) ?? ''
   const uf = (dados.uf as string) ?? ''
-  const servoFacilitadorId = dados.servo_facilitador_id ? Number(dados.servo_facilitador_id) : null
+
   await sql`
     UPDATE salvos
-    SET nome_responsavel = ${nomeResponsavel}, data_cadastro = ${dataCadastro}, nome = ${nome}, telefone = ${telefone}, idade = ${idade}, data_nascimento = ${dataNascimento}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}, servo_facilitador_id = ${servoFacilitadorId}, data_atribuicao = CASE WHEN ${servoFacilitadorId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
+    SET
+      nome_responsavel = ${nomeResponsavel},
+      data_cadastro = ${dataCadastro},
+      nome = ${nome},
+      telefone = ${telefone},
+      idade = ${idade},
+      data_nascimento = ${dataNascimento},
+      endereco = ${endereco},
+      numero = ${numero},
+      complemento = ${complemento},
+      bairro = ${bairro},
+      cidade = ${cidade},
+      uf = ${uf}
     WHERE id = ${id}
   `
 }

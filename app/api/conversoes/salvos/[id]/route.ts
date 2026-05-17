@@ -159,9 +159,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       bairro: body.bairro?.trim() || '',
       cidade: body.cidade?.trim() || '',
       uf: body.uf?.trim() || '',
-      servo_facilitador_id: body.servo_facilitador_id || null,
-      data_atribuicao: body.data_atribuicao || null,
-      ativo: body.ativo !== undefined ? body.ativo : true,
     })
 
     const sql = getDb()
