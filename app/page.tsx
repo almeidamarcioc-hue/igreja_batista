@@ -88,14 +88,16 @@ export default function WorkspacePage() {
             bg="#064E3B"
           />
         )}
-        <ModuleCard
-          onClick={() => router.push('/conversoes/login')}
-          icon="🙏"
-          title="Conversões"
-          desc="Acompanhamento de novos crentes"
-          accent="#EC4899"
-          bg="#831843"
-        />
+        {hasModule('conversoes') && (
+          <ModuleCard
+            onClick={() => router.push('/conversoes/painel')}
+            icon="🙏"
+            title="Conversões"
+            desc="Acompanhamento de novos crentes"
+            accent="#EC4899"
+            bg="#831843"
+          />
+        )}
         {me?.role === 'admin' && (
           <ModuleCard
             onClick={() => router.push('/configuracoes')}
