@@ -146,8 +146,8 @@ export default function ServosPage() {
   }
 
   const filtrados = servos.filter(s =>
-    s.nome.toLowerCase().includes(search.toLowerCase()) ||
-    s.telefone.includes(search)
+    (s.nome?.toLowerCase() ?? '').includes(search.toLowerCase()) ||
+    (s.telefone ?? '').includes(search)
   )
 
   if (loading) {

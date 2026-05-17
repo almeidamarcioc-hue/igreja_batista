@@ -6,9 +6,26 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   try {
     const servos = await getServosFacilitadores()
-    return NextResponse.json(servos)
+    console.log('[DEBUG] Servos retornados:', servos)
+    const formatted = servos.map(s => ({
+      id: s.id,
+      nome: s.nome || '',
+      data_nascimento: s.data_nascimento || '',
+      telefone: s.telefone || '',
+      idade: s.idade || null,
+      endereco: s.endereco || '',
+      numero: s.numero || '',
+      complemento: s.complemento || '',
+      bairro: s.bairro || '',
+      cidade: s.cidade || '',
+      uf: s.uf || '',
+      ativo: s.ativo,
+      data_criacao: s.data_criacao,
+    }))
+    return NextResponse.json(formatted)
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro ao carregar servos'
+    console.error('[DEBUG] Erro ao carregar servos:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
