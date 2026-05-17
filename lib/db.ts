@@ -1737,21 +1737,37 @@ export async function getSalvos() {
 export async function getSalvo(id: number) {
   const sql = getDb()
   const rows = await sql`
-    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
+    SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+           sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
     FROM salvos s
     LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
-    WHERE s.id = ${id} AND s.ativo = TRUE
+    WHERE s.id = ${id}
   `
   if (rows.length === 0) return null
   const r = rows[0] as any
   return {
-    ...r,
-    servo: r.servo_facilitador_id ? {
-      id: r.servo_facilitador_id,
-      nome: r.servo_nome,
-      telefone: r.servo_telefone,
-      data_nascimento: r.servo_data_nascimento,
-      genero: r.servo_genero,
+    id: r.id,
+    nome_responsavel: r.nome_responsavel,
+    data_cadastro: r.data_cadastro,
+    nome: r.nome,
+    telefone: r.telefone,
+    idade: r.idade,
+    endereco: r.endereco,
+    numero: r.numero,
+    complemento: r.complemento,
+    bairro: r.bairro,
+    cidade: r.cidade,
+    uf: r.uf,
+    servo_facilitador_id: r.servo_facilitador_id,
+    data_atribuicao: r.data_atribuicao,
+    ativo: r.ativo,
+    data_criacao: r.data_criacao,
+    servo: r.servo_id ? {
+      id: r.servo_id,
+      nome: r.servo_nome || '',
+      telefone: r.servo_telefone || '',
+      data_nascimento: r.servo_data_nascimento || '',
+      genero: r.servo_genero || 'M',
     } : undefined,
   }
 }
