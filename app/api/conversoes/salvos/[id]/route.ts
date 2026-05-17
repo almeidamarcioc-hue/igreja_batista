@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const sql = getDb()
 
     const rows = await sql`
-      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.data_nascimento, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
              sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
       FROM salvos s
       LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
@@ -29,6 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       nome: r.nome,
       telefone: r.telefone,
       idade: r.idade,
+      data_nascimento: r.data_nascimento,
       endereco: r.endereco,
       numero: r.numero,
       complemento: r.complemento,
@@ -89,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         // Step 4: Fetch and return updated salvo
         const rows = await sql`
-          SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+          SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.data_nascimento, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
                  sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
           FROM salvos s
           LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
@@ -109,6 +110,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           nome: r.nome,
           telefone: r.telefone,
           idade: r.idade,
+          data_nascimento: r.data_nascimento,
           endereco: r.endereco,
           numero: r.numero,
           complemento: r.complemento,
@@ -150,6 +152,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       nome_responsavel: body.nome_responsavel?.trim() || '',
       data_cadastro: body.data_cadastro || '',
       idade: body.idade ? Number(body.idade) : null,
+      data_nascimento: body.data_nascimento || '',
       endereco: body.endereco?.trim() || '',
       numero: body.numero?.trim() || '',
       complemento: body.complemento?.trim() || '',
@@ -163,7 +166,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const sql = getDb()
     const rows = await sql`
-      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.data_nascimento, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
              sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
       FROM salvos s
       LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
@@ -182,6 +185,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       nome: r.nome,
       telefone: r.telefone,
       idade: r.idade,
+      data_nascimento: r.data_nascimento,
       endereco: r.endereco,
       numero: r.numero,
       complemento: r.complemento,

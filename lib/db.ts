@@ -1800,6 +1800,7 @@ export async function updateSalvo(id: number, dados: Record<string, unknown>): P
   const nome = (dados.nome as string) ?? ''
   const telefone = (dados.telefone as string) ?? ''
   const idade = dados.idade ? Number(dados.idade) : null
+  const dataNascimento = (dados.data_nascimento as string) ?? ''
   const endereco = (dados.endereco as string) ?? ''
   const numero = (dados.numero as string) ?? ''
   const complemento = (dados.complemento as string) ?? ''
@@ -1809,7 +1810,7 @@ export async function updateSalvo(id: number, dados: Record<string, unknown>): P
   const servoFacilitadorId = dados.servo_facilitador_id ? Number(dados.servo_facilitador_id) : null
   await sql`
     UPDATE salvos
-    SET nome_responsavel = ${nomeResponsavel}, data_cadastro = ${dataCadastro}, nome = ${nome}, telefone = ${telefone}, idade = ${idade}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}, servo_facilitador_id = ${servoFacilitadorId}, data_atribuicao = CASE WHEN ${servoFacilitadorId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
+    SET nome_responsavel = ${nomeResponsavel}, data_cadastro = ${dataCadastro}, nome = ${nome}, telefone = ${telefone}, idade = ${idade}, data_nascimento = ${dataNascimento}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}, servo_facilitador_id = ${servoFacilitadorId}, data_atribuicao = CASE WHEN ${servoFacilitadorId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
     WHERE id = ${id}
   `
 }
