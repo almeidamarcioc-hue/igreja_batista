@@ -78,10 +78,19 @@ export default function DashboardConfigPage() {
                 Imagem de Fundo do Dashboard
               </label>
               <input
-                type="url"
-                value={config.imagem_fundo_dashboard}
-                onChange={e => setConfig(c => ({ ...c, imagem_fundo_dashboard: e.target.value }))}
-                placeholder="https://exemplo.com/imagem.jpg"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result as string
+                      setConfig(c => ({ ...c, imagem_fundo_dashboard: base64 }))
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.08)',
                   border: '1px solid rgba(255,255,255,0.15)',
@@ -93,9 +102,6 @@ export default function DashboardConfigPage() {
                 }}
                 className="focus:outline-none focus:border-indigo-400"
               />
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                🙏 Recomendação: Use uma imagem relacionada a oração de joelhos na igreja. A imagem será exibida como fundo do dashboard público.
-              </p>
             </div>
 
             {/* Preview */}
