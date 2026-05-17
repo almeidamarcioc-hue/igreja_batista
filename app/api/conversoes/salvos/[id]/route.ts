@@ -39,14 +39,31 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       `
 
       console.log('Update successful, fetching updated record')
-      const updated_salvo = await getSalvo(id)
-      console.log('Fetched updated salvo:', updated_salvo)
+      const rows = await sql`
+        SELECT s.*, sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
+        FROM salvos s
+        LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+        WHERE s.id = ${id}
+      `
 
-      if (!updated_salvo) {
+      if (rows.length === 0) {
         console.error('Failed to fetch updated salvo after update')
         return NextResponse.json({ error: 'Salvo não encontrado após atualização' }, { status: 404 })
       }
 
+      const r = rows[0] as any
+      const updated_salvo = {
+        ...r,
+        servo: r.servo_id ? {
+          id: r.servo_id,
+          nome: r.servo_nome,
+          telefone: r.servo_telefone,
+          data_nascimento: r.servo_data_nascimento,
+          genero: r.servo_genero,
+        } : undefined,
+      }
+
+      console.log('Fetched updated salvo:', updated_salvo)
       return NextResponse.json(updated_salvo)
     }
 
