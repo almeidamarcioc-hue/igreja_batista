@@ -224,7 +224,7 @@ export default function ServosPage() {
                   </tr>
                 ) : (
                   filtrados.map(servo => (
-                    <tr key={servo.id} style={{ borderBottom: '1px solid #e5e7eb', '&:hover': { backgroundColor: '#f9fafb' } }}>
+                    <tr key={servo.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '12px 16px', fontSize: 13, color: '#1f2937', fontWeight: 500 }}>{servo.nome}</td>
                       <td style={{ padding: '12px 16px', fontSize: 13, color: '#6b7280' }}>{servo.idade ?? '—'}</td>
                       <td style={{ padding: '12px 16px', fontSize: 13, color: '#6b7280' }}>{servo.telefone}</td>
