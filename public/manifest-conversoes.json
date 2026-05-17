@@ -1,0 +1,40 @@
+{
+  "name": "Conversões IBTM",
+  "short_name": "Conversões",
+  "description": "Acompanhamento de conversões e atribuição de mentores espirituais",
+  "start_url": "/conversoes-direto",
+  "scope": "/conversoes-direto/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#002347",
+  "categories": ["productivity"],
+  "icons": [
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

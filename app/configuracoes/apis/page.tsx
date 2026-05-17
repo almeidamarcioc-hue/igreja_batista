@@ -152,6 +152,17 @@ export default function ApisPage() {
             </ul>
           </div>
 
+          <div style={{ marginTop: 20, padding: 20, backgroundColor: '#e0e7ff', borderRadius: 8, borderLeft: '4px solid #6366f1' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#4338ca', margin: '0 0 8px 0' }}>📱 Links Diretos (PWA Apps)</h3>
+            <p style={{ fontSize: 13, color: '#4338ca', margin: '0 0 12px 0', lineHeight: 1.6 }}>
+              Acesso direto aos módulos após login no workspace:
+            </p>
+            <ul style={{ fontSize: 13, color: '#4338ca', margin: '0', paddingLeft: 20, lineHeight: 1.8 }}>
+              <li><strong>Agenda Pastores:</strong> <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 3 }}>/pastor/agenda</code></li>
+              <li><strong>Conversões:</strong> <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 3 }}>/conversoes-direto</code></li>
+            </ul>
+          </div>
+
           <div style={{ marginTop: 20, padding: 20, backgroundColor: '#fef3c7', borderRadius: 8, borderLeft: '4px solid #f59e0b' }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#92400e', margin: '0 0 8px 0' }}>👤 Criando usuários para módulos</h3>
             <p style={{ fontSize: 13, color: '#92400e', margin: '0 0 12px 0', lineHeight: 1.6 }}>
