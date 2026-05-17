@@ -32,10 +32,15 @@ export default function ServosPage() {
     const fetchServos = async () => {
       try {
         const res = await fetch('/api/secretaria/servos-facilitadores')
-        if (!res.ok) throw new Error('Erro ao carregar servos')
+        if (!res.ok) {
+          const text = await res.text()
+          console.error('API Error:', res.status, text)
+          throw new Error(`Erro ao carregar servos (${res.status})`)
+        }
         const data = await res.json()
         setServos(data)
       } catch (err) {
+        console.error('Fetch error:', err)
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
         setLoading(false)
