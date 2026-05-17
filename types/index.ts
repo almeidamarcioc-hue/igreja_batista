@@ -309,6 +309,7 @@ export interface Salvo {
   nome: string
   telefone: string
   idade?: number
+  data_nascimento?: string
   endereco: string
   numero: string
   complemento: string

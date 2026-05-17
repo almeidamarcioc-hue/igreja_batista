@@ -701,37 +701,73 @@ function EditForm({
   onSave: () => void
   onCancel: () => void
 }) {
+  const inputStyle = { border: '1px solid #e5e7eb', borderRadius: 4, padding: '8px 10px', fontSize: 12, boxSizing: 'border-box' as const, fontFamily: 'inherit', width: '100%' }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <input
-        type="text"
-        value={data.nome || ''}
-        onChange={(e) => onChange({ ...data, nome: e.target.value })}
-        placeholder="Nome"
-        style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 4,
-          padding: '8px 10px',
-          fontSize: 12,
-          boxSizing: 'border-box',
-          fontFamily: 'inherit',
-        }}
-      />
-      <input
-        type="tel"
-        value={data.telefone || ''}
-        onChange={(e) => onChange({ ...data, telefone: e.target.value })}
-        placeholder="Telefone"
-        style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 4,
-          padding: '8px 10px',
-          fontSize: 12,
-          boxSizing: 'border-box',
-          fontFamily: 'inherit',
-        }}
-      />
-      <div style={{ display: 'flex', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '70vh', overflow: 'auto' }}>
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Responsável pelo Cadastro</label>
+        <input type="text" value={data.nome_responsavel || ''} onChange={(e) => onChange({ ...data, nome_responsavel: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Data Cadastro</label>
+          <input type="date" value={data.data_cadastro || ''} onChange={(e) => onChange({ ...data, data_cadastro: e.target.value })} style={inputStyle} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Idade</label>
+          <input type="number" value={data.idade || ''} onChange={(e) => onChange({ ...data, idade: e.target.value ? Number(e.target.value) : undefined })} style={inputStyle} />
+        </div>
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Nome do Novo Crente</label>
+        <input type="text" value={data.nome || ''} onChange={(e) => onChange({ ...data, nome: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Telefone</label>
+        <input type="tel" value={data.telefone || ''} onChange={(e) => onChange({ ...data, telefone: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Data de Nascimento</label>
+        <input type="date" value={data.data_nascimento || ''} onChange={(e) => onChange({ ...data, data_nascimento: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Endereço</label>
+        <input type="text" value={data.endereco || ''} onChange={(e) => onChange({ ...data, endereco: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Número</label>
+          <input type="text" value={data.numero || ''} onChange={(e) => onChange({ ...data, numero: e.target.value })} style={inputStyle} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Complemento</label>
+          <input type="text" value={data.complemento || ''} onChange={(e) => onChange({ ...data, complemento: e.target.value })} style={inputStyle} />
+        </div>
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Bairro</label>
+        <input type="text" value={data.bairro || ''} onChange={(e) => onChange({ ...data, bairro: e.target.value })} style={inputStyle} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Cidade</label>
+          <input type="text" value={data.cidade || ''} onChange={(e) => onChange({ ...data, cidade: e.target.value })} style={inputStyle} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 3 }}>UF</label>
+          <input type="text" value={data.uf || ''} onChange={(e) => onChange({ ...data, uf: e.target.value })} maxLength={2} style={inputStyle} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         <button
           onClick={onSave}
           style={{
