@@ -582,7 +582,7 @@ export default function ConversoesPage() {
 
             <form onSubmit={handleSaveNovo} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Responsável *</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Responsável pelo Cadastro *</label>
                 <input type="text" value={novoFormData.nome_responsavel} onChange={(e) => setNovoFormData({...novoFormData, nome_responsavel: e.target.value})} required style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
               </div>
 
