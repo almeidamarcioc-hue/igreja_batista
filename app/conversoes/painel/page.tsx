@@ -77,9 +77,14 @@ export default function ConversoesPage() {
   }
 
   const handleConfirmAssociar = async (servo: ServoFacilitador) => {
-    if (!selectedSalvo) return
+    console.log('handleConfirmAssociar called', { selectedSalvo, servo })
+    if (!selectedSalvo) {
+      console.error('selectedSalvo is null')
+      return
+    }
 
     try {
+      console.log('Fetching API with:', { salvoId: selectedSalvo.id, servoId: servo.id })
       const res = await fetch(`/api/conversoes/salvos/${selectedSalvo.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -89,6 +94,7 @@ export default function ConversoesPage() {
         }),
       })
 
+      console.log('API response:', { ok: res.ok, status: res.status })
       if (!res.ok) throw new Error('Erro ao associar servo')
 
       setSalvos(prev =>
@@ -101,8 +107,9 @@ export default function ConversoesPage() {
 
       setShowServoModal(false)
       setSelectedSalvo(null)
+      console.log('Servo associado com sucesso')
     } catch (err) {
-      console.error(err)
+      console.error('Erro ao associar:', err)
     }
   }
 
@@ -371,7 +378,7 @@ export default function ConversoesPage() {
                         </p>
                         {salvo.servo && (
                           <p style={{ fontSize: 12, backgroundColor: '#dcfce7', color: '#166534', padding: '6px 8px', borderRadius: 4, margin: '8px 0 0 0', fontWeight: 600 }}>
-                            👨‍🏫 Pai: {salvo.servo.nome}
+                            {salvo.servo.genero === 'F' ? '👩‍🏫 Mãe' : '👨‍🏫 Pai'}: {salvo.servo.nome}
                           </p>
                         )}
                         {salvo.endereco && (
@@ -488,7 +495,10 @@ export default function ConversoesPage() {
                 {servos.map(servo => (
                   <button
                     key={servo.id}
-                    onClick={() => handleConfirmAssociar(servo)}
+                    onClick={() => {
+                      console.log('Button clicked for servo:', servo)
+                      handleConfirmAssociar(servo)
+                    }}
                     style={{
                       width: '100%',
                       backgroundColor: '#f9fafb',
@@ -499,7 +509,10 @@ export default function ConversoesPage() {
                       cursor: 'pointer',
                       fontSize: 13,
                       fontFamily: 'inherit',
+                      transition: 'background-color 0.2s',
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eff6ff')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
                   >
                     <div style={{ fontWeight: 600, color: '#1f2937' }}>{servo.nome}</div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>📱 {servo.telefone}</div>

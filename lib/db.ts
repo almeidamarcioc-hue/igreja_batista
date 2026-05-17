@@ -438,6 +438,7 @@ export async function initDb(): Promise<void> {
       data_nascimento DATE NOT NULL,
       telefone VARCHAR(20) NOT NULL,
       idade INTEGER,
+      genero VARCHAR(1) DEFAULT 'M',
       endereco TEXT DEFAULT '',
       numero VARCHAR(20) DEFAULT '',
       complemento TEXT DEFAULT '',
@@ -448,6 +449,9 @@ export async function initDb(): Promise<void> {
       data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
+
+  // Add genero column if it doesn't exist (migration)
+  await sql`ALTER TABLE servos_facilitadores ADD COLUMN IF NOT EXISTS genero VARCHAR(1) DEFAULT 'M'`
 
   // ── Salvos (Conversões) ──
   await sql`
@@ -1668,6 +1672,7 @@ export async function criarServoFacilitador(dados: Record<string, unknown>): Pro
   const nome = (dados.nome as string) ?? ''
   const dataNascimento = (dados.data_nascimento as string) ?? ''
   const telefone = (dados.telefone as string) ?? ''
+  const genero = (dados.genero as string) ?? 'M'
   const endereco = (dados.endereco as string) ?? ''
   const numero = (dados.numero as string) ?? ''
   const complemento = (dados.complemento as string) ?? ''
@@ -1675,8 +1680,8 @@ export async function criarServoFacilitador(dados: Record<string, unknown>): Pro
   const cidade = (dados.cidade as string) ?? ''
   const uf = (dados.uf as string) ?? ''
   const rows = await sql`
-    INSERT INTO servos_facilitadores (nome, data_nascimento, telefone, endereco, numero, complemento, bairro, cidade, uf)
-    VALUES (${nome}, ${dataNascimento}, ${telefone}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
+    INSERT INTO servos_facilitadores (nome, data_nascimento, telefone, genero, endereco, numero, complemento, bairro, cidade, uf)
+    VALUES (${nome}, ${dataNascimento}, ${telefone}, ${genero}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
@@ -1687,6 +1692,7 @@ export async function updateServoFacilitador(id: number, dados: Record<string, u
   const nome = (dados.nome as string) ?? ''
   const dataNascimento = (dados.data_nascimento as string) ?? ''
   const telefone = (dados.telefone as string) ?? ''
+  const genero = (dados.genero as string) ?? 'M'
   const endereco = (dados.endereco as string) ?? ''
   const numero = (dados.numero as string) ?? ''
   const complemento = (dados.complemento as string) ?? ''
@@ -1695,7 +1701,7 @@ export async function updateServoFacilitador(id: number, dados: Record<string, u
   const uf = (dados.uf as string) ?? ''
   await sql`
     UPDATE servos_facilitadores
-    SET nome = ${nome}, data_nascimento = ${dataNascimento}, telefone = ${telefone}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}
+    SET nome = ${nome}, data_nascimento = ${dataNascimento}, telefone = ${telefone}, genero = ${genero}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}
     WHERE id = ${id}
   `
 }

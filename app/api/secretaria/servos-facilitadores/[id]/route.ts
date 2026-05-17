@@ -38,6 +38,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       nome: body.nome.trim(),
       data_nascimento: body.data_nascimento,
       telefone: body.telefone.trim(),
+      genero: body.genero || 'M',
       endereco: body.endereco?.trim() || '',
       numero: body.numero?.trim() || '',
       complemento: body.complemento?.trim() || '',

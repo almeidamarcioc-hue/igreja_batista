@@ -17,6 +17,7 @@ export default function ServosPage() {
     nome: '',
     data_nascimento: '',
     telefone: '',
+    genero: 'M',
     endereco: '',
     numero: '',
     complemento: '',
@@ -57,6 +58,7 @@ export default function ServosPage() {
         nome: servo.nome,
         data_nascimento: servo.data_nascimento,
         telefone: servo.telefone,
+        genero: servo.genero || 'M',
         endereco: servo.endereco,
         numero: servo.numero,
         complemento: servo.complemento,
@@ -70,6 +72,7 @@ export default function ServosPage() {
         nome: '',
         data_nascimento: '',
         telefone: '',
+        genero: 'M',
         endereco: '',
         numero: '',
         complemento: '',
@@ -365,6 +368,34 @@ export default function ServosPage() {
                     fontFamily: 'inherit',
                   }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Gênero</label>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="genero"
+                      value="M"
+                      checked={formData.genero === 'M'}
+                      onChange={handleChange}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 13 }}>Masculino</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="genero"
+                      value="F"
+                      checked={formData.genero === 'F'}
+                      onChange={handleChange}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 13 }}>Feminino</span>
+                  </label>
+                </div>
               </div>
 
               <div>

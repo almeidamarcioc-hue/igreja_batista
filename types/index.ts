@@ -291,6 +291,7 @@ export interface ServoFacilitador {
   data_nascimento: string
   telefone: string
   idade?: number
+  genero: 'M' | 'F'
   endereco: string
   numero: string
   complemento: string
