@@ -246,11 +246,11 @@ export default function ConversoesPage() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
       {/* Header */}
-      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 20px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>Acompanhamento de Conversões</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Distribua mentores espirituais aos novos crentes</p>
+      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: 'clamp(12px, 4vw, 20px)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontSize: 'clamp(18px, 5vw, 24px)', fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>Acompanhamento de Conversões</h1>
+            <p style={{ fontSize: 'clamp(11px, 3vw, 13px)', color: '#6b7280', margin: 0 }}>Distribua mentores espirituais aos novos crentes</p>
           </div>
           <button
             onClick={() => setShowNovoModal(true)}
@@ -259,9 +259,9 @@ export default function ConversoesPage() {
               color: '#fff',
               border: 'none',
               borderRadius: 6,
-              padding: '10px 16px',
+              padding: 'clamp(8px, 3vw, 12px) clamp(12px, 4vw, 16px)',
               fontWeight: 600,
-              fontSize: 14,
+              fontSize: 'clamp(12px, 3vw, 14px)',
               cursor: 'pointer',
               fontFamily: 'inherit',
               whiteSpace: 'nowrap',
@@ -279,11 +279,11 @@ export default function ConversoesPage() {
       )}
 
       {/* Conteúdo */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(12px, 4vw, 20px)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'clamp(12px, 4vw, 20px)' }}>
           {/* Preciso de um Pai/Mãe */}
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 700, color: '#1f2937', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>🙏</span> Preciso de um Pai/Mãe ({precisoDePai.length})
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -293,7 +293,7 @@ export default function ConversoesPage() {
                 </div>
               ) : (
                 precisoDePai.map(salvo => (
-                  <div key={salvo.id} style={{ backgroundColor: '#fff', borderRadius: 8, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <div key={salvo.id} style={{ backgroundColor: '#fff', borderRadius: 8, padding: 'clamp(12px, 4vw, 16px)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                     {editingId === salvo.id ? (
                       <EditForm
                         data={editFormData}
@@ -320,17 +320,18 @@ export default function ConversoesPage() {
                           Responsável pelo Cadastro: {salvo.nome_responsavel} • {new Date(salvo.data_cadastro).toLocaleDateString('pt-BR')}
                         </p>
 
-                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                           <button
                             onClick={() => handleAssociarServo(salvo)}
                             style={{
-                              flex: 1,
+                              flex: '1 1 100%',
+                              minWidth: 0,
                               backgroundColor: '#10b981',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 4,
-                              padding: '8px 12px',
-                              fontSize: 12,
+                              padding: 'clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 12px)',
+                              fontSize: 'clamp(11px, 3vw, 12px)',
                               fontWeight: 600,
                               cursor: 'pointer',
                               fontFamily: 'inherit',
@@ -341,12 +342,14 @@ export default function ConversoesPage() {
                           <button
                             onClick={() => handleEdit(salvo)}
                             style={{
+                              flex: '1 1 100%',
+                              minWidth: 0,
                               backgroundColor: '#3b82f6',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 4,
-                              padding: '8px 12px',
-                              fontSize: 12,
+                              padding: 'clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 12px)',
+                              fontSize: 'clamp(11px, 3vw, 12px)',
                               fontWeight: 600,
                               cursor: 'pointer',
                               fontFamily: 'inherit',
@@ -381,7 +384,7 @@ export default function ConversoesPage() {
 
           {/* Tenho um Pai/Mãe */}
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 'clamp(15px, 4vw, 18px)', fontWeight: 700, color: '#1f2937', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>❤️</span> Tenho um Pai/Mãe ({tenhoUmPai.length})
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -391,7 +394,7 @@ export default function ConversoesPage() {
                 </div>
               ) : (
                 tenhoUmPai.map(salvo => (
-                  <div key={salvo.id} style={{ backgroundColor: '#fff', borderRadius: 8, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <div key={salvo.id} style={{ backgroundColor: '#fff', borderRadius: 8, padding: 'clamp(12px, 4vw, 16px)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                     {editingId === salvo.id ? (
                       <EditForm
                         data={editFormData}
@@ -420,17 +423,18 @@ export default function ConversoesPage() {
                           </p>
                         )}
 
-                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                           <button
                             onClick={() => handleDesvincular(salvo.id)}
                             style={{
-                              flex: 1,
+                              flex: '1 1 100%',
+                              minWidth: 0,
                               backgroundColor: '#f59e0b',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 4,
-                              padding: '8px 12px',
-                              fontSize: 12,
+                              padding: 'clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 12px)',
+                              fontSize: 'clamp(11px, 3vw, 12px)',
                               fontWeight: 600,
                               cursor: 'pointer',
                               fontFamily: 'inherit',
@@ -483,9 +487,11 @@ export default function ConversoesPage() {
           <div style={{
             backgroundColor: '#fff',
             borderRadius: 8,
-            padding: 24,
+            padding: 'clamp(16px, 5vw, 24px)',
             maxWidth: 400,
             width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto',
             boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px 0', color: '#1f2937' }}>
