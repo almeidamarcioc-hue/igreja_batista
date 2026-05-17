@@ -21,6 +21,7 @@ const navEntries: NavEntry[] = [
       { href: '/secretaria/cadastros/fieis', icon: '🙍', label: 'Fiéis' },
       { href: '/secretaria/cadastros/pastores', icon: '👤', label: 'Pastores' },
       { href: '/secretaria/cadastros/servos-facilitadores', icon: '🤝', label: 'Servos Facilitadores' },
+      { href: '/secretaria/cadastros/motivos-oracao', icon: '🙏', label: 'Motivos de Oração' },
     ],
   },
   { href: '/secretaria/configuracoes', icon: '⚙️', label: 'Config. Secretaria' },

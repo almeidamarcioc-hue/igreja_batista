@@ -322,3 +322,11 @@ export interface Salvo {
   ativo: boolean
   data_criacao: string
 }
+
+export interface MotivoOracao {
+  id: number
+  motivo: string
+  data_fim: string
+  ativo: boolean
+  data_criacao: string
+}

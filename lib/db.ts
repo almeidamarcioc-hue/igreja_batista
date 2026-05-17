@@ -478,6 +478,17 @@ export async function initDb(): Promise<void> {
 
   // Add data_nascimento column to salvos if it doesn't exist (migration)
   await sql`ALTER TABLE salvos ADD COLUMN IF NOT EXISTS data_nascimento DATE`
+
+  // ── Prayers table ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS motivos_oracao (
+      id SERIAL PRIMARY KEY,
+      motivo TEXT NOT NULL,
+      data_fim DATE NOT NULL,
+      ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
@@ -1843,6 +1854,71 @@ export async function updateSalvo(id: number, dados: Record<string, unknown>): P
 export async function deleteSalvo(id: number): Promise<void> {
   const sql = getDb()
   await sql`UPDATE salvos SET ativo = FALSE WHERE id = ${id}`
+}
+
+// ─── Motivos de Oração ─────────────────────────────────────────────────────
+
+export async function getMotivosoracao(): Promise<any[]> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT id, motivo, data_fim, ativo, data_criacao
+    FROM motivos_oracao
+    ORDER BY data_criacao DESC
+  `
+  return rows
+}
+
+export async function getMotivoOracaoAtivos(): Promise<any[]> {
+  const sql = getDb()
+  const hoje = new Date().toISOString().split('T')[0]
+  const rows = await sql`
+    SELECT id, motivo, data_fim, data_criacao
+    FROM motivos_oracao
+    WHERE ativo = TRUE AND data_fim >= ${hoje}
+    ORDER BY data_fim ASC
+  `
+  return rows
+}
+
+export async function getMotivoOracao(id: number): Promise<any> {
+  const sql = getDb()
+  const rows = await sql`SELECT id, motivo, data_fim, ativo, data_criacao FROM motivos_oracao WHERE id = ${id}`
+  return rows.length > 0 ? rows[0] : null
+}
+
+export async function criarMotivoOracao(dados: Record<string, unknown>): Promise<number> {
+  const sql = getDb()
+  const motivo = (dados.motivo as string) ?? ''
+  const dataFim = (dados.data_fim as string) ?? ''
+  const rows = await sql`
+    INSERT INTO motivos_oracao (motivo, data_fim)
+    VALUES (${motivo}, ${dataFim})
+    RETURNING id
+  `
+  return (rows[0] as { id: number }).id
+}
+
+export async function updateMotivoOracao(id: number, dados: Record<string, unknown>): Promise<void> {
+  const sql = getDb()
+  const motivo = (dados.motivo as string) ?? ''
+  const dataFim = (dados.data_fim as string) ?? ''
+  const ativo = dados.ativo !== undefined ? dados.ativo : true
+
+  await sql`
+    UPDATE motivos_oracao
+    SET motivo = ${motivo}, data_fim = ${dataFim}, ativo = ${ativo}
+    WHERE id = ${id}
+  `
+}
+
+export async function deleteMotivoOracao(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`DELETE FROM motivos_oracao WHERE id = ${id}`
+}
+
+export async function toggleMotivoOracao(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`UPDATE motivos_oracao SET ativo = NOT ativo WHERE id = ${id}`
 }
 
 function calcularIdade(dataNascimento: string | Date): number {
