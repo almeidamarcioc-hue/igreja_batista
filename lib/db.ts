@@ -1798,37 +1798,45 @@ export async function criarSalvo(dados: Record<string, unknown>): Promise<number
 }
 
 export async function updateSalvo(id: number, dados: Record<string, unknown>): Promise<void> {
-  const sql = getDb()
-  const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
-  const dataCadastro = (dados.data_cadastro as string) ?? ''
-  const nome = (dados.nome as string) ?? ''
-  const telefone = (dados.telefone as string) ?? ''
-  const idade = dados.idade ? Number(dados.idade) : null
-  const dataNascimento = (dados.data_nascimento as string) ?? ''
-  const endereco = (dados.endereco as string) ?? ''
-  const numero = (dados.numero as string) ?? ''
-  const complemento = (dados.complemento as string) ?? ''
-  const bairro = (dados.bairro as string) ?? ''
-  const cidade = (dados.cidade as string) ?? ''
-  const uf = (dados.uf as string) ?? ''
+  try {
+    const sql = getDb()
+    const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
+    const dataCadastro = (dados.data_cadastro as string) ?? ''
+    const nome = (dados.nome as string) ?? ''
+    const telefone = (dados.telefone as string) ?? ''
+    const idade = dados.idade ? Number(dados.idade) : null
+    const dataNascimento = (dados.data_nascimento as string) ?? ''
+    const endereco = (dados.endereco as string) ?? ''
+    const numero = (dados.numero as string) ?? ''
+    const complemento = (dados.complemento as string) ?? ''
+    const bairro = (dados.bairro as string) ?? ''
+    const cidade = (dados.cidade as string) ?? ''
+    const uf = (dados.uf as string) ?? ''
 
-  await sql`
-    UPDATE salvos
-    SET
-      nome_responsavel = ${nomeResponsavel},
-      data_cadastro = ${dataCadastro},
-      nome = ${nome},
-      telefone = ${telefone},
-      idade = ${idade},
-      data_nascimento = ${dataNascimento},
-      endereco = ${endereco},
-      numero = ${numero},
-      complemento = ${complemento},
-      bairro = ${bairro},
-      cidade = ${cidade},
-      uf = ${uf}
-    WHERE id = ${id}
-  `
+    console.log('[DB] Updating salvo:', { id, nome, telefone })
+
+    await sql`
+      UPDATE salvos
+      SET
+        nome_responsavel = ${nomeResponsavel},
+        data_cadastro = ${dataCadastro},
+        nome = ${nome},
+        telefone = ${telefone},
+        idade = ${idade},
+        data_nascimento = ${dataNascimento},
+        endereco = ${endereco},
+        numero = ${numero},
+        complemento = ${complemento},
+        bairro = ${bairro},
+        cidade = ${cidade},
+        uf = ${uf}
+      WHERE id = ${id}
+    `
+    console.log('[DB] Update successful')
+  } catch (err) {
+    console.error('[DB] Update failed:', err)
+    throw err
+  }
 }
 
 export async function deleteSalvo(id: number): Promise<void> {

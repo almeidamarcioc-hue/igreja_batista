@@ -206,7 +206,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro ao atualizar salvo'
     console.error('[ERROR] Erro ao atualizar salvo:', msg, error)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({
+      error: msg,
+      details: error instanceof Error ? error.stack : String(error)
+    }, { status: 500 })
   }
 }
 
