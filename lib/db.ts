@@ -462,6 +462,7 @@ export async function initDb(): Promise<void> {
       nome VARCHAR(100) NOT NULL,
       telefone VARCHAR(20) NOT NULL,
       idade INTEGER,
+      data_nascimento DATE,
       endereco TEXT DEFAULT '',
       numero VARCHAR(20) DEFAULT '',
       complemento TEXT DEFAULT '',
@@ -474,6 +475,9 @@ export async function initDb(): Promise<void> {
       data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
+
+  // Add data_nascimento column to salvos if it doesn't exist (migration)
+  await sql`ALTER TABLE salvos ADD COLUMN IF NOT EXISTS data_nascimento DATE`
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
