@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSalvo, updateSalvo, deleteSalvo, getDb } from '@/lib/db'
+import { updateSalvo, deleteSalvo, getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,11 +7,48 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id: idStr } = await params
     const id = parseInt(idStr)
-    const salvo = await getSalvo(id)
-    if (!salvo) {
+    const sql = getDb()
+
+    const rows = await sql`
+      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+             sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
+      FROM salvos s
+      LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+      WHERE s.id = ${id}
+    `
+
+    if (rows.length === 0) {
       return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
     }
-    return NextResponse.json(salvo)
+
+    const r = rows[0] as any
+    const result = {
+      id: r.id,
+      nome_responsavel: r.nome_responsavel,
+      data_cadastro: r.data_cadastro,
+      nome: r.nome,
+      telefone: r.telefone,
+      idade: r.idade,
+      endereco: r.endereco,
+      numero: r.numero,
+      complemento: r.complemento,
+      bairro: r.bairro,
+      cidade: r.cidade,
+      uf: r.uf,
+      servo_facilitador_id: r.servo_facilitador_id,
+      data_atribuicao: r.data_atribuicao,
+      ativo: r.ativo,
+      data_criacao: r.data_criacao,
+      servo: r.servo_id ? {
+        id: r.servo_id,
+        nome: r.servo_nome || '',
+        telefone: r.servo_telefone || '',
+        data_nascimento: r.servo_data_nascimento || '',
+        genero: r.servo_genero || 'M',
+      } : undefined,
+    }
+
+    return NextResponse.json(result)
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro ao carregar salvo'
     return NextResponse.json({ error: msg }, { status: 500 })
@@ -24,54 +61,69 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const id = parseInt(idStr)
     const body = await req.json()
 
-    // If only updating servo assignment, do a direct SQL update
+    // If only updating servo assignment
     if (body.servo_facilitador_id !== undefined && Object.keys(body).length <= 2) {
+      const sql = getDb()
+      const servoId = body.servo_facilitador_id ? Number(body.servo_facilitador_id) : null
+
+      console.log('[SERVO] Starting servo assignment:', { id, servoId })
+
       try {
-        const sql = getDb()
-        const servoId = body.servo_facilitador_id ? Number(body.servo_facilitador_id) : null
-
-        console.log('[SERVO] Updating servo assignment:', { id, servoId })
-
-        // First, get current salvo data
-        const currentSalvo = await getSalvo(id)
-        console.log('[SERVO] Current salvo:', currentSalvo ? 'found' : 'not found')
-
-        if (!currentSalvo) {
-          console.log('[SERVO] Salvo not found with id:', id)
-          return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
-        }
-
-        // Update servo assignment
-        console.log('[SERVO] Running UPDATE query')
+        // Simple UPDATE without RETURNING
         await sql`
           UPDATE salvos
           SET servo_facilitador_id = ${servoId},
               data_atribuicao = CASE WHEN ${servoId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
           WHERE id = ${id}
         `
-        console.log('[SERVO] UPDATE completed')
+        console.log('[SERVO] UPDATE successful')
 
-        // Fetch updated salvo
-        console.log('[SERVO] Fetching updated salvo')
-        const updated = await getSalvo(id)
-        console.log('[SERVO] Updated salvo found:', updated ? 'yes' : 'no')
+        // Get updated data using inline query (no function call)
+        const rows = await sql`
+          SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+                 sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
+          FROM salvos s
+          LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+          WHERE s.id = ${id}
+        `
 
-        if (!updated) {
-          console.log('[SERVO] Failed to fetch updated salvo')
-          // Return the current salvo with updated servo info
-          return NextResponse.json({
-            ...currentSalvo,
-            servo_facilitador_id: servoId
-          })
+        if (rows.length === 0) {
+          console.log('[SERVO] Salvo not found after update')
+          return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
         }
 
-        console.log('[SERVO] Success, returning updated salvo')
-        return NextResponse.json(updated)
-      } catch (servoError: unknown) {
-        const msg = servoError instanceof Error ? servoError.message : 'Erro desconhecido ao associar servo'
-        const stack = servoError instanceof Error ? servoError.stack : ''
-        console.error('[SERVO] Error in servo association:', { msg, stack, servoError })
-        return NextResponse.json({ error: `${msg}. Verifique os logs do servidor.` }, { status: 500 })
+        const r = rows[0] as any
+        const result = {
+          id: r.id,
+          nome_responsavel: r.nome_responsavel,
+          data_cadastro: r.data_cadastro,
+          nome: r.nome,
+          telefone: r.telefone,
+          idade: r.idade,
+          endereco: r.endereco,
+          numero: r.numero,
+          complemento: r.complemento,
+          bairro: r.bairro,
+          cidade: r.cidade,
+          uf: r.uf,
+          servo_facilitador_id: r.servo_facilitador_id,
+          data_atribuicao: r.data_atribuicao,
+          ativo: r.ativo,
+          data_criacao: r.data_criacao,
+          servo: r.servo_id ? {
+            id: r.servo_id,
+            nome: r.servo_nome || '',
+            telefone: r.servo_telefone || '',
+            data_nascimento: r.servo_data_nascimento || '',
+            genero: r.servo_genero || 'M',
+          } : undefined,
+        }
+
+        console.log('[SERVO] Returning updated salvo')
+        return NextResponse.json(result)
+      } catch (err) {
+        console.error('[SERVO] Error during update:', err)
+        throw err
       }
     }
 
@@ -100,11 +152,50 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       ativo: body.ativo !== undefined ? body.ativo : true,
     })
 
-    const updated_salvo = await getSalvo(id)
-    return NextResponse.json(updated_salvo)
+    const sql = getDb()
+    const rows = await sql`
+      SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
+             sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
+      FROM salvos s
+      LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+      WHERE s.id = ${id}
+    `
+
+    if (rows.length === 0) {
+      return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
+    }
+
+    const r = rows[0] as any
+    const result = {
+      id: r.id,
+      nome_responsavel: r.nome_responsavel,
+      data_cadastro: r.data_cadastro,
+      nome: r.nome,
+      telefone: r.telefone,
+      idade: r.idade,
+      endereco: r.endereco,
+      numero: r.numero,
+      complemento: r.complemento,
+      bairro: r.bairro,
+      cidade: r.cidade,
+      uf: r.uf,
+      servo_facilitador_id: r.servo_facilitador_id,
+      data_atribuicao: r.data_atribuicao,
+      ativo: r.ativo,
+      data_criacao: r.data_criacao,
+      servo: r.servo_id ? {
+        id: r.servo_id,
+        nome: r.servo_nome || '',
+        telefone: r.servo_telefone || '',
+        data_nascimento: r.servo_data_nascimento || '',
+        genero: r.servo_genero || 'M',
+      } : undefined,
+    }
+
+    return NextResponse.json(result)
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro ao atualizar salvo'
-    console.error('Erro ao atualizar salvo:', msg, error)
+    console.error('[ERROR] Erro ao atualizar salvo:', msg, error)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
@@ -116,7 +207,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await deleteSalvo(id)
     return NextResponse.json({ ok: true })
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Erro ao deletar salvo'
+    const msg = error instanceof Error ? error.message : 'Erro ao deletar servo'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
