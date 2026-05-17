@@ -28,25 +28,25 @@ export default function ServosPage() {
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState('')
 
-  useEffect(() => {
-    const fetchServos = async () => {
-      try {
-        const res = await fetch('/api/secretaria/servos-facilitadores')
-        if (!res.ok) {
-          const text = await res.text()
-          console.error('API Error:', res.status, text)
-          throw new Error(`Erro ao carregar servos (${res.status})`)
-        }
-        const data = await res.json()
-        setServos(data)
-      } catch (err) {
-        console.error('Fetch error:', err)
-        setError(err instanceof Error ? err.message : 'Erro desconhecido')
-      } finally {
-        setLoading(false)
+  const fetchServos = async () => {
+    try {
+      const res = await fetch('/api/secretaria/servos-facilitadores')
+      if (!res.ok) {
+        const text = await res.text()
+        console.error('API Error:', res.status, text)
+        throw new Error(`Erro ao carregar servos (${res.status})`)
       }
+      const data = await res.json()
+      setServos(data)
+    } catch (err) {
+      console.error('Fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchServos()
   }, [])
 
@@ -113,15 +113,8 @@ export default function ServosPage() {
         throw new Error(json.error || 'Erro ao salvar')
       }
 
-      const data = await res.json()
-
-      if (editingId) {
-        setServos(prev => prev.map(s => s.id === editingId ? data : s))
-      } else {
-        setServos(prev => [data, ...prev])
-      }
-
       handleCloseModal()
+      await fetchServos()
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
@@ -139,7 +132,7 @@ export default function ServosPage() {
 
       if (!res.ok) throw new Error('Erro ao deletar')
 
-      setServos(prev => prev.filter(s => s.id !== id))
+      await fetchServos()
     } catch (err) {
       console.error(err)
     }
