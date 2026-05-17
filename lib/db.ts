@@ -104,9 +104,12 @@ export async function initDb(): Promise<void> {
       msg_lembrete TEXT DEFAULT '',
       msg_cancelamento TEXT DEFAULT '',
       msg_remarcacao TEXT DEFAULT '',
-      msg_pastor TEXT DEFAULT ''
+      msg_pastor TEXT DEFAULT '',
+      imagem_fundo_dashboard TEXT DEFAULT ''
     )
   `
+
+  await sql`ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS imagem_fundo_dashboard TEXT DEFAULT ''`
 
   await sql`
     CREATE TABLE IF NOT EXISTS horarios_atendimento (
@@ -1022,7 +1025,7 @@ export async function getConfiguracoes() {
   const sql = getDb()
   const rows = await sql`SELECT * FROM configuracoes WHERE id = 1`
   if (rows.length === 0) {
-    return { id: 1, horas_lembrete: 24, msg_confirmacao: '', msg_lembrete: '', msg_cancelamento: '', msg_remarcacao: '', msg_pastor: '' }
+    return { id: 1, horas_lembrete: 24, msg_confirmacao: '', msg_lembrete: '', msg_cancelamento: '', msg_remarcacao: '', msg_pastor: '', imagem_fundo_dashboard: '' }
   }
   return rows[0]
 }
@@ -1036,6 +1039,7 @@ export async function updateConfiguracoes(dados: Record<string, unknown>): Promi
   const msg_cancelamento = (dados.msg_cancelamento as string) ?? atual.msg_cancelamento
   const msg_remarcacao = (dados.msg_remarcacao as string) ?? atual.msg_remarcacao
   const msg_pastor = (dados.msg_pastor as string) ?? atual.msg_pastor
+  const imagem_fundo_dashboard = (dados.imagem_fundo_dashboard as string) ?? atual.imagem_fundo_dashboard
 
   await sql`
     UPDATE configuracoes
@@ -1045,7 +1049,8 @@ export async function updateConfiguracoes(dados: Record<string, unknown>): Promi
       msg_lembrete = ${msg_lembrete},
       msg_cancelamento = ${msg_cancelamento},
       msg_remarcacao = ${msg_remarcacao},
-      msg_pastor = ${msg_pastor}
+      msg_pastor = ${msg_pastor},
+      imagem_fundo_dashboard = ${imagem_fundo_dashboard}
     WHERE id = 1
   `
 }

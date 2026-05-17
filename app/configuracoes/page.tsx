@@ -242,11 +242,22 @@ export default function ConfiguracoesPage() {
 
         {/* Slides link */}
         <a href="/configuracoes/carousel"
-          className="flex items-center justify-between bg-white bg-opacity-10 rounded-xl px-5 py-4 hover:bg-opacity-20 mb-4"
+          className="flex items-center justify-between bg-white bg-opacity-10 rounded-xl px-5 py-4 hover:bg-opacity-20 mb-3"
           style={{ textDecoration: 'none' }}>
           <div>
             <p className="text-white font-semibold text-sm">Slides da Tela Inicial</p>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Configure os textos e fundos exibidos na página de login</p>
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 18 }}>→</span>
+        </a>
+
+        {/* Dashboard link */}
+        <a href="/configuracoes/dashboard"
+          className="flex items-center justify-between bg-white bg-opacity-10 rounded-xl px-5 py-4 hover:bg-opacity-20 mb-4"
+          style={{ textDecoration: 'none' }}>
+          <div>
+            <p className="text-white font-semibold text-sm">Dashboard de Orações</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Configure a imagem de fundo do dashboard público</p>
           </div>
           <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 18 }}>→</span>
         </a>
