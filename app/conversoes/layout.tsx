@@ -11,13 +11,13 @@ export const metadata: Metadata = {
 
 export default async function ConversoesLayout({ children }: { children: React.ReactNode }) {
   const token = (await cookies()).get(COOKIE_NAME)?.value
-  if (!token) redirect('/conversoes/login')
+  if (!token) redirect('/login')
 
   const userId = await verifySessionToken(token)
-  if (!userId) redirect('/conversoes/login')
+  if (!userId) redirect('/login')
 
   const user = await getUsuario(userId) as any
-  if (!user || !user.ativo) redirect('/conversoes/login')
+  if (!user || !user.ativo) redirect('/login')
 
   const modulos: string = user.modulos ?? ''
   if (modulos !== '*' && !modulos.split(',').map((m: string) => m.trim()).includes('conversoes')) {
