@@ -69,16 +69,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       console.log('[SERVO] Starting servo assignment:', { id, servoId })
 
       try {
-        // Simple UPDATE without RETURNING
-        await sql`
-          UPDATE salvos
-          SET servo_facilitador_id = ${servoId},
-              data_atribuicao = CASE WHEN ${servoId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
-          WHERE id = ${id}
-        `
-        console.log('[SERVO] UPDATE successful')
+        // Step 1: Check if salvo exists
+        const checkRows = await sql`SELECT id FROM salvos WHERE id = ${id}`
+        if (checkRows.length === 0) {
+          console.log('[SERVO] Salvo not found')
+          return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
+        }
+        console.log('[SERVO] Salvo exists')
 
-        // Get updated data using inline query (no function call)
+        // Step 2: Update servo_facilitador_id
+        await sql`UPDATE salvos SET servo_facilitador_id = ${servoId} WHERE id = ${id}`
+        console.log('[SERVO] Updated servo_facilitador_id')
+
+        // Step 3: If servo is being assigned, update data_atribuicao
+        if (servoId !== null) {
+          await sql`UPDATE salvos SET data_atribuicao = NOW() WHERE id = ${id}`
+          console.log('[SERVO] Updated data_atribuicao')
+        }
+
+        // Step 4: Fetch and return updated salvo
         const rows = await sql`
           SELECT s.id, s.nome_responsavel, s.data_cadastro, s.nome, s.telefone, s.idade, s.endereco, s.numero, s.complemento, s.bairro, s.cidade, s.uf, s.servo_facilitador_id, s.data_atribuicao, s.ativo, s.data_criacao,
                  sf.id AS servo_id, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
@@ -119,7 +128,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           } : undefined,
         }
 
-        console.log('[SERVO] Returning updated salvo')
+        console.log('[SERVO] Success, returning updated salvo')
         return NextResponse.json(result)
       } catch (err) {
         console.error('[SERVO] Error during update:', err)
