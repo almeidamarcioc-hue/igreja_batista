@@ -20,6 +20,7 @@ const navEntries: NavEntry[] = [
     children: [
       { href: '/secretaria/cadastros/fieis', icon: '🙍', label: 'Fiéis' },
       { href: '/secretaria/cadastros/pastores', icon: '👤', label: 'Pastores' },
+      { href: '/secretaria/cadastros/servos-facilitadores', icon: '🤝', label: 'Servos Facilitadores' },
     ],
   },
   { href: '/secretaria/configuracoes', icon: '⚙️', label: 'Config. Secretaria' },

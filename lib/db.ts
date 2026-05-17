@@ -1709,15 +1709,43 @@ export async function deleteServoFacilitador(id: number): Promise<void> {
 
 export async function getSalvos() {
   const sql = getDb()
-  const rows = await sql`SELECT * FROM salvos WHERE ativo = TRUE ORDER BY data_cadastro DESC`
-  return rows
+  const rows = await sql`
+    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento
+    FROM salvos s
+    LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+    WHERE s.ativo = TRUE
+    ORDER BY s.data_cadastro DESC
+  `
+  return (rows as any[]).map(r => ({
+    ...r,
+    servo: r.servo_facilitador_id ? {
+      id: r.servo_facilitador_id,
+      nome: r.servo_nome,
+      telefone: r.servo_telefone,
+      data_nascimento: r.servo_data_nascimento,
+    } : undefined,
+  }))
 }
 
 export async function getSalvo(id: number) {
   const sql = getDb()
-  const rows = await sql`SELECT * FROM salvos WHERE id = ${id} AND ativo = TRUE`
+  const rows = await sql`
+    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento
+    FROM salvos s
+    LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
+    WHERE s.id = ${id} AND s.ativo = TRUE
+  `
   if (rows.length === 0) return null
-  return rows[0]
+  const r = rows[0] as any
+  return {
+    ...r,
+    servo: r.servo_facilitador_id ? {
+      id: r.servo_facilitador_id,
+      nome: r.servo_nome,
+      telefone: r.servo_telefone,
+      data_nascimento: r.servo_data_nascimento,
+    } : undefined,
+  }
 }
 
 export async function criarSalvo(dados: Record<string, unknown>): Promise<number> {

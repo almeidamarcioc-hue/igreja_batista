@@ -1,0 +1,39 @@
+{
+  "name": "Apelo de Conversão — IBTM",
+  "short_name": "Apelo IBTM",
+  "description": "Registro de pessoas que aceitam Jesus como Salvador",
+  "start_url": "/apelo",
+  "scope": "/apelo/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#002347",
+  "background_color": "#002347",
+  "categories": ["lifestyle"],
+  "icons": [
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/ibtm-logo.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}
