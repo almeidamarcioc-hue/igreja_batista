@@ -87,69 +87,43 @@ export default function OracaoDashboard() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
             gap: 'clamp(1.5rem, 3vw, 2rem)',
           }}>
-            {motivos.map((motivo) => {
-              const dataFim = new Date(motivo.data_fim)
-              const hoje = new Date()
-              const diasRestantes = Math.ceil((dataFim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-              const percentualCor = diasRestantes > 7 ? '#10b981' : diasRestantes > 0 ? '#f59e0b' : '#ef4444'
-
-              return (
-                <div
-                  key={motivo.id}
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    borderLeft: `4px solid ${percentualCor}`,
-                    borderRadius: '12px',
-                    padding: 'clamp(1.5rem, 4vw, 2rem)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minHeight: '250px',
-                    transition: 'transform 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)'
-                    e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                >
-                  {/* Motivo Text */}
-                  <p style={{
-                    color: '#fff',
-                    fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
-                    fontWeight: 600,
-                    margin: '0 0 1.5rem 0',
-                    lineHeight: 1.6,
-                  }}>
-                    {motivo.motivo}
-                  </p>
-
-                  {/* Data e Status */}
-                  <div>
-                    <p style={{
-                      color: 'rgba(255,255,255,0.6)',
-                      fontSize: 'clamp(0.85rem, 2vw, 1rem)',
-                      margin: '0.5rem 0',
-                    }}>
-                      📅 Válido até: {new Date(motivo.data_fim).toLocaleDateString('pt-BR')}
-                    </p>
-                    <p style={{
-                      color: percentualCor,
-                      fontSize: 'clamp(0.85rem, 2vw, 1rem)',
-                      fontWeight: 600,
-                      margin: '0.5rem 0 0 0',
-                    }}>
-                      ⏱️ {diasRestantes} dias restantes
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
+            {motivos.map((motivo) => (
+              <div
+                key={motivo.id}
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderLeft: '4px solid #6366F1',
+                  borderRadius: '12px',
+                  padding: 'clamp(1.5rem, 4vw, 2rem)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '200px',
+                  transition: 'transform 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)'
+                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                <p style={{
+                  color: '#fff',
+                  fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+                  fontWeight: 600,
+                  margin: 0,
+                  lineHeight: 1.6,
+                  textAlign: 'center',
+                }}>
+                  {motivo.motivo}
+                </p>
+              </div>
+            ))}
           </div>
         )}
 
