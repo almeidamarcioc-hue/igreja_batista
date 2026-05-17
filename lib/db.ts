@@ -1779,10 +1779,11 @@ export async function getSalvo(id: number) {
 export async function criarSalvo(dados: Record<string, unknown>): Promise<number> {
   const sql = getDb()
   const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
-  const dataCadastro = (dados.data_cadastro as string) ?? ''
+  const dataCadastro = (dados.data_cadastro as string) ? (dados.data_cadastro as string) : null
   const nome = (dados.nome as string) ?? ''
   const telefone = (dados.telefone as string) ?? ''
   const idade = dados.idade ? Number(dados.idade) : null
+  const dataNascimento = (dados.data_nascimento as string) ? (dados.data_nascimento as string) : null
   const endereco = (dados.endereco as string) ?? ''
   const numero = (dados.numero as string) ?? ''
   const complemento = (dados.complemento as string) ?? ''
@@ -1790,8 +1791,8 @@ export async function criarSalvo(dados: Record<string, unknown>): Promise<number
   const cidade = (dados.cidade as string) ?? ''
   const uf = (dados.uf as string) ?? ''
   const rows = await sql`
-    INSERT INTO salvos (nome_responsavel, data_cadastro, nome, telefone, idade, endereco, numero, complemento, bairro, cidade, uf)
-    VALUES (${nomeResponsavel}, ${dataCadastro}, ${nome}, ${telefone}, ${idade}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
+    INSERT INTO salvos (nome_responsavel, data_cadastro, nome, telefone, idade, data_nascimento, endereco, numero, complemento, bairro, cidade, uf)
+    VALUES (${nomeResponsavel}, ${dataCadastro}, ${nome}, ${telefone}, ${idade}, ${dataNascimento}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
     RETURNING id
   `
   return (rows[0] as { id: number }).id
@@ -1801,11 +1802,11 @@ export async function updateSalvo(id: number, dados: Record<string, unknown>): P
   try {
     const sql = getDb()
     const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
-    const dataCadastro = (dados.data_cadastro as string) ?? ''
+    const dataCadastro = (dados.data_cadastro as string) ? (dados.data_cadastro as string) : null
     const nome = (dados.nome as string) ?? ''
     const telefone = (dados.telefone as string) ?? ''
     const idade = dados.idade ? Number(dados.idade) : null
-    const dataNascimento = (dados.data_nascimento as string) ?? ''
+    const dataNascimento = (dados.data_nascimento as string) ? (dados.data_nascimento as string) : null
     const endereco = (dados.endereco as string) ?? ''
     const numero = (dados.numero as string) ?? ''
     const complemento = (dados.complemento as string) ?? ''
