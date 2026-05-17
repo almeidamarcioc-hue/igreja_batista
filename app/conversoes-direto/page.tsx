@@ -21,6 +21,7 @@ export default function ConversoesPage() {
     nome: '',
     telefone: '',
     idade: '',
+    data_nascimento: '',
     endereco: '',
     numero: '',
     complemento: '',
@@ -165,10 +166,14 @@ export default function ConversoesPage() {
     setNovoLoading(true)
 
     try {
+      const dataToSend = {
+        ...novoFormData,
+        idade: novoFormData.idade ? Number(novoFormData.idade) : null,
+      }
       const res = await fetch('/api/conversoes/salvos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novoFormData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (!res.ok) {
@@ -185,6 +190,7 @@ export default function ConversoesPage() {
         nome: '',
         telefone: '',
         idade: '',
+        data_nascimento: '',
         endereco: '',
         numero: '',
         complemento: '',
@@ -386,9 +392,6 @@ export default function ConversoesPage() {
                             📍 {salvo.endereco}, {salvo.numero} {salvo.complemento && `- ${salvo.complemento}`} • {salvo.bairro} • {salvo.cidade}/{salvo.uf}
                           </p>
                         )}
-                        <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0 0' }}>
-                          Responsável: {salvo.nome_responsavel} • {new Date(salvo.data_cadastro).toLocaleDateString('pt-BR')}
-                        </p>
 
                         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                           <button
@@ -409,9 +412,27 @@ export default function ConversoesPage() {
                             ✏️ Editar
                           </button>
                           <button
-                            onClick={() => handleDelete(salvo.id)}
+                            onClick={() => {
+                              if (!confirm('Tem certeza que deseja desvincular o Pai/Mãe Espiritual?')) return
+                              const res = fetch(`/api/conversoes/salvos/${salvo.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  servo_facilitador_id: null,
+                                }),
+                              })
+                              res.then(r => {
+                                if (r.ok) {
+                                  setSalvos(prev => prev.map(s =>
+                                    s.id === salvo.id
+                                      ? { ...s, servo_facilitador_id: null, servo: undefined }
+                                      : s
+                                  ))
+                                }
+                              })
+                            }}
                             style={{
-                              backgroundColor: '#ef4444',
+                              backgroundColor: '#f59e0b',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 4,
@@ -422,7 +443,7 @@ export default function ConversoesPage() {
                               fontFamily: 'inherit',
                             }}
                           >
-                            🗑️
+                            🔗 Desvincular
                           </button>
                         </div>
                       </>
@@ -604,6 +625,43 @@ export default function ConversoesPage() {
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Idade (opcional)</label>
                 <input type="number" value={novoFormData.idade} onChange={(e) => setNovoFormData({...novoFormData, idade: e.target.value})} min="0" max="150" style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Data de Nascimento (opcional)</label>
+                <input type="date" value={novoFormData.data_nascimento} onChange={(e) => setNovoFormData({...novoFormData, data_nascimento: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Endereço (opcional)</label>
+                <input type="text" value={novoFormData.endereco} onChange={(e) => setNovoFormData({...novoFormData, endereco: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Número (opcional)</label>
+                  <input type="text" value={novoFormData.numero} onChange={(e) => setNovoFormData({...novoFormData, numero: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Complemento (opcional)</label>
+                  <input type="text" value={novoFormData.complemento} onChange={(e) => setNovoFormData({...novoFormData, complemento: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Bairro (opcional)</label>
+                <input type="text" value={novoFormData.bairro} onChange={(e) => setNovoFormData({...novoFormData, bairro: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Cidade (opcional)</label>
+                  <input type="text" value={novoFormData.cidade} onChange={(e) => setNovoFormData({...novoFormData, cidade: e.target.value})} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>UF (opcional)</label>
+                  <input type="text" value={novoFormData.uf} onChange={(e) => setNovoFormData({...novoFormData, uf: e.target.value})} maxLength={2} style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
