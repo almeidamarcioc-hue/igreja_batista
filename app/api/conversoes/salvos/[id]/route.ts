@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSalvo, updateSalvo, deleteSalvo } from '@/lib/db'
+import { getSalvo, updateSalvo, deleteSalvo, getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,29 +24,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const id = parseInt(idStr)
     const body = await req.json()
 
-    // If only updating servo assignment, allow partial update
+    // If only updating servo assignment, do a direct SQL update
     if (body.servo_facilitador_id !== undefined && Object.keys(body).length <= 2) {
-      const salvo = await getSalvo(id)
-      if (!salvo) {
-        return NextResponse.json({ error: 'Salvo não encontrado' }, { status: 404 })
-      }
+      const sql = getDb()
+      const servoId = body.servo_facilitador_id ? Number(body.servo_facilitador_id) : null
 
-      const updated = await updateSalvo(id, {
-        nome: salvo.nome,
-        telefone: salvo.telefone,
-        nome_responsavel: salvo.nome_responsavel,
-        data_cadastro: salvo.data_cadastro,
-        idade: salvo.idade,
-        endereco: salvo.endereco,
-        numero: salvo.numero,
-        complemento: salvo.complemento,
-        bairro: salvo.bairro,
-        cidade: salvo.cidade,
-        uf: salvo.uf,
-        servo_facilitador_id: body.servo_facilitador_id || null,
-        data_atribuicao: body.data_atribuicao || null,
-        ativo: salvo.ativo,
-      })
+      await sql`
+        UPDATE salvos
+        SET servo_facilitador_id = ${servoId},
+            data_atribuicao = CASE WHEN ${servoId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
+        WHERE id = ${id}
+      `
 
       const updated_salvo = await getSalvo(id)
       return NextResponse.json(updated_salvo)
@@ -60,7 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Telefone é obrigatório' }, { status: 400 })
     }
 
-    const updated = await updateSalvo(id, {
+    await updateSalvo(id, {
       nome: body.nome.trim(),
       telefone: body.telefone.trim(),
       nome_responsavel: body.nome_responsavel?.trim() || '',

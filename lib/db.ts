@@ -3,7 +3,7 @@ import { hashPassword } from './auth'
 
 // ─── Connection ────────────────────────────────────────────────────────────
 
-function getDb() {
+export function getDb() {
   const raw = process.env.DATABASE_URL
   if (!raw) throw new Error('DATABASE_URL não configurado.')
   const url = raw
@@ -1716,7 +1716,7 @@ export async function deleteServoFacilitador(id: number): Promise<void> {
 export async function getSalvos() {
   const sql = getDb()
   const rows = await sql`
-    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento
+    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
     FROM salvos s
     LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
     WHERE s.ativo = TRUE
@@ -1729,6 +1729,7 @@ export async function getSalvos() {
       nome: r.servo_nome,
       telefone: r.servo_telefone,
       data_nascimento: r.servo_data_nascimento,
+      genero: r.servo_genero,
     } : undefined,
   }))
 }
@@ -1736,7 +1737,7 @@ export async function getSalvos() {
 export async function getSalvo(id: number) {
   const sql = getDb()
   const rows = await sql`
-    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento
+    SELECT s.*, sf.nome AS servo_nome, sf.telefone AS servo_telefone, sf.data_nascimento AS servo_data_nascimento, sf.genero AS servo_genero
     FROM salvos s
     LEFT JOIN servos_facilitadores sf ON s.servo_facilitador_id = sf.id
     WHERE s.id = ${id} AND s.ativo = TRUE
@@ -1750,6 +1751,7 @@ export async function getSalvo(id: number) {
       nome: r.servo_nome,
       telefone: r.servo_telefone,
       data_nascimento: r.servo_data_nascimento,
+      genero: r.servo_genero,
     } : undefined,
   }
 }
