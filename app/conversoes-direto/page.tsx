@@ -160,6 +160,32 @@ export default function ConversoesPage() {
     }
   }
 
+  const handleDesvincular = async (id: number) => {
+    if (!confirm('Tem certeza que deseja desvincular o Pai/Mãe Espiritual?')) return
+
+    try {
+      const res = await fetch(`/api/conversoes/salvos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          servo_facilitador_id: null,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Erro ao desvincular')
+
+      setSalvos(prev =>
+        prev.map(s =>
+          s.id === id
+            ? { ...s, servo_facilitador_id: null, servo: undefined }
+            : s
+        )
+      )
+    } catch (err) {
+      console.error('Erro ao desvincular:', err)
+    }
+  }
+
   const handleSaveNovo = async (e: React.FormEvent) => {
     e.preventDefault()
     setNovoError('')
@@ -412,25 +438,7 @@ export default function ConversoesPage() {
                             ✏️ Editar
                           </button>
                           <button
-                            onClick={() => {
-                              if (!confirm('Tem certeza que deseja desvincular o Pai/Mãe Espiritual?')) return
-                              const res = fetch(`/api/conversoes/salvos/${salvo.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  servo_facilitador_id: null,
-                                }),
-                              })
-                              res.then(r => {
-                                if (r.ok) {
-                                  setSalvos(prev => prev.map(s =>
-                                    s.id === salvo.id
-                                      ? { ...s, servo_facilitador_id: null, servo: undefined }
-                                      : s
-                                  ))
-                                }
-                              })
-                            }}
+                            onClick={() => handleDesvincular(salvo.id)}
                             style={{
                               backgroundColor: '#f59e0b',
                               color: '#fff',

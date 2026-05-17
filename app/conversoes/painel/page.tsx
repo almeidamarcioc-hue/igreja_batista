@@ -160,6 +160,32 @@ export default function ConversoesPage() {
     }
   }
 
+  const handleDesvincular = async (id: number) => {
+    if (!confirm('Tem certeza que deseja desvincular o Pai/Mãe Espiritual?')) return
+
+    try {
+      const res = await fetch(`/api/conversoes/salvos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          servo_facilitador_id: null,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Erro ao desvincular')
+
+      setSalvos(prev =>
+        prev.map(s =>
+          s.id === id
+            ? { ...s, servo_facilitador_id: null, servo: undefined }
+            : s
+        )
+      )
+    } catch (err) {
+      console.error('Erro ao desvincular:', err)
+    }
+  }
+
   const handleSaveNovo = async (e: React.FormEvent) => {
     e.preventDefault()
     setNovoError('')
@@ -396,11 +422,7 @@ export default function ConversoesPage() {
 
                         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                           <button
-                            onClick={() => {
-                              if (confirm('Deseja desvincular este Pai/Mãe?')) {
-                                handleConfirmAssociar({ ...salvo.servo!, id: 0, nome: '', telefone: '', data_nascimento: '', genero: 'M' } as any)
-                              }
-                            }}
+                            onClick={() => handleDesvincular(salvo.id)}
                             style={{
                               flex: 1,
                               backgroundColor: '#f59e0b',
