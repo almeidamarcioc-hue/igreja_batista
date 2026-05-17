@@ -147,8 +147,23 @@ export default function ApisPage() {
               <li>Todas as rotas abertas aceitam requisições CORS</li>
               <li>Rotas de autenticação retornam um cookie com o token de sessão</li>
               <li>O módulo /apelo é um PWA que funciona offline</li>
-              <li>O módulo /conversoes tem seu próprio login em /conversoes/login</li>
+              <li>O módulo /conversoes requer login e usuário com módulo 'conversoes'</li>
               <li>Rotas protegidas requerem um cookie de sessão válido</li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, padding: 20, backgroundColor: '#fef3c7', borderRadius: 8, borderLeft: '4px solid #f59e0b' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#92400e', margin: '0 0 8px 0' }}>👤 Criando usuários para módulos</h3>
+            <p style={{ fontSize: 13, color: '#92400e', margin: '0 0 12px 0', lineHeight: 1.6 }}>
+              Para criar um usuário com acesso a um módulo:
+            </p>
+            <ul style={{ fontSize: 13, color: '#92400e', margin: '0', paddingLeft: 20, lineHeight: 1.8 }}>
+              <li><strong>Secretaria:</strong> role='admin', modulos='secretaria'</li>
+              <li><strong>Educacional:</strong> role='admin', modulos='educacional'</li>
+              <li><strong>Conversões:</strong> role='admin', modulos='conversoes'</li>
+              <li><strong>Financeiro:</strong> role='admin', modulos='financeiro'</li>
+              <li><strong>Múltiplos módulos:</strong> modulos='secretaria,conversoes,educacional' (separados por vírgula)</li>
+              <li><strong>Acesso total:</strong> modulos='*' (acesso a todos os módulos)</li>
             </ul>
           </div>
         </div>
