@@ -14,6 +14,23 @@ export default function ConversoesPage() {
   const [searchServo, setSearchServo] = useState('')
   const [loadingServo, setLoadingServo] = useState(false)
 
+  const [showNovoModal, setShowNovoModal] = useState(false)
+  const [novoFormData, setNovoFormData] = useState({
+    nome_responsavel: '',
+    data_cadastro: new Date().toISOString().split('T')[0],
+    nome: '',
+    telefone: '',
+    idade: '',
+    endereco: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+  })
+  const [novoLoading, setNovoLoading] = useState(false)
+  const [novoError, setNovoError] = useState('')
+
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<Salvo>>({})
 
@@ -135,6 +152,46 @@ export default function ConversoesPage() {
     }
   }
 
+  const handleSaveNovo = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setNovoError('')
+    setNovoLoading(true)
+
+    try {
+      const res = await fetch('/api/conversoes/salvos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novoFormData),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Erro ao salvar')
+      }
+
+      const newSalvo = await res.json()
+      setSalvos(prev => [newSalvo, ...prev])
+      setShowNovoModal(false)
+      setNovoFormData({
+        nome_responsavel: '',
+        data_cadastro: new Date().toISOString().split('T')[0],
+        nome: '',
+        telefone: '',
+        idade: '',
+        endereco: '',
+        numero: '',
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        uf: '',
+      })
+    } catch (err) {
+      setNovoError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setNovoLoading(false)
+    }
+  }
+
   const precisoDePai = salvos.filter(s => !s.servo_facilitador_id && s.ativo)
   const tenhoUmPai = salvos.filter(s => s.servo_facilitador_id && s.ativo)
 
@@ -150,9 +207,28 @@ export default function ConversoesPage() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
       {/* Header */}
       <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 20px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>Acompanhamento de Conversões</h1>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Distribua mentores espirituais aos novos crentes</p>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>Acompanhamento de Conversões</h1>
+            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Distribua mentores espirituais aos novos crentes</p>
+          </div>
+          <button
+            onClick={() => setShowNovoModal(true)}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              padding: '10px 16px',
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            + Novo Registro
+          </button>
         </div>
       </div>
 
@@ -453,6 +529,79 @@ export default function ConversoesPage() {
             >
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo Registro */}
+      {showNovoModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: 8,
+            padding: 24,
+            maxWidth: 500,
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px 0', color: '#1f2937' }}>
+              Novo Registro de Conversão
+            </h2>
+
+            {novoError && (
+              <div style={{ backgroundColor: '#fee2e2', border: '1px solid #ef4444', color: '#991b1b', padding: '12px', borderRadius: 6, marginBottom: 16, fontSize: 13 }}>
+                {novoError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveNovo} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Responsável *</label>
+                <input type="text" value={novoFormData.nome_responsavel} onChange={(e) => setNovoFormData({...novoFormData, nome_responsavel: e.target.value})} required style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Data Cadastro *</label>
+                <input type="date" value={novoFormData.data_cadastro} onChange={(e) => setNovoFormData({...novoFormData, data_cadastro: e.target.value})} required style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Nome do Novo Crente *</label>
+                <input type="text" value={novoFormData.nome} onChange={(e) => setNovoFormData({...novoFormData, nome: e.target.value})} required style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Telefone *</label>
+                <input type="tel" value={novoFormData.telefone} onChange={(e) => setNovoFormData({...novoFormData, telefone: e.target.value})} placeholder="(00) 9 0000-0000" required style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Idade (opcional)</label>
+                <input type="number" value={novoFormData.idade} onChange={(e) => setNovoFormData({...novoFormData, idade: e.target.value})} min="0" max="150" style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '10px 12px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="submit" disabled={novoLoading} style={{ flex: 1, backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '12px 16px', fontWeight: 700, fontSize: 14, cursor: novoLoading ? 'not-allowed' : 'pointer', opacity: novoLoading ? 0.7 : 1, fontFamily: 'inherit' }}>
+                  {novoLoading ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button type="button" onClick={() => setShowNovoModal(false)} style={{ flex: 1, backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 6, padding: '12px 16px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
