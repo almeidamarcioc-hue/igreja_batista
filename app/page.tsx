@@ -88,6 +88,14 @@ export default function WorkspacePage() {
             bg="#064E3B"
           />
         )}
+        <ModuleCard
+          onClick={() => router.push('/conversoes/login')}
+          icon="🙏"
+          title="Conversões"
+          desc="Acompanhamento de novos crentes"
+          accent="#EC4899"
+          bg="#831843"
+        />
         {me?.role === 'admin' && (
           <ModuleCard
             onClick={() => router.push('/configuracoes')}
@@ -96,6 +104,16 @@ export default function WorkspacePage() {
             desc="Usuários e acesso ao sistema"
             accent="#4848A8"
             bg="#1a1a40"
+          />
+        )}
+        {me?.role === 'admin' && (
+          <ModuleCard
+            onClick={() => router.push('/configuracoes/apis')}
+            icon="🔌"
+            title="APIs Públicas"
+            desc="Documentação de rotas abertas"
+            accent="#8B5CF6"
+            bg="#2d1b4e"
           />
         )}
       </div>
