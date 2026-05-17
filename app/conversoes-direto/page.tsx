@@ -316,7 +316,7 @@ export default function ConversoesPage() {
                           </p>
                         )}
                         <p style={{ fontSize: 11, color: '#9ca3af', margin: '8px 0 0 0' }}>
-                          Responsável: {salvo.nome_responsavel} • {new Date(salvo.data_cadastro).toLocaleDateString('pt-BR')}
+                          Responsável pelo Cadastro: {salvo.nome_responsavel} • {new Date(salvo.data_cadastro).toLocaleDateString('pt-BR')}
                         </p>
 
                         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
