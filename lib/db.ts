@@ -429,6 +429,47 @@ export async function initDb(): Promise<void> {
         ('Educacional', 'Ministério Educacional', 0, '', true)
     `
   }
+
+  // ── Servos Facilitadores ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS servos_facilitadores (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      data_nascimento DATE NOT NULL,
+      telefone VARCHAR(20) NOT NULL,
+      idade INTEGER,
+      endereco TEXT DEFAULT '',
+      numero VARCHAR(20) DEFAULT '',
+      complemento TEXT DEFAULT '',
+      bairro VARCHAR(100) DEFAULT '',
+      cidade VARCHAR(100) DEFAULT '',
+      uf VARCHAR(2) DEFAULT '',
+      ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+
+  // ── Salvos (Conversões) ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS salvos (
+      id SERIAL PRIMARY KEY,
+      nome_responsavel VARCHAR(100) NOT NULL,
+      data_cadastro DATE NOT NULL,
+      nome VARCHAR(100) NOT NULL,
+      telefone VARCHAR(20) NOT NULL,
+      idade INTEGER,
+      endereco TEXT DEFAULT '',
+      numero VARCHAR(20) DEFAULT '',
+      complemento TEXT DEFAULT '',
+      bairro VARCHAR(100) DEFAULT '',
+      cidade VARCHAR(100) DEFAULT '',
+      uf VARCHAR(2) DEFAULT '',
+      servo_facilitador_id INTEGER REFERENCES servos_facilitadores(id) ON DELETE SET NULL,
+      data_atribuicao TIMESTAMPTZ,
+      ativo BOOLEAN DEFAULT TRUE,
+      data_criacao TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
@@ -1604,4 +1645,133 @@ export async function getUsuarioPorEmail(email: string) {
 export async function updateUsuarioEmail(id: number, email: string): Promise<void> {
   const sql = getDb()
   await sql`UPDATE usuarios SET email = ${email} WHERE id = ${id}`
+}
+
+// ─── Servos Facilitadores ──────────────────────────────────────────────────
+
+export async function getServosFacilitadores() {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM servos_facilitadores WHERE ativo = TRUE ORDER BY nome`
+  return (rows as any[]).map(r => ({ ...r, idade: calcularIdade(r.data_nascimento) }))
+}
+
+export async function getServoFacilitador(id: number) {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM servos_facilitadores WHERE id = ${id} AND ativo = TRUE`
+  if (rows.length === 0) return null
+  const r = rows[0] as any
+  return { ...r, idade: calcularIdade(r.data_nascimento) }
+}
+
+export async function criarServoFacilitador(dados: Record<string, unknown>): Promise<number> {
+  const sql = getDb()
+  const nome = (dados.nome as string) ?? ''
+  const dataNascimento = (dados.data_nascimento as string) ?? ''
+  const telefone = (dados.telefone as string) ?? ''
+  const endereco = (dados.endereco as string) ?? ''
+  const numero = (dados.numero as string) ?? ''
+  const complemento = (dados.complemento as string) ?? ''
+  const bairro = (dados.bairro as string) ?? ''
+  const cidade = (dados.cidade as string) ?? ''
+  const uf = (dados.uf as string) ?? ''
+  const rows = await sql`
+    INSERT INTO servos_facilitadores (nome, data_nascimento, telefone, endereco, numero, complemento, bairro, cidade, uf)
+    VALUES (${nome}, ${dataNascimento}, ${telefone}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
+    RETURNING id
+  `
+  return (rows[0] as { id: number }).id
+}
+
+export async function updateServoFacilitador(id: number, dados: Record<string, unknown>): Promise<void> {
+  const sql = getDb()
+  const nome = (dados.nome as string) ?? ''
+  const dataNascimento = (dados.data_nascimento as string) ?? ''
+  const telefone = (dados.telefone as string) ?? ''
+  const endereco = (dados.endereco as string) ?? ''
+  const numero = (dados.numero as string) ?? ''
+  const complemento = (dados.complemento as string) ?? ''
+  const bairro = (dados.bairro as string) ?? ''
+  const cidade = (dados.cidade as string) ?? ''
+  const uf = (dados.uf as string) ?? ''
+  await sql`
+    UPDATE servos_facilitadores
+    SET nome = ${nome}, data_nascimento = ${dataNascimento}, telefone = ${telefone}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}
+    WHERE id = ${id}
+  `
+}
+
+export async function deleteServoFacilitador(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`UPDATE servos_facilitadores SET ativo = FALSE WHERE id = ${id}`
+}
+
+// ─── Salvos ────────────────────────────────────────────────────────────────
+
+export async function getSalvos() {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM salvos WHERE ativo = TRUE ORDER BY data_cadastro DESC`
+  return rows
+}
+
+export async function getSalvo(id: number) {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM salvos WHERE id = ${id} AND ativo = TRUE`
+  if (rows.length === 0) return null
+  return rows[0]
+}
+
+export async function criarSalvo(dados: Record<string, unknown>): Promise<number> {
+  const sql = getDb()
+  const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
+  const dataCadastro = (dados.data_cadastro as string) ?? ''
+  const nome = (dados.nome as string) ?? ''
+  const telefone = (dados.telefone as string) ?? ''
+  const idade = dados.idade ? Number(dados.idade) : null
+  const endereco = (dados.endereco as string) ?? ''
+  const numero = (dados.numero as string) ?? ''
+  const complemento = (dados.complemento as string) ?? ''
+  const bairro = (dados.bairro as string) ?? ''
+  const cidade = (dados.cidade as string) ?? ''
+  const uf = (dados.uf as string) ?? ''
+  const rows = await sql`
+    INSERT INTO salvos (nome_responsavel, data_cadastro, nome, telefone, idade, endereco, numero, complemento, bairro, cidade, uf)
+    VALUES (${nomeResponsavel}, ${dataCadastro}, ${nome}, ${telefone}, ${idade}, ${endereco}, ${numero}, ${complemento}, ${bairro}, ${cidade}, ${uf})
+    RETURNING id
+  `
+  return (rows[0] as { id: number }).id
+}
+
+export async function updateSalvo(id: number, dados: Record<string, unknown>): Promise<void> {
+  const sql = getDb()
+  const nomeResponsavel = (dados.nome_responsavel as string) ?? ''
+  const dataCadastro = (dados.data_cadastro as string) ?? ''
+  const nome = (dados.nome as string) ?? ''
+  const telefone = (dados.telefone as string) ?? ''
+  const idade = dados.idade ? Number(dados.idade) : null
+  const endereco = (dados.endereco as string) ?? ''
+  const numero = (dados.numero as string) ?? ''
+  const complemento = (dados.complemento as string) ?? ''
+  const bairro = (dados.bairro as string) ?? ''
+  const cidade = (dados.cidade as string) ?? ''
+  const uf = (dados.uf as string) ?? ''
+  const servoFacilitadorId = dados.servo_facilitador_id ? Number(dados.servo_facilitador_id) : null
+  await sql`
+    UPDATE salvos
+    SET nome_responsavel = ${nomeResponsavel}, data_cadastro = ${dataCadastro}, nome = ${nome}, telefone = ${telefone}, idade = ${idade}, endereco = ${endereco}, numero = ${numero}, complemento = ${complemento}, bairro = ${bairro}, cidade = ${cidade}, uf = ${uf}, servo_facilitador_id = ${servoFacilitadorId}, data_atribuicao = CASE WHEN ${servoFacilitadorId} IS NOT NULL THEN NOW() ELSE data_atribuicao END
+    WHERE id = ${id}
+  `
+}
+
+export async function deleteSalvo(id: number): Promise<void> {
+  const sql = getDb()
+  await sql`UPDATE salvos SET ativo = FALSE WHERE id = ${id}`
+}
+
+function calcularIdade(dataNascimento: string | Date): number {
+  const data = typeof dataNascimento === 'string' ? new Date(dataNascimento) : dataNascimento
+  const hoje = new Date()
+  let idade = hoje.getFullYear() - data.getFullYear()
+  const mes = hoje.getMonth() - data.getMonth()
+  if (mes < 0 || (mes === 0 && hoje.getDate() < data.getDate())) idade--
+  return idade
 }

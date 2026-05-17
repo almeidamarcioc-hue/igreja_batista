@@ -282,3 +282,41 @@ export interface SaudeMinisterio {
   status: 'verde' | 'amarelo' | 'vermelho'
   tendencia: 'subindo' | 'descendo' | 'estavel'
 }
+
+// ─── Conversões types ──────────────────────────────────────────────────────
+
+export interface ServoFacilitador {
+  id: number
+  nome: string
+  data_nascimento: string
+  telefone: string
+  idade?: number
+  endereco: string
+  numero: string
+  complemento: string
+  bairro: string
+  cidade: string
+  uf: string
+  ativo: boolean
+  data_criacao: string
+}
+
+export interface Salvo {
+  id: number
+  nome_responsavel: string
+  data_cadastro: string
+  nome: string
+  telefone: string
+  idade?: number
+  endereco: string
+  numero: string
+  complemento: string
+  bairro: string
+  cidade: string
+  uf: string
+  servo_facilitador_id?: number | null
+  servo?: ServoFacilitador
+  data_atribuicao?: string
+  ativo: boolean
+  data_criacao: string
+}

@@ -5,18 +5,23 @@ import { verifySessionToken, createSessionToken, COOKIE_NAME } from '@/lib/sessi
 const PUBLIC_PATHS = [
   '/login',
   '/pastor/login',
+  '/conversoes/login',
+  '/apelo',
   '/api/auth/login',
   '/api/auth/logout',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/admin/criar-pastor',
   '/api/admin/check-usuario',
+  '/api/apelo',
   '/api/init',
   '/_next',
   '/favicon',
   '/ibtm-logo',
   '/logo',
   '/manifest',
+  '/manifest-pastor',
+  '/manifest-apelo',
   '/sw',
 ]
 
@@ -47,7 +52,13 @@ export async function middleware(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
     const loginUrl = req.nextUrl.clone()
-    loginUrl.pathname = pathname.startsWith('/pastor') ? '/pastor/login' : '/login'
+    if (pathname.startsWith('/pastor')) {
+      loginUrl.pathname = '/pastor/login'
+    } else if (pathname.startsWith('/conversoes')) {
+      loginUrl.pathname = '/conversoes/login'
+    } else {
+      loginUrl.pathname = '/login'
+    }
     return NextResponse.redirect(loginUrl)
   }
 
