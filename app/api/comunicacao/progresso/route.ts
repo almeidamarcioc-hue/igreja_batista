@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'culto_data é obrigatório' }, { status: 400 })
     }
 
-    if (areaId) {
+    if (areaId && areaId !== 'undefined') {
       // Retornar progresso de uma área específica para um usuário
       const passos = await obterProgressoCulto(cultoData, areaId, userId)
       const mapa = new Map(passos.map((p: any) => [p.passo_id, p.marcado]))
