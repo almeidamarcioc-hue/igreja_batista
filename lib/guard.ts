@@ -67,6 +67,13 @@ export async function requirePermission(req: NextRequest, mod: string): Promise<
   return null
 }
 
+export async function getCurrentUserId(req: NextRequest): Promise<number | null> {
+  const token = req.cookies.get(COOKIE_NAME)?.value
+  if (!token) return null
+  const userId = await verifySessionToken(token)
+  return userId
+}
+
 export function unauthorized() {
   return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
 }

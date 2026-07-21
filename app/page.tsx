@@ -98,6 +98,16 @@ export default function WorkspacePage() {
             bg="#831843"
           />
         )}
+        {hasModule('comunicacao') && (
+          <ModuleCard
+            onClick={() => router.push('/comunicacao')}
+            icon="📡"
+            title="Comunicação"
+            desc="Runbook operacional da cabine técnica"
+            accent="#E11D48"
+            bg="#4C0519"
+          />
+        )}
         <ModuleCard
           onClick={() => router.push('/oracao/dashboard')}
           icon="🙏"

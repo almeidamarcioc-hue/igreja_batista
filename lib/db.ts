@@ -492,6 +492,20 @@ export async function initDb(): Promise<void> {
       data_criacao TIMESTAMPTZ DEFAULT NOW()
     )
   `
+
+  // ── Comunicação — Checklist de progresso ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS checklist_progresso (
+      id SERIAL PRIMARY KEY,
+      culto_data DATE NOT NULL,
+      area_id VARCHAR(50) NOT NULL,
+      passo_id VARCHAR(50) NOT NULL,
+      usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      marcado BOOLEAN DEFAULT FALSE,
+      atualizado_em TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(culto_data, area_id, passo_id, usuario_id)
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
@@ -1933,4 +1947,44 @@ function calcularIdade(dataNascimento: string | Date): number {
   const mes = hoje.getMonth() - data.getMonth()
   if (mes < 0 || (mes === 0 && hoje.getDate() < data.getDate())) idade--
   return idade
+}
+
+// ─── Comunicação — Checklist de Progresso ─────────────────────────────────
+
+export async function obterProgressoCulto(cultoData: string, areaId: string, usuarioId: number) {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT passo_id, marcado, atualizado_em
+    FROM checklist_progresso
+    WHERE culto_data = ${cultoData} AND area_id = ${areaId} AND usuario_id = ${usuarioId}
+  `
+  return rows
+}
+
+export async function alternarPassoProgresso(cultoData: string, areaId: string, passoId: string, usuarioId: number, marcado: boolean) {
+  const sql = getDb()
+  await sql`
+    INSERT INTO checklist_progresso (culto_data, area_id, passo_id, usuario_id, marcado, atualizado_em)
+    VALUES (${cultoData}, ${areaId}, ${passoId}, ${usuarioId}, ${marcado}, NOW())
+    ON CONFLICT (culto_data, area_id, passo_id, usuario_id)
+    DO UPDATE SET marcado = ${marcado}, atualizado_em = NOW()
+  `
+}
+
+export async function reiniciarAreaProgresso(cultoData: string, areaId: string, usuarioId: number) {
+  const sql = getDb()
+  await sql`
+    DELETE FROM checklist_progresso
+    WHERE culto_data = ${cultoData} AND area_id = ${areaId} AND usuario_id = ${usuarioId}
+  `
+}
+
+export async function obterResumoAreaCulto(cultoData: string, areaId: string) {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT usuario_id, passo_id, marcado
+    FROM checklist_progresso
+    WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+  `
+  return rows
 }
