@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useParams } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
 interface PassoComMarcacao {
@@ -16,10 +16,11 @@ interface ProgresoPasso {
   marcados: number
 }
 
-export default function AreaPage({ params }: { params: { id: string } }) {
+export default function AreaPage() {
   const searchParams = useSearchParams()
+  const routeParams = useParams()
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
-  const areaId = params.id
+  const areaId = routeParams?.id as string || ''
 
   console.log('AreaPage: areaId=', areaId)
   console.log('PROCEDIMENTOS.areas ids:', PROCEDIMENTOS.areas.map(a => a.id))
