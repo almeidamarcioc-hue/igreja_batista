@@ -21,6 +21,9 @@ export default function AreaPage({ params }: { params: { id: string } }) {
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
   const areaId = params.id
 
+  console.log('AreaPage: areaId=', areaId)
+  console.log('PROCEDIMENTOS.areas ids:', PROCEDIMENTOS.areas.map(a => a.id))
+
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
   const [progresso, setProgresso] = useState<ProgresoPasso>({ pre: [], pos: [], total: 0, marcados: 0 })
   const [carregando, setCarregando] = useState(true)
