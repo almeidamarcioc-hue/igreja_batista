@@ -20,7 +20,8 @@ export default function ComunicacaoDashboard() {
     const carregarProgresso = async () => {
       setCarregando(true)
       try {
-        const resp = await fetch(`/api/comunicacao/progresso?culto_data=${cultoData}`)
+        const params = new URLSearchParams({ culto_data: cultoData })
+        const resp = await fetch(`/api/comunicacao/progresso?${params.toString()}`)
         if (resp.ok) {
           const dados = await resp.json()
           setProgresso(dados)
