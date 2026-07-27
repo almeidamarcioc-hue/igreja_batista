@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
@@ -18,6 +19,7 @@ interface RelatorioData {
 }
 
 export default function ComunicacaoDashboard() {
+  const router = useRouter()
   const [cultoData, setCultoData] = useState<string>('')
   const [dataInicio, setDataInicio] = useState<string>('')
   const [dataFim, setDataFim] = useState<string>('')
@@ -211,7 +213,7 @@ export default function ComunicacaoDashboard() {
                   <button
                     onClick={() => {
                       const dataFormatada = item.culto_data.split('T')[0]
-                      window.location.href = `/comunicacao/area/${item.area_id}?culto_data=${dataFormatada}&mode=view`
+                      router.push(`/comunicacao/area/${item.area_id}?culto_data=${dataFormatada}&mode=view`)
                     }}
                     className="px-3 py-1 rounded-lg font-semibold text-xs transition-colors hover:shadow-md"
                     style={{
