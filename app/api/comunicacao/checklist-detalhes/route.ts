@@ -61,37 +61,41 @@ export async function GET(req: NextRequest) {
       permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
 
     // Buscar dados do checklist
-    const passos = ehCoordenador
-      ? await sql`
-          SELECT passo_id, marcado, usuario_id,
-                 (SELECT nome FROM usuarios WHERE id = cp.usuario_id) as usuario_nome,
-                 data_marcacao
-          FROM checklist_progresso cp
-          WHERE culto_data = ${cultoData} AND area_id = ${areaId}
-          ORDER BY passo_id, data_marcacao DESC
-        `
-      : await sql`
-          SELECT passo_id, marcado, usuario_id,
-                 (SELECT nome FROM usuarios WHERE id = cp.usuario_id) as usuario_nome,
-                 data_marcacao
-          FROM checklist_progresso cp
-          WHERE culto_data = ${cultoData} AND area_id = ${areaId} AND usuario_id = ${userId}
-          ORDER BY passo_id, data_marcacao DESC
-        `
+    let passos: any[] = []
+    try {
+      passos = await sql`
+        SELECT passo_id, marcado, usuario_id, data_marcacao
+        FROM checklist_progresso
+        WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+        ${!ehCoordenador ? sql`AND usuario_id = ${userId}` : sql``}
+        ORDER BY passo_id, data_marcacao DESC
+      `
+    } catch (passosErr) {
+      console.error('Erro ao buscar passos:', passosErr)
+      passos = []
+    }
 
-    const finalizacao = await sql`
-      SELECT usuario_id, data_finalizacao,
-             (SELECT nome FROM usuarios WHERE id = cf.usuario_id) as usuario_nome
-      FROM checklist_finalizado
-      WHERE culto_data = ${cultoData} AND area_id = ${areaId}
-      LIMIT 1
-    `
+    let finalizacao: any[] = []
+    try {
+      finalizacao = await sql`
+        SELECT usuario_id, data_finalizacao
+        FROM checklist_finalizado
+        WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+        LIMIT 1
+      `
+    } catch (finErr) {
+      console.error('Erro ao buscar finalização:', finErr)
+    }
 
     // Montar resumo (último status de cada passo)
     const resumo: Record<string, any> = {}
     passos.forEach((p: any) => {
       if (!resumo[p.passo_id]) {
-        resumo[p.passo_id] = p
+        resumo[p.passo_id] = {
+          marcado: p.marcado,
+          usuario_id: p.usuario_id,
+          data_marcacao: p.data_marcacao
+        }
       }
     })
 
