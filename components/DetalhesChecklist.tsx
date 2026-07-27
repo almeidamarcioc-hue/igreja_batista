@@ -135,22 +135,26 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
             </p>
           </div>
           <div className="flex gap-2">
-            {permissaoCoordenador && (
-              <>
-                <button
-                  onClick={handleEditar}
-                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
-                >
-                  ✏️ Editar
-                </button>
-                <button
-                  onClick={() => setShowConfirmExcluir(true)}
-                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                >
-                  🗑️ Excluir
-                </button>
-              </>
+            {/* Todos podem editar */}
+            {!erro403 && detalhes && (
+              <button
+                onClick={handleEditar}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+              >
+                ✏️ Editar
+              </button>
             )}
+
+            {/* Apenas coordenadores podem excluir */}
+            {permissaoCoordenador && (
+              <button
+                onClick={() => setShowConfirmExcluir(true)}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+              >
+                🗑️ Excluir
+              </button>
+            )}
+
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl font-bold"

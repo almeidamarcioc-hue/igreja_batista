@@ -26,16 +26,44 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Verificar se é coordenador
     const sql = getDb()
+    const userRows = await sql`
+      SELECT
+        u.id, u.usuario, u.role,
+        COALESCE(p.permissoes, '[]') as permissoes
+      FROM usuarios u
+      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
+      WHERE u.id = ${userId}
+    `
+    const user = userRows[0]
+    if (!user) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    }
+
+    let permissoes: string[] = []
+    try {
+      permissoes = JSON.parse(user.permissoes)
+    } catch (e) {
+      permissoes = []
+    }
+
+    // Apenas coordenadores podem excluir
+    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${area_id}.coordenador`)
+    if (!ehCoordenador) {
+      return NextResponse.json({ error: 'Apenas coordenadores podem excluir checklists' }, { status: 403 })
+    }
+
+    const sql2 = getDb()
 
     // Deletar todos os registros de progresso deste checklist
-    await sql`
+    await sql2`
       DELETE FROM checklist_progresso
       WHERE culto_data = ${culto_data} AND area_id = ${area_id}
     `
 
     // Deletar o registro de finalização
-    await sql`
+    await sql2`
       DELETE FROM checklist_finalizado
       WHERE culto_data = ${culto_data} AND area_id = ${area_id}
     `

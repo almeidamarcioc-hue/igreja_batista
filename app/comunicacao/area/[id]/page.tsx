@@ -358,7 +358,7 @@ export default function AreaPage() {
             )}
             {finalizado && (
               <div className="px-6 py-2 rounded-lg font-semibold text-sm bg-green-100 text-green-700 flex items-center gap-2">
-                ✓ Checklist salvo em {new Date(cultoData).toLocaleDateString('pt-BR')}
+                ✓ Checklist finalizado em {new Date(cultoData).toLocaleDateString('pt-BR')}
               </div>
             )}
             <button
@@ -434,6 +434,20 @@ export default function AreaPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {finalizado && (
+            <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                <span className="font-semibold">✓ Checklist Finalizado:</span> Este checklist foi salvo. Você pode:
+                <br />
+                • <strong>Editar</strong> — desbloquear para fazer alterações
+                <br />
+                • <strong>Criar novo</strong> — fazer checklist de outra data
+                <br />
+                Volte ao dashboard para ver o histórico de todos os checklists.
+              </p>
             </div>
           )}
         </>
