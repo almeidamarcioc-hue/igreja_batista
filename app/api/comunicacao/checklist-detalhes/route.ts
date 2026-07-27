@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json({
-      culto_data,
+      culto_data: cultoData,
       area_id: areaId,
       resumo,
       finalizacao: finalizacao[0] || null,
