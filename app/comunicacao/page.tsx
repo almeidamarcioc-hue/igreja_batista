@@ -10,9 +10,20 @@ interface Usuario {
   permissoes?: string
 }
 
+interface RelatorioData {
+  culto_data: string
+  area_id: string
+  total: number
+  marcados: number
+}
+
 export default function ComunicacaoDashboard() {
   const [cultoData, setCultoData] = useState<string>('')
+  const [dataInicio, setDataInicio] = useState<string>('')
+  const [dataFim, setDataFim] = useState<string>('')
+  const [filtroAtivo, setFiltroAtivo] = useState(false)
   const [progresso, setProgresso] = useState<Record<string, { total: number; marcados: number }>>({})
+  const [relatorioPeriodo, setRelatorioPeriodo] = useState<RelatorioData[]>([])
   const [carregando, setCarregando] = useState(true)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
@@ -59,7 +70,31 @@ export default function ComunicacaoDashboard() {
   }, [])
 
   useEffect(() => {
-    if (!cultoData) return
+    if (filtroAtivo) {
+      if (!dataInicio || !dataFim) return
+
+      const carregarRelatorio = async () => {
+        setCarregando(true)
+        try {
+          const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim })
+          const resp = await fetch(`/api/comunicacao/periodo?${params.toString()}`)
+          if (resp.ok) {
+            const dados = await resp.json()
+            setRelatorioPeriodo(dados)
+          }
+        } catch (err) {
+          console.error('Erro ao carregar relatório:', err)
+        } finally {
+          setCarregando(false)
+        }
+      }
+
+      carregarRelatorio()
+    }
+  }, [filtroAtivo, dataInicio, dataFim])
+
+  useEffect(() => {
+    if (!cultoData || filtroAtivo) return
 
     const carregarProgresso = async () => {
       setCarregando(true)
@@ -78,7 +113,7 @@ export default function ComunicacaoDashboard() {
     }
 
     carregarProgresso()
-  }, [cultoData])
+  }, [cultoData, filtroAtivo])
 
   const handleDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCultoData(e.target.value)
@@ -92,22 +127,104 @@ export default function ComunicacaoDashboard() {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <label className="block mb-2">
-          <span className="text-sm font-semibold" style={{ color: '#002347' }}>Selecione a data do culto:</span>
-        </label>
-        <input
-          type="date"
-          value={cultoData}
-          onChange={handleDataChange}
-          className="w-full md:w-64 px-4 py-2 border-2 rounded-lg"
-          style={{ borderColor: '#C5A059' }}
-        />
-        <p className="text-xs text-gray-500 mt-2">Cada data tem seu próprio checklist. Novo culto = checklist zerado.</p>
+        <div className="flex items-center justify-between mb-4">
+          <label className="block">
+            <span className="text-sm font-semibold" style={{ color: '#002347' }}>Selecione a data do culto:</span>
+          </label>
+          <button
+            onClick={() => setFiltroAtivo(!filtroAtivo)}
+            className="text-xs px-3 py-1 rounded-lg transition-colors"
+            style={{
+              backgroundColor: filtroAtivo ? '#C5A059' : 'rgba(197, 160, 89, 0.2)',
+              color: '#002347',
+              fontWeight: 600
+            }}
+          >
+            {filtroAtivo ? '✓ Filtro ativo' : '🔍 Filtrar por período'}
+          </button>
+        </div>
+
+        {!filtroAtivo ? (
+          <>
+            <input
+              type="date"
+              value={cultoData}
+              onChange={handleDataChange}
+              className="w-full md:w-64 px-4 py-2 border-2 rounded-lg"
+              style={{ borderColor: '#C5A059' }}
+            />
+            <p className="text-xs text-gray-500 mt-2">Cada data tem seu próprio checklist. Novo culto = checklist zerado.</p>
+          </>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Data inicial:</label>
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                className="w-full px-4 py-2 border-2 rounded-lg"
+                style={{ borderColor: '#C5A059' }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Data final:</label>
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                className="w-full px-4 py-2 border-2 rounded-lg"
+                style={{ borderColor: '#C5A059' }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {carregando ? (
         <div className="text-center py-12">
           <p className="text-gray-500">Carregando...</p>
+        </div>
+      ) : filtroAtivo && relatorioPeriodo.length === 0 ? (
+        <div className="text-center py-12 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-blue-800">Nenhum checklist realizado neste período.</p>
+        </div>
+      ) : filtroAtivo ? (
+        <div className="space-y-4">
+          {relatorioPeriodo.map((item) => {
+            const area = PROCEDIMENTOS.areas.find(a => a.id === item.area_id)
+            if (!area) return null
+            const percentual = item.total > 0 ? Math.round((item.marcados / item.total) * 100) : 0
+
+            return (
+              <div key={`${item.culto_data}-${item.area_id}`} className="bg-white rounded-lg shadow-md p-4 border-l-4" style={{ borderColor: area.cor }}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">{area.icone}</span>
+                      <div>
+                        <h4 className="font-semibold" style={{ color: '#002347' }}>{area.nome}</h4>
+                        <p className="text-xs text-gray-500">{new Date(item.culto_data).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold" style={{ color: '#002347' }}>Progresso</span>
+                        <span className="text-xs font-bold" style={{ color: area.cor }}>{percentual}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{ width: `${percentual}%`, backgroundColor: area.cor }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{item.marcados} de {item.total} passos</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -9,6 +9,7 @@ interface Usuario {
   id: number
   nome: string
   modulos: string
+  role: string
   permissoes?: string
 }
 
@@ -19,11 +20,6 @@ interface NavItem {
   icon: string
   label: string
 }
-
-const navEntries: NavItem[] = [
-  { href: '/comunicacao', icon: '🏠', label: 'Dashboard' },
-  { href: '/comunicacao/coordenador', icon: '👁️', label: 'Visão Coordenador' },
-]
 
 export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
@@ -112,8 +108,10 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
       <div style={{ borderColor: '#C5A059' }} className="border-t mx-4 opacity-40" />
 
       <nav className="flex-1 overflow-y-auto py-4 px-2">
-        {navEntries.map((entry) => {
-          const isActive = entry.href === '/comunicacao' ? pathname === '/comunicacao' : pathname.startsWith(entry.href)
+        {/* Dashboard - sempre visível */}
+        {(() => {
+          const entry = { href: '/comunicacao', icon: '🏠', label: 'Dashboard' }
+          const isActive = pathname === '/comunicacao'
           return (
             <Link
               key={entry.href}
@@ -126,7 +124,25 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
               <span>{entry.label}</span>
             </Link>
           )
-        })}
+        })()}
+
+        {/* Visão Coordenador - apenas para admins */}
+        {usuario?.role === 'admin' && (() => {
+          const entry = { href: '/comunicacao/coordenador', icon: '👁️', label: 'Visão Coordenador' }
+          const isActive = pathname.startsWith(entry.href)
+          return (
+            <Link
+              key={entry.href}
+              href={entry.href}
+              onClick={onClose}
+              style={isActive ? { color: '#C5A059', backgroundColor: 'rgba(197,160,89,0.15)' } : { color: '#e8e8e8' }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+            >
+              <span className="text-base leading-none">{entry.icon}</span>
+              <span>{entry.label}</span>
+            </Link>
+          )
+        })()}
 
         <div style={{ borderColor: '#C5A059' }} className="border-t mx-2 my-4 opacity-40" />
 
