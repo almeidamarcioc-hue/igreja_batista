@@ -27,12 +27,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Sessão inválida' }, { status: 401 })
     }
 
-    // Buscar permissões do usuário
     const sql = getDb()
+
+    // Buscar permissões do usuário
     const userRows = await sql`
-      SELECT
-        u.id, u.usuario, u.nome, u.role,
-        COALESCE(p.permissoes, '[]') as permissoes
+      SELECT u.id, u.role, COALESCE(p.permissoes, '[]') as permissoes
       FROM usuarios u
       LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
       WHERE u.id = ${userId}
@@ -44,90 +43,68 @@ export async function GET(req: NextRequest) {
 
     let permissoes: string[] = []
     try {
-      permissoes = JSON.parse(user.permissoes)
+      permissoes = JSON.parse(user.permissoes || '[]')
     } catch (e) {
       permissoes = []
     }
 
-    // Verificar se tem permissão para esta área
+    // Verificar se tem permissão
     const temPermissao = permissoes.includes('*') ||
       permissoes.some((p: string) => p.startsWith(`comunicacao:${areaId}`))
 
-    if (!temPermissao) {
+    if (!temPermissao && user.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
-    // Verificar se é coordenador (pode ver todos) ou operador (só vê seus)
-    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+    // Admin e coordenadores veem todos; operadores veem apenas seus
+    const ehCoordenador = user.role === 'admin' ||
+      permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
 
-    const sql2 = getDb()
+    // Buscar dados do checklist
+    const passos = ehCoordenador
+      ? await sql`
+          SELECT passo_id, marcado, usuario_id,
+                 (SELECT nome FROM usuarios WHERE id = cp.usuario_id) as usuario_nome,
+                 data_marcacao
+          FROM checklist_progresso cp
+          WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+          ORDER BY passo_id, data_marcacao DESC
+        `
+      : await sql`
+          SELECT passo_id, marcado, usuario_id,
+                 (SELECT nome FROM usuarios WHERE id = cp.usuario_id) as usuario_nome,
+                 data_marcacao
+          FROM checklist_progresso cp
+          WHERE culto_data = ${cultoData} AND area_id = ${areaId} AND usuario_id = ${userId}
+          ORDER BY passo_id, data_marcacao DESC
+        `
 
-    // Buscar último status de cada passo
-    const sqlInstance = getDb()
-    let passos
-    if (ehCoordenador) {
-      // Coordenador vê todos os passos
-      passos = await sqlInstance`
-        SELECT
-          cp.passo_id,
-          cp.marcado,
-          cp.usuario_id,
-          u.nome as usuario_nome,
-          cp.data_marcacao
-        FROM checklist_progresso cp
-        LEFT JOIN usuarios u ON cp.usuario_id = u.id
-        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
-        ORDER BY cp.passo_id, cp.data_marcacao DESC
-      `
-    } else {
-      // Operador só vê seus próprios passos
-      passos = await sqlInstance`
-        SELECT
-          cp.passo_id,
-          cp.marcado,
-          cp.usuario_id,
-          u.nome as usuario_nome,
-          cp.data_marcacao
-        FROM checklist_progresso cp
-        LEFT JOIN usuarios u ON cp.usuario_id = u.id
-        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId} AND cp.usuario_id = ${userId}
-        ORDER BY cp.passo_id, cp.data_marcacao DESC
-      `
-    }
-
-    // Buscar quem finalizou o checklist
-    const finalizacao = await sqlInstance`
-      SELECT
-        cf.usuario_id,
-        u.nome as usuario_nome,
-        cf.data_finalizacao
-      FROM checklist_finalizado cf
-      LEFT JOIN usuarios u ON cf.usuario_id = u.id
-      WHERE cf.culto_data = ${cultoData} AND cf.area_id = ${areaId}
+    const finalizacao = await sql`
+      SELECT usuario_id, data_finalizacao,
+             (SELECT nome FROM usuarios WHERE id = cf.usuario_id) as usuario_nome
+      FROM checklist_finalizado
+      WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+      LIMIT 1
     `
 
-    // Montar resumo
-    const resumo: Record<string, { marcado: boolean; usuario_nome: string; data_marcacao: string }> = {}
-
-    passos.forEach((passo: any) => {
-      resumo[passo.passo_id] = {
-        marcado: passo.marcado,
-        usuario_nome: passo.usuario_nome || 'Desconhecido',
-        data_marcacao: passo.data_marcacao
+    // Montar resumo (último status de cada passo)
+    const resumo: Record<string, any> = {}
+    passos.forEach((p: any) => {
+      if (!resumo[p.passo_id]) {
+        resumo[p.passo_id] = p
       }
     })
 
     return NextResponse.json({
-      culto_data: cultoData,
+      culto_data,
       area_id: areaId,
       resumo,
-      finalizacao: finalizacao[0] || null,
-      historico: passos
+      finalizacao: finalizacao[0] || null
     })
   } catch (err: any) {
     console.error('Erro ao buscar detalhes:', err)
     return NextResponse.json(
-      { error: err.message },
+      { error: err.message || 'Erro ao buscar detalhes' },
       { status: 500 }
     )
   }
