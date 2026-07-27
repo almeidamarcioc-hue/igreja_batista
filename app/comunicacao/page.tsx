@@ -209,7 +209,10 @@ export default function ComunicacaoDashboard() {
                     </div>
                   </div>
                   <button
-                    onClick={() => window.location.href = `/comunicacao/area/${item.area_id}?culto_data=${item.culto_data}&mode=view`}
+                    onClick={() => {
+                      const dataFormatada = item.culto_data.split('T')[0]
+                      window.location.href = `/comunicacao/area/${item.area_id}?culto_data=${dataFormatada}&mode=view`
+                    }}
                     className="px-3 py-1 rounded-lg font-semibold text-xs transition-colors hover:shadow-md"
                     style={{
                       backgroundColor: 'rgba(197, 160, 89, 0.15)',
