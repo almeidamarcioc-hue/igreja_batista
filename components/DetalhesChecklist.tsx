@@ -26,6 +26,8 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
   const [carregando, setCarregando] = useState(true)
   const [showConfirmExcluir, setShowConfirmExcluir] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
+  const [permissaoCoordenador, setPermissaoCoordenador] = useState(false)
+  const [erro403, setErro403] = useState(false)
 
   useEffect(() => {
     const carregarDetalhes = async () => {
@@ -37,6 +39,17 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
         if (resp.ok) {
           const dados = await resp.json()
           setDetalhes(dados)
+          // Se chegou aqui, tem no mínimo permissão de operador
+          // Verificar se é coordenador
+          const userResp = await fetch('/api/auth/me')
+          if (userResp.ok) {
+            const user = await userResp.json()
+            const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+            const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+            setPermissaoCoordenador(ehCoordenador)
+          }
+        } else if (resp.status === 403) {
+          setErro403(true)
         }
       } catch (err) {
         console.error('Erro ao carregar detalhes:', err)
@@ -122,18 +135,22 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
             </p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleEditar}
-              className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
-            >
-              ✏️ Editar
-            </button>
-            <button
-              onClick={() => setShowConfirmExcluir(true)}
-              className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-            >
-              🗑️ Excluir
-            </button>
+            {permissaoCoordenador && (
+              <>
+                <button
+                  onClick={handleEditar}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  onClick={() => setShowConfirmExcluir(true)}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                >
+                  🗑️ Excluir
+                </button>
+              </>
+            )}
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
@@ -146,8 +163,10 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
         <div className="p-6">
           {carregando ? (
             <p className="text-center text-gray-500">Carregando detalhes...</p>
-          ) : !detalhes ? (
-            <p className="text-center text-gray-500">Nenhum dado disponível</p>
+          ) : erro403 ? (
+            <p className="text-center text-red-600 py-12">Você não tem permissão para visualizar este checklist.</p>
+          ) : !detalhes || Object.keys(detalhes.resumo).length === 0 ? (
+            <p className="text-center text-gray-500 py-12">Nenhum dado disponível.</p>
           ) : (
             <div className="space-y-6">
               {/* Resumo */}
