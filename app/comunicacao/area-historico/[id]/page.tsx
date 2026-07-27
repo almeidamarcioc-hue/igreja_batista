@@ -97,7 +97,9 @@ export default function AreaHistoricoPage() {
         <div className="space-y-3">
           {checklists.map((checklist) => {
             const percentual = checklist.total > 0 ? Math.round((checklist.marcados / checklist.total) * 100) : 0
-            const data = new Date(checklist.culto_data)
+            const dataString = checklist.culto_data.split('T')[0]
+            const [ano, mes, dia] = dataString.split('-')
+            const data = new Date(Number(ano), Number(mes) - 1, Number(dia))
             const dataFormatada = data.toLocaleDateString('pt-BR', {
               weekday: 'long',
               year: 'numeric',
@@ -109,8 +111,7 @@ export default function AreaHistoricoPage() {
               <button
                 key={checklist.culto_data}
                 onClick={() => {
-                  const dataFormatada = checklist.culto_data.split('T')[0]
-                  router.push(`/comunicacao/area/${areaId}?culto_data=${dataFormatada}&mode=view`)
+                  router.push(`/comunicacao/area/${areaId}?culto_data=${dataString}&mode=view`)
                 }}
                 className="w-full text-left bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow"
                 style={{ borderColor: area.cor }}
