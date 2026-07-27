@@ -24,6 +24,8 @@ export default function AreaPage() {
   const modoVisualizacao = searchParams.get('mode') === 'view'
   const areaId = (routeParams?.id as string) || ''
 
+  console.log('AreaPage renderizado - modo visualização:', modoVisualizacao, 'cultoData:', cultoData, 'areaId:', areaId)
+
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
   const [progresso, setProgresso] = useState<ProgresoPasso>({ pre: [], pos: [], total: 0, marcados: 0 })
   const [carregando, setCarregando] = useState(true)
