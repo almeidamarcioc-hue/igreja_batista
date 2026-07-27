@@ -74,32 +74,13 @@ export default function AreaPage() {
       setCarregando(true)
       try {
         const dataFormatada = cultoData.split('T')[0]
-        const endpoint = modoVisualizacao
-          ? `/api/comunicacao/checklist-detalhes?culto_data=${dataFormatada}&area_id=${areaId}`
-          : `/api/comunicacao/progresso?culto_data=${cultoData}&area_id=${areaId}`
+        // Sempre usar o mesmo endpoint para consistência
+        const endpoint = `/api/comunicacao/progresso?culto_data=${dataFormatada}&area_id=${areaId}`
 
         const resp = await fetch(endpoint)
         if (resp.ok) {
           const dados = await resp.json()
-
-          if (modoVisualizacao && dados.resumo) {
-            // Transformar resposta de checklist-detalhes para formato esperado
-            const pre = area?.fases.pre.map(p => ({
-              id: p.id,
-              marcado: dados.resumo[p.id]?.marcado ?? false
-            })) || []
-            const pos = area?.fases.pos.map(p => ({
-              id: p.id,
-              marcado: dados.resumo[p.id]?.marcado ?? false
-            })) || []
-
-            const marcados = Object.values(dados.resumo).filter((r: any) => r.marcado).length
-            const total = Object.keys(dados.resumo).length
-
-            setProgresso({ pre, pos, total, marcados })
-          } else {
-            setProgresso(dados)
-          }
+          setProgresso(dados)
         }
       } catch (err) {
         console.error('Erro ao carregar progresso:', err)
