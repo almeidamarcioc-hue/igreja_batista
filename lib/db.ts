@@ -285,14 +285,20 @@ export async function initDb(): Promise<void> {
         ('Secretaria — Leitura',    'Somente visualização no módulo Secretaria',                                             '["secretaria.visualizar"]',                                                                                                    true),
         ('Educacional — Completo',  'Acesso completo ao módulo Educacional',                                                 '["educacional.visualizar","educacional.criar","educacional.editar","educacional.excluir"]',                                      true),
         ('Educacional — Leitura',   'Somente visualização no módulo Educacional',                                            '["educacional.visualizar"]',                                                                                                   true),
-        ('Comunicação — Transmissão',  'Acesso completo ao módulo Comunicação (Transmissão YouTube)',                       '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Comunicação — Mix de Som',   'Acesso ao módulo Comunicação (Mix de Som)',                                          '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Comunicação — Datashow',     'Acesso ao módulo Comunicação (Datashow)',                                            '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Comunicação — Câmeras',      'Acesso ao módulo Comunicação (Câmeras)',                                             '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Comunicação — Iluminação',   'Acesso ao módulo Comunicação (Iluminação)',                                          '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Comunicação — Coordenador',  'Acesso completo ao módulo Comunicação (visão de coordenador)',                      '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]',                                    true),
-        ('Completo (sem admin)',       'Acesso completo a todos os módulos, sem acesso às configurações de sistema',         '["secretaria.visualizar","secretaria.criar","secretaria.editar","secretaria.excluir","educacional.visualizar","educacional.criar","educacional.editar","educacional.excluir","comunicacao.visualizar"]', true)
+        ('Completo (sem admin)',     'Acesso completo a todos os módulos, sem acesso às configurações de sistema',            '["secretaria.visualizar","secretaria.criar","secretaria.editar","secretaria.excluir","educacional.visualizar","educacional.criar","educacional.editar","educacional.excluir"]', true)
     `
+  }
+
+  // Adicionar perfis de Comunicação se não existirem
+  const perfis_comm = ['Comunicação — Transmissão', 'Comunicação — Mix de Som', 'Comunicação — Datashow', 'Comunicação — Câmeras', 'Comunicação — Iluminação', 'Comunicação — Coordenador']
+  for (const nome of perfis_comm) {
+    const existe = await sql`SELECT id FROM perfis_acesso WHERE nome = ${nome}`
+    if ((existe as unknown[]).length === 0) {
+      await sql`
+        INSERT INTO perfis_acesso (nome, descricao, permissoes, padrao)
+        VALUES (${nome}, 'Acesso ao módulo Comunicação', '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]', true)
+      `
+    }
   }
 
   // ── Tokens de recuperação de senha ──
