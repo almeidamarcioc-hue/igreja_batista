@@ -44,9 +44,11 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
           const userResp = await fetch('/api/auth/me')
           if (userResp.ok) {
             const user = await userResp.json()
+            console.log('User role:', user.role)
             const ehAdmin = user.role === 'admin'
             const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
             const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+            console.log('ehAdmin:', ehAdmin, 'ehCoordenador:', ehCoordenador)
             setPermissaoCoordenador(ehAdmin || ehCoordenador)
           }
         } else if (resp.status === 403) {
