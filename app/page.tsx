@@ -28,7 +28,12 @@ export default function WorkspacePage() {
     router.push('/login')
   }
 
-  if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#1F1F4D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingSpinner /></div>
+  if (loading) return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#1F1F4D', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+      <LoadingSpinner />
+      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Carregando workspace...</p>
+    </div>
+  )
 
   return (
     <div style={{
@@ -38,7 +43,7 @@ export default function WorkspacePage() {
       padding: '32px 16px',
     }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/ibtm-logo.png" alt="IBTM" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: 16 }} />
+      <img src="/ibtm-logo.png" alt="IBTM" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: 16 }} loading="lazy" />
 
       <h1 style={{ color: '#fff', fontFamily: 'Fraunces, serif', fontSize: 'clamp(20px,4vw,28px)', fontWeight: 400, marginBottom: 4, textAlign: 'center', lineHeight: 1.2 }}>
         Igreja Batista Transformação
@@ -174,7 +179,7 @@ function ModuleCard({ onClick, icon, title, desc, accent, bg, image }: {
     >
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt={title} style={{ width: 80, height: 80, marginBottom: 12, objectFit: 'contain' }} />
+        <img src={image} alt={title} style={{ width: 80, height: 80, marginBottom: 12, objectFit: 'contain' }} loading="lazy" />
       ) : (
         <div style={{ fontSize: 44, marginBottom: 12 }}>{icon}</div>
       )}

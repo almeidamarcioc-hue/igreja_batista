@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { getUsuario } from '@/lib/db'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value
@@ -14,5 +14,7 @@ export async function GET(req: NextRequest) {
   const usuario = await getUsuario(userId)
   if (!usuario) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
 
-  return NextResponse.json(usuario)
+  const response = NextResponse.json(usuario)
+  response.headers.set('Cache-Control', 'private, max-age=60')
+  return response
 }
