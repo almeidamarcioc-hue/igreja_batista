@@ -48,12 +48,24 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
           setUsuario(user)
 
           // Determinar quais áreas o usuário pode acessar
-          const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+          let permissoes: string[] = []
+          try {
+            permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+          } catch (e) {
+            permissoes = []
+          }
+
+          console.log('Usuário:', user.nome)
+          console.log('Permissões brutas:', user.permissoes)
+          console.log('Permissões parseadas:', permissoes)
+
           const areas: string[] = []
 
           if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
             // Acesso a todas as áreas
-            setAreasPermitidas(PROCEDIMENTOS.areas.map(a => a.id))
+            const todasAreas = PROCEDIMENTOS.areas.map(a => a.id)
+            console.log('Acesso a todas as áreas:', todasAreas)
+            setAreasPermitidas(todasAreas)
           } else {
             // Acesso apenas às áreas específicas
             permissoes.forEach((perm: string) => {
@@ -64,6 +76,7 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
                 }
               }
             })
+            console.log('Áreas permitidas:', areas)
             setAreasPermitidas(areas)
           }
         }
