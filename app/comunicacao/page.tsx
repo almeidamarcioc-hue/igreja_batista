@@ -303,6 +303,28 @@ export default function ComunicacaoDashboard() {
           cultoData={checklistSelecionado.cultoData}
           areaId={checklistSelecionado.areaId}
           onClose={() => setChecklistSelecionado(null)}
+          onChecklistExcluido={() => {
+            setChecklistSelecionado(null)
+            // Recarregar dados
+            if (filtroAtivo && dataInicio && dataFim) {
+              const carregarRelatorio = async () => {
+                setCarregando(true)
+                try {
+                  const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim })
+                  const resp = await fetch(`/api/comunicacao/periodo?${params.toString()}`)
+                  if (resp.ok) {
+                    const dados = await resp.json()
+                    setRelatorioPeriodo(dados)
+                  }
+                } catch (err) {
+                  console.error('Erro ao carregar relatório:', err)
+                } finally {
+                  setCarregando(false)
+                }
+              }
+              carregarRelatorio()
+            }
+          }}
         />
       )}
     </div>

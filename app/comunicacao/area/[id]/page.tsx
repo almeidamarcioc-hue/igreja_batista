@@ -180,6 +180,10 @@ export default function AreaPage() {
       if (resp.ok) {
         setFinalizado(true)
         setShowConfirmSalvar(false)
+        // Redirecionar para dashboard após 2 segundos
+        setTimeout(() => {
+          router.push('/comunicacao')
+        }, 2000)
       }
     } catch (err) {
       console.error('Erro ao salvar checklist:', err)

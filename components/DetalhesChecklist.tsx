@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
 interface ResumoPasso {
@@ -13,14 +14,18 @@ interface DetalhesChecklistProps {
   cultoData: string
   areaId: string
   onClose: () => void
+  onChecklistExcluido?: () => void
 }
 
-export default function DetalhesChecklist({ cultoData, areaId, onClose }: DetalhesChecklistProps) {
+export default function DetalhesChecklist({ cultoData, areaId, onClose, onChecklistExcluido }: DetalhesChecklistProps) {
+  const router = useRouter()
   const [detalhes, setDetalhes] = useState<{
     resumo: Record<string, ResumoPasso>
     finalizacao: any
   } | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const [showConfirmExcluir, setShowConfirmExcluir] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
 
   useEffect(() => {
     const carregarDetalhes = async () => {
@@ -42,6 +47,51 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose }: Detalh
 
     carregarDetalhes()
   }, [cultoData, areaId])
+
+  const handleEditar = async () => {
+    try {
+      const resp = await fetch('/api/comunicacao/editar-checklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          culto_data: cultoData,
+          area_id: areaId,
+        }),
+      })
+
+      if (resp.ok) {
+        const data = await resp.json()
+        onClose()
+        router.push(data.redirectUrl)
+      }
+    } catch (err) {
+      console.error('Erro ao editar:', err)
+    }
+  }
+
+  const handleExcluir = async () => {
+    setExcluindo(true)
+    try {
+      const resp = await fetch('/api/comunicacao/excluir-checklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          culto_data: cultoData,
+          area_id: areaId,
+        }),
+      })
+
+      if (resp.ok) {
+        setShowConfirmExcluir(false)
+        onClose()
+        onChecklistExcluido?.()
+      }
+    } catch (err) {
+      console.error('Erro ao excluir:', err)
+    } finally {
+      setExcluindo(false)
+    }
+  }
 
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
   if (!area) return null
@@ -71,12 +121,26 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose }: Detalh
               {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-          >
-            ×
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleEditar}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+            >
+              ✏️ Editar
+            </button>
+            <button
+              onClick={() => setShowConfirmExcluir(true)}
+              className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+            >
+              🗑️ Excluir
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <div className="p-6">
@@ -176,6 +240,35 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose }: Detalh
             </div>
           )}
         </div>
+
+        {showConfirmExcluir && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[51] p-4">
+            <div className="bg-white rounded-lg p-6 max-w-sm">
+              <h3 className="text-lg font-bold mb-4 text-red-600">
+                Excluir Checklist?
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Tem certeza que deseja excluir este checklist? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirmExcluir(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold text-sm hover:bg-gray-300"
+                  disabled={excluindo}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleExcluir}
+                  disabled={excluindo}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 disabled:opacity-50"
+                >
+                  {excluindo ? 'Excluindo...' : 'Excluir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
