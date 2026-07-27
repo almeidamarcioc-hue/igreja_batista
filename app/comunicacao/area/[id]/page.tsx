@@ -24,6 +24,8 @@ export default function AreaPage() {
   const modoVisualizacao = searchParams.get('mode') === 'view'
   const areaId = (routeParams?.id as string) || ''
 
+  console.log('🔍 AreaPage - cultoData:', cultoData, 'modoVisualizacao:', modoVisualizacao, 'areaId:', areaId)
+
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
   const [progresso, setProgresso] = useState<ProgresoPasso>({ pre: [], pos: [], total: 0, marcados: 0 })
   const [carregando, setCarregando] = useState(true)
@@ -78,9 +80,11 @@ export default function AreaPage() {
           ? `/api/comunicacao/checklist-detalhes?culto_data=${dataFormatada}&area_id=${areaId}`
           : `/api/comunicacao/progresso?culto_data=${cultoData}&area_id=${areaId}`
 
+        console.log('🔗 Chamando endpoint:', endpoint)
         const resp = await fetch(endpoint)
         if (resp.ok) {
           const dados = await resp.json()
+          console.log('📊 Dados retornados:', dados)
 
           if (modoVisualizacao && dados.resumo) {
             // Transformar resposta de checklist-detalhes para formato esperado
