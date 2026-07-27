@@ -64,14 +64,25 @@ export async function GET(req: NextRequest) {
     // Buscar dados do checklist com nome do usuário
     let passos: any[] = []
     try {
-      passos = await sql`
-        SELECT cp.passo_id, cp.marcado, cp.usuario_id, cp.data_marcacao, u.nome as usuario_nome
-        FROM checklist_progresso cp
-        LEFT JOIN usuarios u ON cp.usuario_id = u.id
-        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
-        ${!ehCoordenador ? sql`AND cp.usuario_id = ${userId}` : sql``}
-        ORDER BY cp.passo_id, cp.data_marcacao DESC
-      `
+      if (ehCoordenador) {
+        // Coordenador vê todos
+        passos = await sql`
+          SELECT cp.passo_id, cp.marcado, cp.usuario_id, cp.data_marcacao, u.nome as usuario_nome
+          FROM checklist_progresso cp
+          LEFT JOIN usuarios u ON cp.usuario_id = u.id
+          WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
+          ORDER BY cp.passo_id, cp.data_marcacao DESC
+        `
+      } else {
+        // Operador vê apenas seus
+        passos = await sql`
+          SELECT cp.passo_id, cp.marcado, cp.usuario_id, cp.data_marcacao, u.nome as usuario_nome
+          FROM checklist_progresso cp
+          LEFT JOIN usuarios u ON cp.usuario_id = u.id
+          WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId} AND cp.usuario_id = ${userId}
+          ORDER BY cp.passo_id, cp.data_marcacao DESC
+        `
+      }
     } catch (passosErr) {
       console.error('Erro ao buscar passos:', passosErr)
       passos = []
