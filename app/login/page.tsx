@@ -265,8 +265,22 @@ function LoginForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Falha ao entrar')
       flashToast(`Bem-vindo, ${data.nome}.`, 'ok')
+      // Limpar cache e revalidar dados do novo usuário
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys()
+          await Promise.all(cacheNames.map(name => caches.delete(name)))
+        } catch (e) {
+          // Ignorar se não houver suporte
+        }
+      }
+      localStorage.clear()
+      sessionStorage.clear()
       // Redirecionar para URL retornada pela API (pastor -> /pastor/agenda, outros -> /)
-      setTimeout(() => router.push(data.redirectUrl || '/'), 600)
+      setTimeout(() => {
+        router.refresh()
+        router.push(data.redirectUrl || '/')
+      }, 300)
     } catch (err: any) {
       flashToast(err?.message || 'Falha ao entrar', 'warn')
     } finally {
