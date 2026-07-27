@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         u.id, u.usuario, u.nome, u.email, u.role, u.modulos, u.perfil_id, u.ativo,
         COALESCE(p.permissoes, '[]') as permissoes
       FROM usuarios u
-      LEFT JOIN perfis p ON u.perfil_id = p.id
+      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
       WHERE u.id = ${userId}
     `
     const usuario = rows[0]
