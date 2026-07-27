@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
-import DetalhesChecklist from '@/components/DetalhesChecklist'
 
 interface Usuario {
   id: number
@@ -28,7 +27,6 @@ export default function ComunicacaoDashboard() {
   const [carregando, setCarregando] = useState(true)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
-  const [checklistSelecionado, setChecklistSelecionado] = useState<{ cultoData: string; areaId: string } | null>(null)
 
   useEffect(() => {
     const hoje = new Date().toISOString().split('T')[0]
@@ -211,7 +209,7 @@ export default function ComunicacaoDashboard() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setChecklistSelecionado({ cultoData: item.culto_data, areaId: item.area_id })}
+                    onClick={() => window.location.href = `/comunicacao/area/${item.area_id}?culto_data=${item.culto_data}&mode=view`}
                     className="px-3 py-1 rounded-lg font-semibold text-xs transition-colors hover:shadow-md"
                     style={{
                       backgroundColor: 'rgba(197, 160, 89, 0.15)',
@@ -229,35 +227,6 @@ export default function ComunicacaoDashboard() {
         </div>
       )}
 
-      {checklistSelecionado && (
-        <DetalhesChecklist
-          cultoData={checklistSelecionado.cultoData}
-          areaId={checklistSelecionado.areaId}
-          onClose={() => setChecklistSelecionado(null)}
-          onChecklistExcluido={() => {
-            setChecklistSelecionado(null)
-            // Recarregar dados
-            if (filtroAtivo && dataInicio && dataFim) {
-              const carregarRelatorio = async () => {
-                setCarregando(true)
-                try {
-                  const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim })
-                  const resp = await fetch(`/api/comunicacao/periodo?${params.toString()}`)
-                  if (resp.ok) {
-                    const dados = await resp.json()
-                    setRelatorioPeriodo(dados)
-                  }
-                } catch (err) {
-                  console.error('Erro ao carregar relatório:', err)
-                } finally {
-                  setCarregando(false)
-                }
-              }
-              carregarRelatorio()
-            }
-          }}
-        />
-      )}
     </div>
   )
 }
