@@ -33,9 +33,17 @@ const MODULOS_PERM = [
   { key: 'comunicacao', label: 'Comunicação' },
 ]
 
+const AREAS_COMUNICACAO = [
+  { key: 'transmissao-youtube', label: '📡 Transmissão YouTube', emoji: '📡' },
+  { key: 'mix-som', label: '🎚️ Mix de Som', emoji: '🎚️' },
+  { key: 'datashow', label: '📽️ Datashow', emoji: '📽️' },
+  { key: 'cameras', label: '🎥 Câmeras', emoji: '🎥' },
+  { key: 'iluminacao', label: '💡 Iluminação', emoji: '💡' },
+]
+
 const ACOES_PERM = [
   { key: 'visualizar', label: 'Visualizar' },
-  { key: 'criar', label: 'Criar' },
+  { key: 'criar', label: 'Marcar/Criar' },
   { key: 'editar', label: 'Editar' },
   { key: 'excluir', label: 'Excluir' },
 ]
@@ -514,20 +522,74 @@ export default function ConfiguracoesPage() {
                     {MODULOS_PERM.map(mod => (
                       <div key={mod.key} className="border border-gray-200 rounded-lg p-3">
                         <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">{mod.label}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {ACOES_PERM.map(acao => {
-                            const perm = `${mod.key}.${acao.key}`
-                            return (
-                              <label key={perm} className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox"
-                                  checked={formPerfil.permissoes.includes(perm)}
-                                  onChange={() => togglePerm(perm)}
-                                  className="w-4 h-4 accent-indigo-600" />
-                                <span className="text-sm text-gray-700">{acao.label}</span>
-                              </label>
-                            )
-                          })}
-                        </div>
+                        {mod.key === 'comunicacao' ? (
+                          <div className="space-y-2">
+                            <p className="text-xs text-gray-500 mb-3">Selecione as áreas que este perfil pode acessar:</p>
+                            <div className="space-y-2">
+                              {AREAS_COMUNICACAO.map(area => {
+                                const perm = `comunicacao:${area.key}`
+                                const isChecked = formPerfil.permissoes.includes(perm)
+                                return (
+                                  <div key={area.key} className="border border-gray-100 rounded p-2 bg-gray-50">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <input type="checkbox"
+                                        id={`area-${area.key}`}
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          if (isChecked) {
+                                            setFormPerfil(prev => ({
+                                              ...prev,
+                                              permissoes: prev.permissoes.filter(p => !p.startsWith(`comunicacao:${area.key}`))
+                                            }))
+                                          } else {
+                                            setFormPerfil(prev => ({
+                                              ...prev,
+                                              permissoes: [...prev.permissoes, perm]
+                                            }))
+                                          }
+                                        }}
+                                        className="w-4 h-4 accent-indigo-600" />
+                                      <label htmlFor={`area-${area.key}`} className="text-sm font-medium text-gray-700">
+                                        {area.label}
+                                      </label>
+                                    </div>
+                                    {isChecked && (
+                                      <div className="grid grid-cols-2 gap-2 ml-6">
+                                        {ACOES_PERM.map(acao => {
+                                          const fullPerm = `comunicacao:${area.key}.${acao.key}`
+                                          return (
+                                            <label key={fullPerm} className="flex items-center gap-2 cursor-pointer">
+                                              <input type="checkbox"
+                                                checked={formPerfil.permissoes.includes(fullPerm)}
+                                                onChange={() => togglePerm(fullPerm)}
+                                                className="w-3 h-3 accent-indigo-600" />
+                                              <span className="text-xs text-gray-600">{acao.label}</span>
+                                            </label>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {ACOES_PERM.map(acao => {
+                              const perm = `${mod.key}.${acao.key}`
+                              return (
+                                <label key={perm} className="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox"
+                                    checked={formPerfil.permissoes.includes(perm)}
+                                    onChange={() => togglePerm(perm)}
+                                    className="w-4 h-4 accent-indigo-600" />
+                                  <span className="text-sm text-gray-700">{acao.label}</span>
+                                </label>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
