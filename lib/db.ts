@@ -289,14 +289,29 @@ export async function initDb(): Promise<void> {
     `
   }
 
-  // Adicionar perfis de Comunicação se não existirem
-  const perfis_comm = ['Comunicação — Transmissão', 'Comunicação — Mix de Som', 'Comunicação — Datashow', 'Comunicação — Câmeras', 'Comunicação — Iluminação', 'Comunicação — Coordenador']
-  for (const nome of perfis_comm) {
-    const existe = await sql`SELECT id FROM perfis_acesso WHERE nome = ${nome}`
+  // Remover perfis de Comunicação antigos (se existirem)
+  await sql`DELETE FROM perfis_acesso WHERE nome LIKE 'Comunicação —' AND nome NOT LIKE '% (Operador)' AND nome NOT LIKE '% (Coordenador)' AND nome != 'Comunicação — Coordenador Geral'`
+
+  // Adicionar perfis de Comunicação novos com granularidade
+  const perfis_comm = [
+    { nome: 'Comunicação — Transmissão (Operador)', desc: 'Pode marcar checklist de Transmissão', perms: '["comunicacao.visualizar","comunicacao.criar"]' },
+    { nome: 'Comunicação — Transmissão (Coordenador)', desc: 'Acesso completo à Transmissão', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+    { nome: 'Comunicação — Mix de Som (Operador)', desc: 'Pode marcar checklist de Mix', perms: '["comunicacao.visualizar","comunicacao.criar"]' },
+    { nome: 'Comunicação — Mix de Som (Coordenador)', desc: 'Acesso completo ao Mix', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+    { nome: 'Comunicação — Datashow (Operador)', desc: 'Pode marcar checklist do Datashow', perms: '["comunicacao.visualizar","comunicacao.criar"]' },
+    { nome: 'Comunicação — Datashow (Coordenador)', desc: 'Acesso completo ao Datashow', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+    { nome: 'Comunicação — Câmeras (Operador)', desc: 'Pode marcar checklist de Câmeras', perms: '["comunicacao.visualizar","comunicacao.criar"]' },
+    { nome: 'Comunicação — Câmeras (Coordenador)', desc: 'Acesso completo à Câmeras', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+    { nome: 'Comunicação — Iluminação (Operador)', desc: 'Pode marcar checklist de Iluminação', perms: '["comunicacao.visualizar","comunicacao.criar"]' },
+    { nome: 'Comunicação — Iluminação (Coordenador)', desc: 'Acesso completo à Iluminação', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+    { nome: 'Comunicação — Coordenador Geral', desc: 'Visão completa de todas as áreas', perms: '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]' },
+  ]
+  for (const perfil of perfis_comm) {
+    const existe = await sql`SELECT id FROM perfis_acesso WHERE nome = ${perfil.nome}`
     if ((existe as unknown[]).length === 0) {
       await sql`
         INSERT INTO perfis_acesso (nome, descricao, permissoes, padrao)
-        VALUES (${nome}, 'Acesso ao módulo Comunicação', '["comunicacao.visualizar","comunicacao.criar","comunicacao.editar","comunicacao.excluir"]', true)
+        VALUES (${perfil.nome}, ${perfil.desc}, ${perfil.perms}, true)
       `
     }
   }
