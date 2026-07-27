@@ -24,7 +24,24 @@ export default function WorkspacePage() {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    try {
+      // Limpar cache do navegador
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+      }
+    } catch (e) {
+      // Ignorar se não houver suporte a Service Workers
+    }
+
+    // Fazer logout no servidor
+    await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' })
+
+    // Limpar localStorage e sessionStorage
+    localStorage.clear()
+    sessionStorage.clear()
+
+    // Redirecionar para login
     router.push('/login')
   }
 

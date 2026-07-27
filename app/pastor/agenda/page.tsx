@@ -143,7 +143,18 @@ export default function PastorAgendaPage() {
               <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>📅 Agenda dos Pastores</h1>
               <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Visualização mensal, semanal e diária</p>
             </div>
-            <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/pastor/login') }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: '8px 12px' }}>Sair</button>
+            <button onClick={async () => {
+              try {
+                if ('caches' in window) {
+                  const cacheNames = await caches.keys()
+                  await Promise.all(cacheNames.map(name => caches.delete(name)))
+                }
+              } catch (e) {}
+              await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' })
+              localStorage.clear()
+              sessionStorage.clear()
+              router.push('/pastor/login')
+            }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: '8px 12px' }}>Sair</button>
           </div>
 
           {/* Controles */}
