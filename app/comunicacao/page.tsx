@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import DetalhesChecklist from '@/components/DetalhesChecklist'
 
 interface Usuario {
   id: number
@@ -27,6 +28,7 @@ export default function ComunicacaoDashboard() {
   const [carregando, setCarregando] = useState(true)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
+  const [checklistSelecionado, setChecklistSelecionado] = useState<{ cultoData: string; areaId: string } | null>(null)
 
   useEffect(() => {
     const hoje = new Date().toISOString().split('T')[0]
@@ -197,7 +199,12 @@ export default function ComunicacaoDashboard() {
             const percentual = item.total > 0 ? Math.round((item.marcados / item.total) * 100) : 0
 
             return (
-              <div key={`${item.culto_data}-${item.area_id}`} className="bg-white rounded-lg shadow-md p-4 border-l-4" style={{ borderColor: area.cor }}>
+              <button
+                key={`${item.culto_data}-${item.area_id}`}
+                onClick={() => setChecklistSelecionado({ cultoData: item.culto_data, areaId: item.area_id })}
+                className="w-full text-left bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow"
+                style={{ borderColor: area.cor }}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -221,8 +228,9 @@ export default function ComunicacaoDashboard() {
                       <p className="text-xs text-gray-500 mt-1">{item.marcados} de {item.total} passos</p>
                     </div>
                   </div>
+                  <div className="ml-4 text-gray-400 text-lg">👁️</div>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -288,6 +296,14 @@ export default function ComunicacaoDashboard() {
             )
           })}
         </div>
+      )}
+
+      {checklistSelecionado && (
+        <DetalhesChecklist
+          cultoData={checklistSelecionado.cultoData}
+          areaId={checklistSelecionado.areaId}
+          onClose={() => setChecklistSelecionado(null)}
+        />
       )}
     </div>
   )
