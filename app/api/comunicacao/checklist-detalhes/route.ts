@@ -18,20 +18,18 @@ export async function GET(req: NextRequest) {
   try {
     const sql = getDb()
 
-    // Buscar detalhes de todos os passos do checklist
+    // Buscar último status de cada passo
     const passos = await sql`
-      SELECT
+      SELECT DISTINCT ON (passo_id)
         cp.passo_id,
         cp.marcado,
         cp.usuario_id,
         u.nome as usuario_nome,
-        cp.data_marcacao,
-        MAX(CASE WHEN cp.marcado = true THEN cp.data_marcacao END) as data_finalizacao
+        cp.data_marcacao
       FROM checklist_progresso cp
       LEFT JOIN usuarios u ON cp.usuario_id = u.id
       WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
-      GROUP BY cp.passo_id, cp.marcado, cp.usuario_id, u.nome, cp.data_marcacao
-      ORDER BY cp.passo_id
+      ORDER BY cp.passo_id, cp.data_marcacao DESC
     `
 
     // Buscar quem finalizou o checklist
@@ -45,16 +43,14 @@ export async function GET(req: NextRequest) {
       WHERE cf.culto_data = ${cultoData} AND cf.area_id = ${areaId}
     `
 
-    // Resumo: pegar o último status de cada passo
+    // Montar resumo
     const resumo: Record<string, { marcado: boolean; usuario_nome: string; data_marcacao: string }> = {}
 
     passos.forEach((passo: any) => {
-      if (!resumo[passo.passo_id] || new Date(passo.data_marcacao) > new Date(resumo[passo.passo_id].data_marcacao)) {
-        resumo[passo.passo_id] = {
-          marcado: passo.marcado,
-          usuario_nome: passo.usuario_nome || 'Desconhecido',
-          data_marcacao: passo.data_marcacao
-        }
+      resumo[passo.passo_id] = {
+        marcado: passo.marcado,
+        usuario_nome: passo.usuario_nome || 'Desconhecido',
+        data_marcacao: passo.data_marcacao
       }
     })
 

@@ -180,10 +180,6 @@ export default function AreaPage() {
       if (resp.ok) {
         setFinalizado(true)
         setShowConfirmSalvar(false)
-        // Gerar e exportar automaticamente
-        setTimeout(() => {
-          handleExportar()
-        }, 500)
       }
     } catch (err) {
       console.error('Erro ao salvar checklist:', err)
