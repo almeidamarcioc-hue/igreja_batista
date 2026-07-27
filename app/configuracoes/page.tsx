@@ -67,10 +67,12 @@ const MODULOS_OPTS = [
   { value: 'secretaria', label: 'Secretaria' },
   { value: 'educacional', label: 'Educacional' },
   { value: 'financeiro', label: 'Financeiro' },
+  { value: 'comunicacao', label: 'Comunicação' },
   { value: 'secretaria,educacional', label: 'Secretaria + Educacional' },
   { value: 'secretaria,financeiro', label: 'Secretaria + Financeiro' },
   { value: 'educacional,financeiro', label: 'Educacional + Financeiro' },
-  { value: 'secretaria,educacional,financeiro', label: 'Todos' },
+  { value: 'secretaria,educacional,financeiro', label: 'Secretaria + Educacional + Financeiro' },
+  { value: 'secretaria,educacional,financeiro,comunicacao', label: 'Todos (com Comunicação)' },
 ]
 
 const emptyUser = { usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'secretaria', perfil_id: null as number | null, ativo: true }
