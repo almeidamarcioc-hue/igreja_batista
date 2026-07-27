@@ -40,13 +40,14 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
           const dados = await resp.json()
           setDetalhes(dados)
           // Se chegou aqui, tem no mínimo permissão de operador
-          // Verificar se é coordenador
+          // Verificar se é coordenador ou admin
           const userResp = await fetch('/api/auth/me')
           if (userResp.ok) {
             const user = await userResp.json()
+            const ehAdmin = user.role === 'admin'
             const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
             const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
-            setPermissaoCoordenador(ehCoordenador)
+            setPermissaoCoordenador(ehAdmin || ehCoordenador)
           }
         } else if (resp.status === 403) {
           setErro403(true)
