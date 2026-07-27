@@ -21,6 +21,7 @@ export default function AreaPage() {
   const routeParams = useParams()
   const router = useRouter()
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
+  const modoVisualizacao = searchParams.get('mode') === 'view'
   const areaId = (routeParams?.id as string) || ''
 
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
@@ -113,6 +114,7 @@ export default function AreaPage() {
   }
 
   const handleMarcaPasso = async (passoId: string, marcado: boolean) => {
+    if (modoVisualizacao) return
     setSalvando(passoId)
     try {
       await fetch('/api/comunicacao/progresso', {
@@ -301,6 +303,7 @@ export default function AreaPage() {
             salvando={salvando}
             onMarcaPasso={handleMarcaPasso}
             cor={area.cor}
+            desabilitado={modoVisualizacao}
           />
 
           {/* DURANTE */}
@@ -319,6 +322,7 @@ export default function AreaPage() {
             salvando={salvando}
             onMarcaPasso={handleMarcaPasso}
             cor={area.cor}
+            desabilitado={modoVisualizacao}
           />
 
           {/* TROUBLESHOOTING */}
@@ -342,7 +346,15 @@ export default function AreaPage() {
 
           {/* AÇÕES */}
           <div className="bg-white rounded-lg shadow p-6 flex gap-3 flex-wrap">
-            {!finalizado && (
+            {modoVisualizacao && (
+              <button
+                onClick={() => router.push(`/comunicacao/area/${areaId}?culto_data=${cultoData}`)}
+                className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200"
+              >
+                ✏️ Editar
+              </button>
+            )}
+            {!finalizado && !modoVisualizacao && (
               <button
                 onClick={() => setShowConfirmSalvar(true)}
                 disabled={salvandoChecklist}
@@ -368,7 +380,7 @@ export default function AreaPage() {
             >
               📥 Exportar checklist
             </button>
-            {!finalizado && (
+            {!finalizado && !modoVisualizacao && (
               <button
                 onClick={() => setShowConfirm(true)}
                 className="px-6 py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
@@ -464,9 +476,10 @@ interface BlocoChecklistProps {
   salvando: string | null
   onMarcaPasso: (passoId: string, marcado: boolean) => void
   cor: string
+  desabilitado?: boolean
 }
 
-function BlocoChecklist({ titulo, passos, progresso, percentual, salvando, onMarcaPasso, cor }: BlocoChecklistProps) {
+function BlocoChecklist({ titulo, passos, progresso, percentual, salvando, onMarcaPasso, cor, desabilitado }: BlocoChecklistProps) {
   const marcados = progresso.filter(p => p.marcado).length
 
   return (
@@ -495,12 +508,13 @@ function BlocoChecklist({ titulo, passos, progresso, percentual, salvando, onMar
             <button
               key={passo.id}
               onClick={() => onMarcaPasso(passo.id, progPasso.marcado)}
-              disabled={salvando === passo.id}
+              disabled={salvando === passo.id || desabilitado}
               className="w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all hover:shadow-md"
               style={{
                 borderColor: progPasso.marcado ? cor : '#e5e7eb',
                 backgroundColor: progPasso.marcado ? `${cor}15` : '#fff',
-                opacity: salvando === passo.id ? 0.6 : 1,
+                opacity: salvando === passo.id || desabilitado ? 0.6 : 1,
+                cursor: desabilitado ? 'not-allowed' : 'pointer',
               }}
             >
               <div

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
-import DetalhesChecklist from '@/components/DetalhesChecklist'
 
 interface ChecklistItem {
   culto_data: string
@@ -20,7 +19,6 @@ export default function AreaHistoricoPage() {
 
   const [checklists, setChecklists] = useState<ChecklistItem[]>([])
   const [carregando, setCarregando] = useState(true)
-  const [checklistSelecionado, setChecklistSelecionado] = useState<string | null>(null)
   const [showNovoModal, setShowNovoModal] = useState(false)
   const [novaData, setNovaData] = useState<string>(new Date().toISOString().split('T')[0])
 
@@ -110,7 +108,7 @@ export default function AreaHistoricoPage() {
             return (
               <button
                 key={checklist.culto_data}
-                onClick={() => setChecklistSelecionado(checklist.culto_data)}
+                onClick={() => router.push(`/comunicacao/area/${areaId}?culto_data=${checklist.culto_data}&mode=view`)}
                 className="w-full text-left bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow"
                 style={{ borderColor: area.cor }}
               >
@@ -190,19 +188,6 @@ export default function AreaHistoricoPage() {
         </div>
       )}
 
-      {/* Modal: Visualizar Checklist */}
-      {checklistSelecionado && (
-        <DetalhesChecklist
-          cultoData={checklistSelecionado}
-          areaId={areaId}
-          onClose={() => setChecklistSelecionado(null)}
-          onChecklistExcluido={() => {
-            setChecklistSelecionado(null)
-            // Recarregar
-            window.location.reload()
-          }}
-        />
-      )}
     </div>
   )
 }
