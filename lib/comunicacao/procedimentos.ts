@@ -230,24 +230,42 @@ export const PROCEDIMENTOS: Procedimentos = {
 
     /* =====================================================================
        ÁREA 5 — ILUMINAÇÃO (Lumikit / cena de palco)
-       ⚠️ SEM MATERIAL BASE. Área criada como PENDENTE, aguardando o time
-       fornecer o passo a passo. NÃO invente procedimentos.
+       Fonte: Checklist Igreja (Iluminação)
     ===================================================================== */
     {
       id: 'iluminacao',
       nome: 'Iluminação',
       icone: '💡',
       cor: '#a855f7',
-      responsavelSugerido: '',
+      responsavelSugerido: 'Operador de Iluminação',
       chegadaAntecedencia: '',
       dependencias: 'Observação: o canhão de luzes compartilha os 4 disjuntores ligados pela equipe do Datashow.',
-      observacoes: '',
-      pendente: true,
-      pendenteMensagem: 'Ainda não há procedimento de iluminação (Lumikit) documentado. Assim que o time definir o passo a passo, preencha as fases desta área no arquivo procedimentos.ts.',
+      observacoes: 'Fundamentos: reverência, sincronização com o louvor, atenção ao pastor para sinais de mudança de fase.',
       fases: {
-        pre: [],
-        operacao: [],
-        pos: [],
+        pre: [
+          { id: 'ilum-pre-01', titulo: 'Ligar a luz da cruz', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pre-02', titulo: 'Ligar notebook (certificar que está ligado na tomada)', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pre-03', titulo: 'Ligar aparelho do Lumikit', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pre-04', titulo: 'Abrir programa do Lumikit no desktop', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pre-05', titulo: 'Testar luzes', descricao: 'Verificar se todas as luzes estão respondendo corretamente.', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pre-06', titulo: 'Ligar aparelho da fumaça', descricao: '', aviso: '', imagem: '', critico: false },
+          { id: 'ilum-pre-07', titulo: 'Participar do momento de oração', descricao: 'Conforme horário combinado (15 min antes do culto).', aviso: '', imagem: '', critico: false },
+        ],
+        operacao: [
+          { id: 'ilum-op-01', titulo: 'Ao iniciar o culto: dar blackout e desligar luz geral', descricao: 'Momento dos vídeos de abertura no telão.', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-op-02', titulo: 'Após vídeos de abertura: ligar luzes', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-op-03', titulo: 'Durante o louvor: ligar luzes coloridas e alternar conforme a música', descricao: 'Acompanhar o ritmo das mudanças de canção.', aviso: '', imagem: '', critico: false },
+          { id: 'ilum-op-04', titulo: 'Usar Movings: apenas com fumaça em todo o palco', descricao: 'Preferência: deixar cor BRANCA.', aviso: '', imagem: '', critico: false },
+          { id: 'ilum-op-05', titulo: 'Quando o pastor subir (após o louvor)', descricao: 'Atenção: ele costuma fazer apelos. Manter luzes coloridas e desligar luz geral da igreja.', aviso: '⚠️ Estar atento aos sinais do pastor', imagem: '', critico: false },
+          { id: 'ilum-op-06', titulo: 'Início da ministração: manter luz branca', descricao: 'Após finalizar o louvor e apelo.', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-op-07', titulo: 'Ao ouvir "baixe sua fronte"', descricao: 'Sinal do pastor no encerramento do culto.', aviso: 'Desligar luz geral e deixar apenas luz branca.', imagem: '', critico: true },
+        ],
+        pos: [
+          { id: 'ilum-pos-01', titulo: 'Desligar computador', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pos-02', titulo: 'Desligar aparelho do Lumikit', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pos-03', titulo: 'Tirar aparelho da tomada', descricao: '', aviso: '', imagem: '', critico: true },
+          { id: 'ilum-pos-04', titulo: 'Ir ao disjuntor e desligar', descricao: 'Desligar os disjuntores da iluminação.', aviso: '', imagem: '', critico: true },
+        ],
       },
       troubleshooting: [],
     },

@@ -20,10 +20,7 @@ export default function AreaPage() {
   const searchParams = useSearchParams()
   const routeParams = useParams()
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
-  const areaId = routeParams?.id as string || ''
-
-  console.log('AreaPage: areaId=', areaId)
-  console.log('PROCEDIMENTOS.areas ids:', PROCEDIMENTOS.areas.map(a => a.id))
+  const areaId = (routeParams?.id as string) || ''
 
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
   const [progresso, setProgresso] = useState<ProgresoPasso>({ pre: [], pos: [], total: 0, marcados: 0 })
@@ -32,6 +29,8 @@ export default function AreaPage() {
   const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
+    if (!areaId || !cultoData) return
+
     const carregarProgresso = async () => {
       setCarregando(true)
       try {
@@ -111,262 +110,277 @@ export default function AreaPage() {
     }
   }
 
+  const handleExportar = () => {
+    const dataFormatada = new Date(cultoData).toLocaleDateString('pt-BR')
+    const conteudo = gerarTextoChecklist()
+    const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${area.nome}_${cultoData}.txt`
+    link.click()
+  }
+
+  const gerarTextoChecklist = () => {
+    const dataFormatada = new Date(cultoData).toLocaleDateString('pt-BR')
+    let texto = `CHECKLIST — ${area.nome.toUpperCase()}\n`
+    texto += `Culto: ${dataFormatada}\n`
+    texto += `${'='.repeat(60)}\n\n`
+
+    if (area.responsavelSugerido) {
+      texto += `Responsável: ${area.responsavelSugerido}\n`
+    }
+    if (area.chegadaAntecedencia) {
+      texto += `Chegada: ${area.chegadaAntecedencia} antes\n`
+    }
+    if (area.responsavelSugerido || area.chegadaAntecedencia) {
+      texto += '\n'
+    }
+
+    // ANTES
+    texto += `ANTES DE INICIAR\n${'-'.repeat(60)}\n`
+    area.fases.pre.forEach((passo, idx) => {
+      const marcado = progresso.pre.find(p => p.id === passo.id)?.marcado
+      const simbolo = marcado ? '[✓]' : '[ ]'
+      texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
+      if (passo.descricao) texto += `    ${passo.descricao}\n`
+    })
+    texto += '\n'
+
+    // DURANTE
+    texto += `DURANTE (GUIA DE CONSULTA)\n${'-'.repeat(60)}\n`
+    area.fases.operacao.forEach((passo, idx) => {
+      const simbolo = passo.critico ? '[ATENÇÃO]' : '▸'
+      texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
+      if (passo.descricao) texto += `    ${passo.descricao}\n`
+    })
+    texto += '\n'
+
+    // DEPOIS
+    texto += `DEPOIS DE FINALIZAR\n${'-'.repeat(60)}\n`
+    area.fases.pos.forEach((passo, idx) => {
+      const marcado = progresso.pos.find(p => p.id === passo.id)?.marcado
+      const simbolo = marcado ? '[✓]' : '[ ]'
+      texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
+      if (passo.descricao) texto += `    ${passo.descricao}\n`
+    })
+
+    return texto
+  }
+
   const percentualPre = progresso.pre.length > 0 ? Math.round((progresso.pre.filter(p => p.marcado).length / progresso.pre.length) * 100) : 0
   const percentualPos = progresso.pos.length > 0 ? Math.round((progresso.pos.filter(p => p.marcado).length / progresso.pos.length) * 100) : 0
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
+    <div className="max-w-4xl mx-auto pb-12">
+      {/* CABEÇALHO */}
+      <div className="mb-8 bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-4 mb-4">
-          <span className="text-4xl">{area.icone}</span>
+          <span className="text-5xl">{area.icone}</span>
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: '#002347' }}>{area.nome}</h1>
-            <p className="text-sm text-gray-600 mt-1">Culto: {cultoData}</p>
+            <h1 className="text-4xl font-bold" style={{ color: '#002347' }}>
+              {area.nome}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded p-4 mt-4">
-          <p className="text-sm text-gray-700">
-            <span className="font-semibold" style={{ color: area.cor }}>Responsável sugerido:</span> {area.responsavelSugerido || '—'}
-            {area.chegadaAntecedencia && ` | Chegada: ${area.chegadaAntecedencia} antes`}
+        {area.responsavelSugerido && (
+          <p className="text-sm text-gray-700 mb-2">
+            <span className="font-semibold">👤 Responsável:</span> {area.responsavelSugerido}
           </p>
-          {area.dependencias && (
-            <p className="text-xs text-gray-600 mt-2">
-              <span className="font-semibold">Dependências:</span> {area.dependencias}
-            </p>
-          )}
-        </div>
+        )}
+        {area.chegadaAntecedencia && (
+          <p className="text-sm text-gray-700 mb-2">
+            <span className="font-semibold">⏰ Chegada:</span> {area.chegadaAntecedencia} antes
+          </p>
+        )}
+        {area.dependencias && (
+          <p className="text-sm text-gray-700">
+            <span className="font-semibold">🔗 Dependências:</span> {area.dependencias}
+          </p>
+        )}
       </div>
 
-      {area.pendente ? (
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-8 text-center">
-          <p className="text-4xl mb-4">⏳</p>
-          <h2 className="text-xl font-bold mb-2" style={{ color: '#002347' }}>Área Pendente</h2>
-          <p className="text-gray-700 mb-4">{area.pendenteMensagem}</p>
-          <p className="text-sm text-gray-600">Entre em contato com o coordenador de comunicação quando o procedimento estiver documentado.</p>
-        </div>
-      ) : carregando ? (
+      {carregando ? (
         <div className="text-center py-12">
           <p className="text-gray-500">Carregando...</p>
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold" style={{ color: '#002347' }}>Progresso geral</h2>
-              <span className="text-2xl font-bold" style={{ color: area.cor }}>
-                {progresso.marcados} / {progresso.total}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="h-3 rounded-full transition-all"
-                style={{
-                  width: `${progresso.total > 0 ? Math.round((progresso.marcados / progresso.total) * 100) : 0}%`,
-                  backgroundColor: area.cor,
-                }}
-              />
-            </div>
-          </div>
-
           {/* ANTES DE INICIAR */}
-          <div className="mb-8">
-            <BlocoFase
-              titulo="ANTES DE INICIAR"
-              subtitulo="Checklist pré-transmissão (marcável)"
-              passos={area.fases.pre}
-              progresso={progresso.pre}
-              areaId={areaId}
-              salvando={salvando}
-              onMarcaPasso={handleMarcaPasso}
-              area={area}
-              cor={area.cor}
-            />
-          </div>
+          <BlocoChecklist
+            titulo="✅ ANTES DE INICIAR"
+            passos={area.fases.pre}
+            progresso={progresso.pre}
+            percentual={percentualPre}
+            salvando={salvando}
+            onMarcaPasso={handleMarcaPasso}
+            cor={area.cor}
+          />
 
           {/* DURANTE */}
-          <div className="mb-8">
-            <BlocoFaseConsulta
-              titulo="DURANTE"
-              subtitulo="Guia de consulta (não marcável — ao vivo não há o que marcar)"
-              passos={area.fases.operacao}
-              area={area}
-              cor={area.cor}
-            />
-          </div>
+          <BlocoGuia
+            titulo="▸ DURANTE (GUIA DE CONSULTA)"
+            passos={area.fases.operacao}
+            cor={area.cor}
+          />
 
-          {/* DEPOIS DE FINALIZAR */}
-          <div className="mb-8">
-            <BlocoFase
-              titulo="DEPOIS DE FINALIZAR"
-              subtitulo="Checklist pós-transmissão (marcável)"
-              passos={area.fases.pos}
-              progresso={progresso.pos}
-              areaId={areaId}
-              salvando={salvando}
-              onMarcaPasso={handleMarcaPasso}
-              area={area}
-              cor={area.cor}
-            />
-          </div>
+          {/* DEPOIS */}
+          <BlocoChecklist
+            titulo="🏁 DEPOIS DE FINALIZAR"
+            passos={area.fases.pos}
+            progresso={progresso.pos}
+            percentual={percentualPos}
+            salvando={salvando}
+            onMarcaPasso={handleMarcaPasso}
+            cor={area.cor}
+          />
 
           {/* TROUBLESHOOTING */}
-          <div className="mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-bold mb-4" style={{ color: '#002347' }}>🔧 Troubleshooting</h2>
-              {area.troubleshooting && area.troubleshooting.length > 0 ? (
-                <div className="space-y-4">
-                  {area.troubleshooting.map((item, idx) => (
-                    <div key={idx} className="border-l-4 pl-4" style={{ borderColor: area.cor }}>
-                      <p className="font-semibold text-sm" style={{ color: area.cor }}>❓ {item.problema}</p>
-                      <p className="text-sm text-gray-700 mt-1">{item.solucao}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Nenhum item de troubleshooting cadastrado ainda.</p>
-              )}
+          {area.troubleshooting && area.troubleshooting.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4" style={{ color: '#002347' }}>
+                🔧 Troubleshooting
+              </h2>
+              <div className="space-y-3">
+                {area.troubleshooting.map((item, idx) => (
+                  <div key={idx} className="border-l-4 pl-4" style={{ borderColor: area.cor }}>
+                    <p className="font-semibold text-sm" style={{ color: area.cor }}>
+                      ❓ {item.problema}
+                    </p>
+                    <p className="text-sm text-gray-700 mt-1">{item.solucao}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* BOTÃO REINICIAR */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          {/* AÇÕES */}
+          <div className="bg-white rounded-lg shadow p-6 flex gap-3 flex-wrap">
+            <button
+              onClick={handleExportar}
+              className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
+              style={{ backgroundColor: area.cor, color: '#fff' }}
+            >
+              📥 Exportar checklist
+            </button>
             <button
               onClick={() => setShowConfirm(true)}
-              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
+              className="px-6 py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
             >
-              🔄 Reiniciar checklist desta área
+              🔄 Reiniciar
             </button>
-            <p className="text-xs text-gray-600 mt-2">Isso apagará toda a marcação desta área para este culto apenas.</p>
+          </div>
 
-            {showConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg p-6 max-w-sm">
-                  <h3 className="text-lg font-bold mb-4" style={{ color: '#002347' }}>Tem certeza?</h3>
-                  <p className="text-gray-700 mb-6">Você está prestes a reiniciar a marcação desta área. Essa ação não pode ser desfeita.</p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setShowConfirm(false)}
-                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold text-sm hover:bg-gray-300"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleReiniciar}
-                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700"
-                    >
-                      Reiniciar
-                    </button>
-                  </div>
+          {showConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg p-6 max-w-sm">
+                <h3 className="text-lg font-bold mb-4" style={{ color: '#002347' }}>
+                  Tem certeza?
+                </h3>
+                <p className="text-gray-700 mb-6">Isso vai reiniciar toda a marcação desta área para este culto.</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold text-sm hover:bg-gray-300"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleReiniciar}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700"
+                  >
+                    Reiniciar
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
     </div>
   )
 }
 
-interface BlocoFaseProps {
+interface BlocoChecklistProps {
   titulo: string
-  subtitulo: string
   passos: any[]
   progresso: PassoComMarcacao[]
-  areaId: string
+  percentual: number
   salvando: string | null
   onMarcaPasso: (passoId: string, marcado: boolean) => void
-  area: any
   cor: string
 }
 
-function BlocoFase({ titulo, subtitulo, passos, progresso, salvando, onMarcaPasso, area, cor }: BlocoFaseProps) {
+function BlocoChecklist({ titulo, passos, progresso, percentual, salvando, onMarcaPasso, cor }: BlocoChecklistProps) {
   const marcados = progresso.filter(p => p.marcado).length
-  const percentual = passos.length > 0 ? Math.round((marcados / passos.length) * 100) : 0
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold" style={{ color: '#002347' }}>{titulo}</h2>
-        <span className="text-sm font-semibold" style={{ color: cor }}>{marcados}/{passos.length}</span>
+    <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold" style={{ color: '#002347' }}>
+          {titulo}
+        </h2>
+        <span className="text-sm font-semibold" style={{ color: cor }}>
+          {marcados} / {passos.length}
+        </span>
       </div>
-      <p className="text-xs text-gray-600 mb-4">{subtitulo}</p>
 
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
         <div
           className="h-2 rounded-full transition-all"
           style={{ width: `${percentual}%`, backgroundColor: cor }}
         />
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {passos.map((passo, idx) => {
           const progPasso = progresso.find(p => p.id === passo.id) || { id: passo.id, marcado: false }
-          const esCritico = passo.critico
 
           return (
-            <div
+            <button
               key={passo.id}
-              className="flex items-start gap-3 p-3 rounded-lg border-2 transition-all"
+              onClick={() => onMarcaPasso(passo.id, progPasso.marcado)}
+              disabled={salvando === passo.id}
+              className="w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all hover:shadow-md"
               style={{
                 borderColor: progPasso.marcado ? cor : '#e5e7eb',
                 backgroundColor: progPasso.marcado ? `${cor}15` : '#fff',
-                opacity: progPasso.marcado ? 0.7 : 1,
+                opacity: salvando === passo.id ? 0.6 : 1,
               }}
             >
-              <button
-                onClick={() => onMarcaPasso(passo.id, progPasso.marcado)}
-                disabled={salvando === passo.id}
-                className="flex-shrink-0 mt-1 w-6 h-6 rounded-md border-2 flex items-center justify-center font-bold text-sm transition-all"
+              <div
+                className="flex-shrink-0 mt-0.5 w-6 h-6 rounded border-2 flex items-center justify-center font-bold text-sm flex-center"
                 style={{
                   borderColor: progPasso.marcado ? cor : '#d1d5db',
                   backgroundColor: progPasso.marcado ? cor : '#fff',
                   color: progPasso.marcado ? '#fff' : '#000',
-                  cursor: salvando === passo.id ? 'not-allowed' : 'pointer',
-                  opacity: salvando === passo.id ? 0.6 : 1,
                 }}
               >
-                {salvando === passo.id ? '...' : progPasso.marcado ? '✓' : ''}
-              </button>
+                {progPasso.marcado ? '✓' : ''}
+              </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2">
-                  <p
-                    className="font-semibold text-sm"
-                    style={{
-                      color: '#002347',
-                      textDecoration: progPasso.marcado ? 'line-through' : 'none',
-                    }}
-                  >
-                    {`${idx + 1}.`} {passo.titulo}
-                  </p>
-                  {esCritico && (
-                    <span
-                      className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-bold text-white"
-                      style={{ backgroundColor: cor }}
-                    >
-                      ⚠️ Crítico
-                    </span>
-                  )}
-                </div>
-
+                <p
+                  className="font-semibold text-sm leading-tight"
+                  style={{
+                    color: '#002347',
+                    textDecoration: progPasso.marcado ? 'line-through' : 'none',
+                  }}
+                >
+                  {idx + 1}. {passo.titulo}
+                </p>
                 {passo.descricao && (
                   <p className="text-xs text-gray-600 mt-1">{passo.descricao}</p>
                 )}
-
                 {passo.aviso && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mt-2">
-                    <p className="text-xs text-yellow-800">{passo.aviso}</p>
-                  </div>
-                )}
-
-                {passo.imagem && (
-                  <div className="mt-2">
-                    <ImgPreview src={passo.imagem} alt={passo.titulo} />
-                  </div>
+                  <p className="text-xs text-yellow-700 mt-1 font-semibold">⚠️ {passo.aviso}</p>
                 )}
               </div>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -374,100 +388,46 @@ function BlocoFase({ titulo, subtitulo, passos, progresso, salvando, onMarcaPass
   )
 }
 
-interface BlocoFaseConsultaProps {
+interface BlocoGuiaProps {
   titulo: string
-  subtitulo: string
   passos: any[]
-  area: any
   cor: string
 }
 
-function BlocoFaseConsulta({ titulo, subtitulo, passos, area, cor }: BlocoFaseConsultaProps) {
+function BlocoGuia({ titulo, passos, cor }: BlocoGuiaProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6" style={{ borderLeft: `4px solid ${cor}` }}>
-      <div className="mb-2">
-        <h2 className="text-lg font-bold" style={{ color: '#002347' }}>{titulo}</h2>
-        <p className="text-xs text-gray-600 mt-1">{subtitulo}</p>
-      </div>
+    <div className="bg-white rounded-lg shadow p-6 mb-6" style={{ borderLeft: `5px solid ${cor}` }}>
+      <h2 className="text-xl font-bold mb-4" style={{ color: '#002347' }}>
+        {titulo}
+      </h2>
 
-      <div className="bg-blue-50 border border-blue-200 rounded p-3 my-4">
+      <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
         <p className="text-xs text-blue-800">
-          <span className="font-semibold">💡 Dica:</span> Esta é uma guia de consulta. Os itens aqui NÃO são marcáveis.
+          <span className="font-semibold">💡 Dica:</span> Esta é uma guia de consulta rápida. Os itens aqui não são marcáveis.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {passos.map((passo, idx) => (
-          <div
-            key={passo.id}
-            className="flex items-start gap-3 p-3 rounded-lg border-2 border-gray-200 bg-gray-50"
-          >
-            <span className="flex-shrink-0 mt-1 font-bold text-sm" style={{ color: cor }}>
-              ▸
+          <div key={passo.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <span className="flex-shrink-0 mt-0.5 font-bold text-sm" style={{ color: cor }}>
+              {passo.critico ? '⚠️' : '▸'}
             </span>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-2">
-                <p className="font-semibold text-sm" style={{ color: '#002347' }}>
-                  {`${idx + 1}.`} {passo.titulo}
-                </p>
-                {passo.critico && (
-                  <span className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: cor }}>
-                    ATENÇÃO
-                  </span>
-                )}
-              </div>
-
+              <p className="font-semibold text-sm" style={{ color: '#002347' }}>
+                {idx + 1}. {passo.titulo}
+              </p>
               {passo.descricao && (
                 <p className="text-xs text-gray-600 mt-1">{passo.descricao}</p>
               )}
-
               {passo.aviso && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mt-2">
-                  <p className="text-xs text-yellow-800">{passo.aviso}</p>
-                </div>
-              )}
-
-              {passo.imagem && (
-                <div className="mt-2">
-                  <ImgPreview src={passo.imagem} alt={passo.titulo} />
-                </div>
+                <p className="text-xs text-yellow-700 mt-1 font-semibold">⚠️ {passo.aviso}</p>
               )}
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
-}
-
-function ImgPreview({ src, alt }: { src: string; alt: string }) {
-  const [expanded, setExpanded] = useState(false)
-
-  return (
-    <>
-      <button
-        onClick={() => setExpanded(true)}
-        className="inline-block mt-2 max-w-xs rounded-lg border-2 border-gray-300 overflow-hidden hover:shadow-lg transition-shadow"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className="w-full h-auto" style={{ maxHeight: '150px', objectFit: 'cover' }} />
-      </button>
-
-      {expanded && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setExpanded(false)}>
-          <div className="bg-white rounded-lg p-4 max-w-2xl max-h-96 overflow-auto" onClick={(e) => e.stopPropagation()}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt={alt} className="w-full h-auto" />
-            <button
-              onClick={() => setExpanded(false)}
-              className="mt-4 px-4 py-2 bg-gray-200 rounded-lg font-semibold text-sm hover:bg-gray-300 w-full"
-            >
-              Fechar
-            </button>
-          </div>
-        </div>
-      )}
-    </>
   )
 }
