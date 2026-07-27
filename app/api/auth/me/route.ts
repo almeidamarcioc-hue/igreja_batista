@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { getUsuario } from '@/lib/db'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value
@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   if (!usuario) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
 
   const response = NextResponse.json(usuario)
-  response.headers.set('Cache-Control', 'private, max-age=60')
+  // Dados de sessão não devem ser cacheados - forçar revalidação a cada requisição
+  response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
   return response
 }
