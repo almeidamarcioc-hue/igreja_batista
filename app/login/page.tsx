@@ -276,11 +276,14 @@ function LoginForm() {
       }
       localStorage.clear()
       sessionStorage.clear()
-      // Redirecionar para URL retornada pela API (pastor -> /pastor/agenda, outros -> /)
+
+      // Aguardar e fazer refresh + push
       setTimeout(() => {
         router.refresh()
-        router.push(data.redirectUrl || '/')
-      }, 300)
+        setTimeout(() => {
+          router.push(data.redirectUrl || '/')
+        }, 500)
+      }, 100)
     } catch (err: any) {
       flashToast(err?.message || 'Falha ao entrar', 'warn')
     } finally {

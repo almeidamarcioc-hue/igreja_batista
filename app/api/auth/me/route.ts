@@ -27,9 +27,10 @@ export async function GET(req: NextRequest) {
 
     const response = NextResponse.json(usuario)
     // Dados de sessão não devem ser cacheados - forçar revalidação a cada requisição
-    response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate, proxy-revalidate')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+    response.headers.set('ETag', `user-${usuario.id}-${Date.now()}`)
     return response
   } catch (err: any) {
     console.error('Erro ao buscar usuário:', err)
