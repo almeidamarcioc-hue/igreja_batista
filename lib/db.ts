@@ -327,6 +327,8 @@ export async function initDb(): Promise<void> {
     )
   `
 
+  await sql`ALTER TABLE carousel_slides ADD COLUMN IF NOT EXISTS imagem_fundo TEXT NOT NULL DEFAULT ''`
+
   const slidesExistentes = await sql`SELECT COUNT(*) AS cnt FROM carousel_slides`
   if (Number((slidesExistentes[0] as { cnt: string }).cnt) === 0) {
     await sql`
