@@ -172,7 +172,7 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
             <p className="text-center text-gray-500">Carregando detalhes...</p>
           ) : erro403 ? (
             <p className="text-center text-red-600 py-12">Você não tem permissão para visualizar este checklist.</p>
-          ) : !detalhes || Object.keys(detalhes.resumo).length === 0 ? (
+          ) : !detalhes ? (
             <p className="text-center text-gray-500 py-12">Nenhum dado disponível.</p>
           ) : (
             <div className="space-y-6">
