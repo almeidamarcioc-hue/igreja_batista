@@ -30,6 +30,7 @@ const MODULOS_PERM = [
   { key: 'secretaria', label: 'Secretaria' },
   { key: 'educacional', label: 'Educacional' },
   { key: 'financeiro', label: 'Financeiro' },
+  { key: 'comunicacao', label: 'Comunicação' },
 ]
 
 const ACOES_PERM = [
