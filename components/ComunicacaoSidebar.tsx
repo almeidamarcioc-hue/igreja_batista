@@ -5,6 +5,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
+interface Usuario {
+  id: number
+  nome: string
+  modulos: string
+  permissoes?: string
+}
+
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 interface NavItem {
@@ -23,11 +30,49 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
   const router = useRouter()
   const [now, setNow] = useState<Date | null>(null)
   const [logoError, setLogoError] = useState(false)
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
 
   useEffect(() => {
     setNow(new Date())
     const id = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const carregarUsuario = async () => {
+      try {
+        const resp = await fetch('/api/auth/me')
+        if (resp.ok) {
+          const user = await resp.json()
+          setUsuario(user)
+
+          // Determinar quais áreas o usuário pode acessar
+          const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+          const areas: string[] = []
+
+          if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
+            // Acesso a todas as áreas
+            setAreasPermitidas(PROCEDIMENTOS.areas.map(a => a.id))
+          } else {
+            // Acesso apenas às áreas específicas
+            permissoes.forEach((perm: string) => {
+              if (perm.startsWith('comunicacao:')) {
+                const area = perm.split(':')[1].split('.')[0]
+                if (area && !areas.includes(area)) {
+                  areas.push(area)
+                }
+              }
+            })
+            setAreasPermitidas(areas)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar usuário:', err)
+      }
+    }
+
+    carregarUsuario()
   }, [])
 
   const dd = now ? String(now.getDate()).padStart(2, '0') : '--'
@@ -74,7 +119,7 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
 
         <div className="px-2 py-2">
           <p style={{ color: '#C5A059' }} className="text-xs font-semibold mb-3 uppercase">Áreas</p>
-          {PROCEDIMENTOS.areas.map((area) => (
+          {PROCEDIMENTOS.areas.filter(area => areasPermitidas.includes(area.id)).map((area) => (
             <Link
               key={area.id}
               href={`/comunicacao/area/${area.id}`}
