@@ -49,8 +49,9 @@ export default function HistoricoChecklist({ cultoData, areaId, onClose }: Histo
   if (!area) return null
 
   // Agrupar histórico por passo
+  const todosPassos = [...area.fases.pre, ...area.fases.operacao, ...area.fases.pos]
   const historicoAgrupado = historico.reduce((acc, item) => {
-    const passo = area.todos_passos.find(p => p.id === item.passo_id)
+    const passo = todosPassos.find(p => p.id === item.passo_id)
     if (!passo) return acc
 
     const key = item.passo_id
