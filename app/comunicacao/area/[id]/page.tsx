@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams, useParams } from 'next/navigation'
+import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
 interface PassoComMarcacao {
@@ -19,6 +19,7 @@ interface ProgresoPasso {
 export default function AreaPage() {
   const searchParams = useSearchParams()
   const routeParams = useParams()
+  const router = useRouter()
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
   const areaId = (routeParams?.id as string) || ''
 
@@ -27,9 +28,43 @@ export default function AreaPage() {
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [temPermissao, setTemPermissao] = useState(true)
 
   useEffect(() => {
     if (!areaId || !cultoData) return
+
+    const verificarPermissao = async () => {
+      try {
+        const respUser = await fetch('/api/auth/me')
+        if (!respUser.ok) {
+          router.push('/login')
+          return
+        }
+
+        const user = await respUser.json()
+        const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+
+        // Verificar se tem permissão para esta área específica
+        const temAcesso = permissoes.includes('*') ||
+          permissoes.some((p: string) => p.startsWith(`comunicacao:${areaId}`)) ||
+          permissoes.includes('comunicacao.visualizar')
+
+        if (!temAcesso && !permissoes.includes('comunicacao')) {
+          setTemPermissao(false)
+          return
+        }
+
+        setTemPermissao(true)
+      } catch (err) {
+        console.error('Erro ao verificar permissão:', err)
+      }
+    }
+
+    verificarPermissao()
+  }, [areaId, router])
+
+  useEffect(() => {
+    if (!areaId || !cultoData || !temPermissao) return
 
     const carregarProgresso = async () => {
       setCarregando(true)
@@ -47,12 +82,29 @@ export default function AreaPage() {
     }
 
     carregarProgresso()
-  }, [cultoData, areaId])
+  }, [cultoData, areaId, temPermissao])
 
   if (!area) {
     return (
       <div className="max-w-4xl mx-auto py-12 text-center">
         <p className="text-red-600 font-semibold">Área não encontrada</p>
+      </div>
+    )
+  }
+
+  if (!temPermissao) {
+    return (
+      <div className="max-w-4xl mx-auto py-12 text-center">
+        <p className="text-2xl mb-4">🔒</p>
+        <p className="text-red-600 font-semibold mb-4">Acesso negado</p>
+        <p className="text-gray-600 mb-6">Você não tem permissão para acessar esta área de Comunicação.</p>
+        <button
+          onClick={() => router.push('/comunicacao')}
+          className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
+          style={{ backgroundColor: '#002347', color: '#fff' }}
+        >
+          ← Voltar ao Dashboard
+        </button>
       </div>
     )
   }
