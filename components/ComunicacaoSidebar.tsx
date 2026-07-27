@@ -151,9 +151,9 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
           {PROCEDIMENTOS.areas.filter(area => areasPermitidas.includes(area.id)).map((area) => (
             <Link
               key={area.id}
-              href={`/comunicacao/area/${area.id}`}
+              href={`/comunicacao/area-historico/${area.id}`}
               onClick={onClose}
-              style={pathname.startsWith(`/comunicacao/area/${area.id}`) ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
+              style={pathname.startsWith(`/comunicacao/area-historico/${area.id}`) ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
               className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
             >
               <span className="text-base leading-none">{area.icone}</span>
