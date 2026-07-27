@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,15 +61,16 @@ export async function GET(req: NextRequest) {
     const ehCoordenador = user.role === 'admin' ||
       permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
 
-    // Buscar dados do checklist
+    // Buscar dados do checklist com nome do usuário
     let passos: any[] = []
     try {
       passos = await sql`
-        SELECT passo_id, marcado, usuario_id, data_marcacao
-        FROM checklist_progresso
-        WHERE culto_data = ${cultoData} AND area_id = ${areaId}
-        ${!ehCoordenador ? sql`AND usuario_id = ${userId}` : sql``}
-        ORDER BY passo_id, data_marcacao DESC
+        SELECT cp.passo_id, cp.marcado, cp.usuario_id, cp.data_marcacao, u.nome as usuario_nome
+        FROM checklist_progresso cp
+        LEFT JOIN usuarios u ON cp.usuario_id = u.id
+        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
+        ${!ehCoordenador ? sql`AND cp.usuario_id = ${userId}` : sql``}
+        ORDER BY cp.passo_id, cp.data_marcacao DESC
       `
     } catch (passosErr) {
       console.error('Erro ao buscar passos:', passosErr)
@@ -87,15 +89,31 @@ export async function GET(req: NextRequest) {
       console.error('Erro ao buscar finalização:', finErr)
     }
 
-    // Montar resumo (último status de cada passo)
-    const resumo: Record<string, any> = {}
+    // Montar resumo com TODOS os passos da área
+    const area = PROCEDIMENTOS.areas.find((a: any) => a.id === areaId)
+    const todosPassos = area ? [...area.fases.pre, ...area.fases.operacao, ...area.fases.pos] : []
+
+    // Mapa dos passos registrados
+    const passosMarcados: Record<string, any> = {}
     passos.forEach((p: any) => {
-      if (!resumo[p.passo_id]) {
-        resumo[p.passo_id] = {
+      if (!passosMarcados[p.passo_id]) {
+        passosMarcados[p.passo_id] = {
           marcado: p.marcado,
           usuario_id: p.usuario_id,
+          usuario_nome: p.usuario_nome,
           data_marcacao: p.data_marcacao
         }
+      }
+    })
+
+    // Incluir todos os passos, marcados ou não
+    const resumo: Record<string, any> = {}
+    todosPassos.forEach((passo: any) => {
+      resumo[passo.id] = passosMarcados[passo.id] || {
+        marcado: false,
+        usuario_nome: '',
+        usuario_id: null,
+        data_marcacao: null
       }
     })
 
