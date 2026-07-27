@@ -63,11 +63,12 @@ export async function GET(req: NextRequest) {
     const sql2 = getDb()
 
     // Buscar último status de cada passo
+    const sqlInstance = getDb()
     let passos
     if (ehCoordenador) {
       // Coordenador vê todos os passos
-      passos = await sql2`
-        SELECT DISTINCT ON (passo_id)
+      passos = await sqlInstance`
+        SELECT
           cp.passo_id,
           cp.marcado,
           cp.usuario_id,
@@ -80,8 +81,8 @@ export async function GET(req: NextRequest) {
       `
     } else {
       // Operador só vê seus próprios passos
-      passos = await sql2`
-        SELECT DISTINCT ON (passo_id)
+      passos = await sqlInstance`
+        SELECT
           cp.passo_id,
           cp.marcado,
           cp.usuario_id,
@@ -95,7 +96,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Buscar quem finalizou o checklist
-    const finalizacao = await sql`
+    const finalizacao = await sqlInstance`
       SELECT
         cf.usuario_id,
         u.nome as usuario_nome,
