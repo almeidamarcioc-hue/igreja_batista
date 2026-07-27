@@ -387,7 +387,7 @@ export default function AreaPage() {
                 <p className="text-gray-700 mb-2">
                   Você está salvando este checklist como finalizado em:
                 </p>
-                <p className="text-lg font-semibold" style={{ color: area.cor }} className="mb-6">
+                <p className="text-lg font-semibold mb-6" style={{ color: area.cor }}>
                   {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
                 <p className="text-sm text-gray-600 mb-6">
