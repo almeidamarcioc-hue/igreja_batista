@@ -108,7 +108,10 @@ export default function AreaHistoricoPage() {
             return (
               <button
                 key={checklist.culto_data}
-                onClick={() => router.push(`/comunicacao/area/${areaId}?culto_data=${checklist.culto_data}&mode=view`)}
+                onClick={() => {
+                  const dataFormatada = checklist.culto_data.split('T')[0]
+                  router.push(`/comunicacao/area/${areaId}?culto_data=${dataFormatada}&mode=view`)
+                }}
                 className="w-full text-left bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow"
                 style={{ borderColor: area.cor }}
               >
