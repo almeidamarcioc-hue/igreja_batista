@@ -28,7 +28,10 @@ export default function AreaPage() {
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showConfirmSalvar, setShowConfirmSalvar] = useState(false)
   const [temPermissao, setTemPermissao] = useState(true)
+  const [finalizado, setFinalizado] = useState(false)
+  const [salvandoChecklist, setSalvandoChecklist] = useState(false)
 
   useEffect(() => {
     if (!areaId || !cultoData) return
@@ -159,6 +162,33 @@ export default function AreaPage() {
       setShowConfirm(false)
     } catch (err) {
       console.error('Erro ao reiniciar:', err)
+    }
+  }
+
+  const handleSalvarChecklist = async () => {
+    setSalvandoChecklist(true)
+    try {
+      const resp = await fetch('/api/comunicacao/finalizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          culto_data: cultoData,
+          area_id: areaId,
+        }),
+      })
+
+      if (resp.ok) {
+        setFinalizado(true)
+        setShowConfirmSalvar(false)
+        // Gerar e exportar automaticamente
+        setTimeout(() => {
+          handleExportar()
+        }, 500)
+      }
+    } catch (err) {
+      console.error('Erro ao salvar checklist:', err)
+    } finally {
+      setSalvandoChecklist(false)
     }
   }
 
@@ -312,6 +342,25 @@ export default function AreaPage() {
 
           {/* AÇÕES */}
           <div className="bg-white rounded-lg shadow p-6 flex gap-3 flex-wrap">
+            {!finalizado && (
+              <button
+                onClick={() => setShowConfirmSalvar(true)}
+                disabled={salvandoChecklist}
+                className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
+                style={{
+                  backgroundColor: finalizado ? '#ccc' : '#10B981',
+                  color: '#fff',
+                  opacity: salvandoChecklist ? 0.6 : 1
+                }}
+              >
+                {salvandoChecklist ? '⏳ Salvando...' : '💾 Salvar Checklist'}
+              </button>
+            )}
+            {finalizado && (
+              <div className="px-6 py-2 rounded-lg font-semibold text-sm bg-green-100 text-green-700 flex items-center gap-2">
+                ✓ Checklist salvo em {new Date(cultoData).toLocaleDateString('pt-BR')}
+              </div>
+            )}
             <button
               onClick={handleExportar}
               className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
@@ -319,13 +368,49 @@ export default function AreaPage() {
             >
               📥 Exportar checklist
             </button>
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="px-6 py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
-            >
-              🔄 Reiniciar
-            </button>
+            {!finalizado && (
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="px-6 py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
+              >
+                🔄 Reiniciar
+              </button>
+            )}
           </div>
+
+          {showConfirmSalvar && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg p-6 max-w-sm">
+                <h3 className="text-lg font-bold mb-4" style={{ color: '#002347' }}>
+                  Salvar Checklist
+                </h3>
+                <p className="text-gray-700 mb-2">
+                  Você está salvando este checklist como finalizado em:
+                </p>
+                <p className="text-lg font-semibold" style={{ color: area.cor }} className="mb-6">
+                  {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+                <p className="text-sm text-gray-600 mb-6">
+                  Uma vez salvo, o checklist fica registrado com {progresso.marcados} de {progresso.total} passos concluídos. Você poderá criar um novo checklist para outra data.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowConfirmSalvar(false)}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold text-sm hover:bg-gray-300"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSalvarChecklist}
+                    disabled={salvandoChecklist}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700"
+                  >
+                    {salvandoChecklist ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showConfirm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
