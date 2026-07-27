@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import HistoricoChecklist from '@/components/HistoricoChecklist'
 
 interface ResumoArea {
   areaId: string
@@ -9,15 +10,60 @@ interface ResumoArea {
   marcados: number
 }
 
+interface Usuario {
+  id: number
+  nome: string
+  permissoes?: string
+}
+
 export default function CoordenadorPage() {
   const [cultoData, setCultoData] = useState<string>('')
   const [resumo, setResumo] = useState<ResumoArea[]>([])
   const [carregando, setCarregando] = useState(true)
-  const [autoAtualizar, setAutoAtualizar] = useState(true)
+  const [autoAtualizar, setAutoAtualizar] = useState(false)
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
+  const [areaHistorico, setAreaHistorico] = useState<string | null>(null)
 
   useEffect(() => {
     const hoje = new Date().toISOString().split('T')[0]
     setCultoData(hoje)
+  }, [])
+
+  useEffect(() => {
+    const carregarUsuario = async () => {
+      try {
+        const resp = await fetch('/api/auth/me')
+        if (resp.ok) {
+          const user = await resp.json()
+          setUsuario(user)
+
+          // Determinar quais áreas o usuário pode acessar
+          const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+          const areas: string[] = []
+
+          if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
+            // Acesso a todas as áreas
+            setAreasPermitidas(PROCEDIMENTOS.areas.map(a => a.id))
+          } else {
+            // Acesso apenas às áreas específicas
+            permissoes.forEach((perm: string) => {
+              if (perm.startsWith('comunicacao:')) {
+                const area = perm.split(':')[1].split('.')[0]
+                if (area && !areas.includes(area)) {
+                  areas.push(area)
+                }
+              }
+            })
+            setAreasPermitidas(areas)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar usuário:', err)
+      }
+    }
+
+    carregarUsuario()
   }, [])
 
   useEffect(() => {
@@ -42,7 +88,7 @@ export default function CoordenadorPage() {
 
     if (!autoAtualizar) return
 
-    const interval = setInterval(carregarResumo, 5000)
+    const interval = setInterval(carregarResumo, 1800000) // 30 minutos
     return () => clearInterval(interval)
   }, [cultoData, autoAtualizar])
 
@@ -83,14 +129,27 @@ export default function CoordenadorPage() {
               onChange={(e) => setAutoAtualizar(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="text-sm font-semibold" style={{ color: '#002347' }}>Atualizar a cada 5s</span>
+            <span className="text-sm font-semibold" style={{ color: '#002347' }}>Atualizar a cada 30 min</span>
           </label>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end gap-2">
           <button
-            onClick={() => window.location.reload()}
-            className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+            onClick={async () => {
+              setCarregando(true)
+              try {
+                const resp = await fetch(`/api/comunicacao/resumo?culto_data=${cultoData}`)
+                if (resp.ok) {
+                  const dados = await resp.json()
+                  setResumo(dados)
+                }
+              } catch (err) {
+                console.error('Erro ao carregar resumo:', err)
+              } finally {
+                setCarregando(false)
+              }
+            }}
+            className="flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
             style={{ backgroundColor: '#C5A059', color: '#fff' }}
           >
             🔄 Atualizar agora
@@ -126,7 +185,7 @@ export default function CoordenadorPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PROCEDIMENTOS.areas.map((area) => {
+          {PROCEDIMENTOS.areas.filter(area => areasPermitidas.includes(area.id)).map((area) => {
             const stats = resumo.find(r => r.areaId === area.id)
             if (!stats) return null
 
@@ -162,6 +221,18 @@ export default function CoordenadorPage() {
                   <span className="font-semibold">{stats.marcados}</span> de <span className="font-semibold">{stats.total}</span> passos
                 </p>
 
+                <button
+                  onClick={() => setAreaHistorico(area.id)}
+                  className="mt-3 w-full px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border"
+                  style={{
+                    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+                    borderColor: '#C5A059',
+                    color: '#C5A059'
+                  }}
+                >
+                  📋 Ver histórico
+                </button>
+
                 {area.pendente && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mt-3">
                     <p className="text-xs text-yellow-800">⏳ Pendente</p>
@@ -175,9 +246,17 @@ export default function CoordenadorPage() {
 
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <span className="font-semibold">ℹ️ Como funciona:</span> Esta visão mostra o progresso <strong>agregado</strong> de cada área. Cada operador pode estar em uma fase diferente, e o coordenador vê o total. Atualiza automaticamente a cada 5 segundos.
+          <span className="font-semibold">ℹ️ Como funciona:</span> Esta visão mostra o progresso <strong>agregado</strong> de cada área. Cada operador pode estar em uma fase diferente, e o coordenador vê o total. Clique em "Atualizar agora" para recarregar, ou ative o checkbox para atualizar automaticamente a cada 30 minutos.
         </p>
       </div>
+
+      {areaHistorico && (
+        <HistoricoChecklist
+          cultoData={cultoData}
+          areaId={areaHistorico}
+          onClose={() => setAreaHistorico(null)}
+        />
+      )}
     </div>
   )
 }

@@ -4,14 +4,58 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 
+interface Usuario {
+  id: number
+  nome: string
+  permissoes?: string
+}
+
 export default function ComunicacaoDashboard() {
   const [cultoData, setCultoData] = useState<string>('')
   const [progresso, setProgresso] = useState<Record<string, { total: number; marcados: number }>>({})
   const [carregando, setCarregando] = useState(true)
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
 
   useEffect(() => {
     const hoje = new Date().toISOString().split('T')[0]
     setCultoData(hoje)
+  }, [])
+
+  useEffect(() => {
+    const carregarUsuario = async () => {
+      try {
+        const resp = await fetch('/api/auth/me')
+        if (resp.ok) {
+          const user = await resp.json()
+          setUsuario(user)
+
+          // Determinar quais áreas o usuário pode acessar
+          const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
+          const areas: string[] = []
+
+          if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
+            // Acesso a todas as áreas
+            setAreasPermitidas(PROCEDIMENTOS.areas.map(a => a.id))
+          } else {
+            // Acesso apenas às áreas específicas
+            permissoes.forEach((perm: string) => {
+              if (perm.startsWith('comunicacao:')) {
+                const area = perm.split(':')[1].split('.')[0]
+                if (area && !areas.includes(area)) {
+                  areas.push(area)
+                }
+              }
+            })
+            setAreasPermitidas(areas)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar usuário:', err)
+      }
+    }
+
+    carregarUsuario()
   }, [])
 
   useEffect(() => {
@@ -67,7 +111,7 @@ export default function ComunicacaoDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PROCEDIMENTOS.areas.map((area) => {
+          {PROCEDIMENTOS.areas.filter(area => areasPermitidas.includes(area.id)).map((area) => {
             const stats = progresso[area.id] || { total: 0, marcados: 0 }
             const percentual = stats.total > 0 ? Math.round((stats.marcados / stats.total) * 100) : 0
 
