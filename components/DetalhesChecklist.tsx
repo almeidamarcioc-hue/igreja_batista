@@ -33,8 +33,10 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
     const carregarDetalhes = async () => {
       setCarregando(true)
       try {
+        // Garantir que cultoData é apenas a parte da data (YYYY-MM-DD)
+        const dataFormatada = cultoData.split('T')[0]
         const resp = await fetch(
-          `/api/comunicacao/checklist-detalhes?culto_data=${cultoData}&area_id=${areaId}`
+          `/api/comunicacao/checklist-detalhes?culto_data=${dataFormatada}&area_id=${areaId}`
         )
         if (resp.ok) {
           const dados = await resp.json()
@@ -44,11 +46,9 @@ export default function DetalhesChecklist({ cultoData, areaId, onClose, onCheckl
           const userResp = await fetch('/api/auth/me')
           if (userResp.ok) {
             const user = await userResp.json()
-            console.log('User role:', user.role)
             const ehAdmin = user.role === 'admin'
             const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
             const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
-            console.log('ehAdmin:', ehAdmin, 'ehCoordenador:', ehCoordenador)
             setPermissaoCoordenador(ehAdmin || ehCoordenador)
           }
         } else if (resp.status === 403) {
