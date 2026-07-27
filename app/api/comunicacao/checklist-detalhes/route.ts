@@ -100,9 +100,9 @@ export async function GET(req: NextRequest) {
       console.error('Erro ao buscar finalização:', finErr)
     }
 
-    // Montar resumo com TODOS os passos da área
+    // Montar resumo com TODOS os passos da área (apenas pré e pós, não operação)
     const area = PROCEDIMENTOS.areas.find((a: any) => a.id === areaId)
-    const todosPassos = area ? [...area.fases.pre, ...area.fases.operacao, ...area.fases.pos] : []
+    const todosPassos = area ? [...area.fases.pre, ...area.fases.pos] : []
 
     // Mapa dos passos registrados
     const passosMarcados: Record<string, any> = {}
