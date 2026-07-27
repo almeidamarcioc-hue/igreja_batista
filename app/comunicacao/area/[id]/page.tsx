@@ -78,9 +78,11 @@ export default function AreaPage() {
           ? `/api/comunicacao/checklist-detalhes?culto_data=${dataFormatada}&area_id=${areaId}`
           : `/api/comunicacao/progresso?culto_data=${cultoData}&area_id=${areaId}`
 
+        console.log('Carregando de:', endpoint, 'modoVisualizacao:', modoVisualizacao)
         const resp = await fetch(endpoint)
         if (resp.ok) {
           const dados = await resp.json()
+          console.log('Dados recebidos:', dados)
 
           if (modoVisualizacao && dados.resumo) {
             // Transformar resposta de checklist-detalhes para formato esperado
