@@ -48,10 +48,12 @@ export async function POST(req: NextRequest) {
       permissoes = []
     }
 
-    // Apenas coordenadores podem excluir
+    // Apenas admin e coordenadores podem excluir
+    const ehAdmin = user.role === 'admin'
     const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${area_id}.coordenador`)
-    if (!ehCoordenador) {
-      return NextResponse.json({ error: 'Apenas coordenadores podem excluir checklists' }, { status: 403 })
+
+    if (!ehAdmin && !ehCoordenador) {
+      return NextResponse.json({ error: 'Apenas admin e coordenadores podem excluir checklists' }, { status: 403 })
     }
 
     const sql2 = getDb()
