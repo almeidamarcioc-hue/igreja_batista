@@ -4,7 +4,7 @@ import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = req.cookies.get(COOKIE_NAME)?.value
     if (!token) {
@@ -16,8 +16,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Sessão inválida' }, { status: 401 })
     }
 
+    const { id } = await params
     const passoBusca = await getDb()`
-      SELECT area_id FROM checklist_passos_customizados WHERE id = ${parseInt(params.id)}
+      SELECT area_id FROM checklist_passos_customizados WHERE id = ${parseInt(id)}
     `
 
     if (passoBusca.length === 0) {
@@ -61,7 +62,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     // Remover passo customizado
     await sql`
       DELETE FROM checklist_passos_customizados
-      WHERE id = ${parseInt(params.id)}
+      WHERE id = ${parseInt(id)}
     `
 
     return NextResponse.json({ ok: true, message: 'Passo removido com sucesso' })
