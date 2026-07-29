@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -15,6 +15,18 @@ interface Usuario {
   modulos: string
   perfil_id: number | null
   ativo: boolean
+}
+
+interface CurrentUser {
+  id: number
+  usuario: string
+  nome: string
+  email: string
+  role: string
+  modulos: string
+  perfil_id: number | null
+  ativo: boolean
+  permissoes: string // JSON string
 }
 
 interface Perfil {
@@ -35,11 +47,11 @@ const MODULOS_PERM = [
 ]
 
 const AREAS_COMUNICACAO = [
-  { key: 'transmissao-youtube', label: '📡 Transmissão YouTube', emoji: '📡' },
-  { key: 'mix-som', label: '🎚️ Mix de Som', emoji: '🎚️' },
-  { key: 'datashow', label: '📽️ Datashow', emoji: '📽️' },
-  { key: 'cameras', label: '🎥 Câmeras', emoji: '🎥' },
-  { key: 'iluminacao', label: '💡 Iluminação', emoji: '💡' },
+  { key: 'transmissao-youtube', label: '📡 Transmissão YouTube', emoji: '📡', perfilLabel: 'Transmissão' },
+  { key: 'mix-som', label: '🎚️ Mix de Som', emoji: '🎚️', perfilLabel: 'Mix de Som' },
+  { key: 'datashow', label: '📽️ Datashow', emoji: '📽️', perfilLabel: 'Datashow' },
+  { key: 'cameras', label: '🎥 Câmeras', emoji: '🎥', perfilLabel: 'Câmeras' },
+  { key: 'iluminacao', label: '💡 Iluminação', emoji: '💡', perfilLabel: 'Iluminação' },
 ]
 
 const ACOES_PERM = [
@@ -87,9 +99,17 @@ const labelCls = 'block text-xs font-medium text-gray-500 mb-1'
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ConfiguracoesPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const areaParam = searchParams?.get('area') || null
   const [aba, setAba] = useState<'usuarios' | 'perfis'>('usuarios')
+
+  // ── Current user state (para detectar tipo de usuário) ──
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [loadingAuth, setLoadingAuth] = useState(true)
+  const [coordenadorArea, setCoordenadorArea] = useState<string | null>(null)
+  const [temMultiplasAreas, setTemMultiplasAreas] = useState(false)
+  const [userRole, setUserRole] = useState<'admin' | 'coordenador' | 'operador' | null>(null)
 
   // ── Usuarios state ──
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
@@ -141,10 +161,107 @@ export default function ConfiguracoesPage() {
     finally { setLoadingP(false) }
   }
 
+  // ── Load current user and detect type ──
+  useEffect(() => {
+    async function loadCurrentUser() {
+      try {
+        const res = await fetch('/api/auth/me')
+        if (!res.ok) throw new Error('Erro ao carregar usuário')
+        const user = await res.json()
+        setCurrentUser(user)
+
+        // Detectar tipo de usuário
+        if (user.role === 'admin') {
+          setUserRole('admin')
+        } else {
+          // Verificar se é coordenador
+          const permissoes = typeof user.permissoes === 'string' ? JSON.parse(user.permissoes) : []
+          const isCoordenador = permissoes.some((p: string) => {
+            if (typeof p !== 'string') return false
+            // Deve ter .editar ou .criar para ser considerado coordenador
+            if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
+            return false
+          })
+
+          if (isCoordenador) {
+            setUserRole('coordenador')
+
+            // Detectar áreas de coordenação
+            // Se o perfil tem nome com uma das áreas, é coordenador dessa área
+            // Se for "Coordenador Geral", tem múltiplas
+            const perfilNome = user.perfil_id ? await detectPerfilNome(user.perfil_id) : null
+
+            if (perfilNome) {
+              // Detectar múltiplas áreas (Coordenador Geral)
+              // Isso geralmente é feito no layout, mas também detectamos aqui para segurança
+              if (perfilNome.includes('Coordenador Geral')) {
+                setTemMultiplasAreas(true)
+                // O layout já deve ter redirecionado, mas se não, fazemos aqui
+                return
+              }
+
+              // Detectar área única
+              const areas = AREAS_COMUNICACAO
+              const areaEncontrada = areas.find(a => perfilNome.includes(a.perfilLabel))
+              if (areaEncontrada) {
+                setCoordenadorArea(areaEncontrada.key)
+              }
+            }
+          } else {
+            // Operador ou outro - não tem permissões de editar/criar comunicacao
+            setUserRole('operador')
+          }
+        }
+      } catch (e: any) {
+        console.error('Erro ao carregar usuário:', e)
+      } finally {
+        setLoadingAuth(false)
+      }
+    }
+
+    loadCurrentUser()
+  }, [router])
+
+  // Helper para detectar nome do perfil
+  async function detectPerfilNome(perfilId: number): Promise<string | null> {
+    try {
+      const res = await fetch('/api/admin/perfis')
+      if (!res.ok) return null
+      const perfis = await res.json()
+      const perfil = perfis.find((p: Perfil) => p.id === perfilId)
+      return perfil?.nome || null
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
     loadUsuarios()
     loadPerfis()
   }, [])
+
+  // ── Pré-carregar perfil de operador para coordenador com 1 área ──
+  useEffect(() => {
+    if (userRole === 'coordenador' && coordenadorArea && perfis.length > 0 && loadingAuth === false) {
+      // Procurar o perfil de operador para essa área
+      // O perfil tem nome como "Comunicação — {Area} (Operador)"
+      const areaConfig = AREAS_COMUNICACAO.find(a => a.key === coordenadorArea)
+      if (!areaConfig) return
+
+      const perfilOperador = perfis.find(p =>
+        p.nome.includes('Comunicação') &&
+        p.nome.includes(areaConfig.perfilLabel) &&
+        p.nome.includes('Operador')
+      )
+
+      if (perfilOperador) {
+        setAreaPreSelecionada(coordenadorArea)
+        setEditingUser(null)
+        setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
+        setShowUserModal(true)
+      }
+    }
+  }, [userRole, coordenadorArea, perfis, loadingAuth])
 
   useEffect(() => {
     if (areaParam && perfis.length > 0) {
@@ -180,6 +297,7 @@ export default function ConfiguracoesPage() {
   async function handleSaveUser() {
     if (!formUser.usuario.trim() || !formUser.nome.trim()) return
     if (!editingUser && !formUser.senha.trim()) { flash('Senha é obrigatória para novos usuários.', 'err'); return }
+    if (!editingUser && !formUser.email.trim()) { flash('E-mail é obrigatório para novos usuários.', 'err'); return }
     setSavingUser(true)
     try {
       const method = editingUser ? 'PUT' : 'POST'
@@ -197,7 +315,15 @@ export default function ConfiguracoesPage() {
       setShowUserModal(false)
       setAreaPreSelecionada(null)
       flash(editingUser ? 'Usuário atualizado.' : 'Usuário criado com sucesso.')
-      await loadUsuarios()
+
+      // Se coordenador criou novo operador, redirecionar para a página da área
+      if (!editingUser && userRole === 'coordenador' && coordenadorArea) {
+        setTimeout(() => {
+          router.push(`/comunicacao/area-historico/${coordenadorArea}?culto_data=today`)
+        }, 1500)
+      } else {
+        await loadUsuarios()
+      }
     } catch (e: any) { flash(e.message, 'err') }
     finally { setSavingUser(false) }
   }
@@ -263,6 +389,110 @@ export default function ConfiguracoesPage() {
 
   const roleLabel: Record<string, string> = { admin: 'Admin', usuario: 'Usuário' }
 
+  // Se ainda está carregando autenticação, mostrar spinner
+  if (loadingAuth) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)', padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  // Se coordenador com 1 área: renderizar apenas o modal
+  if (userRole === 'coordenador' && coordenadorArea && !temMultiplasAreas) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)' }}>
+        {/* Global messages */}
+        {erro && <div style={{ position: 'fixed', top: 20, right: 20, background: '#991b1b', border: '1px solid #7c2d2d', color: '#fca5a5', borderRadius: 8, padding: 12, fontSize: 14, maxWidth: 300, zIndex: 100 }}>{erro}</div>}
+        {sucesso && <div style={{ position: 'fixed', top: 20, right: 20, background: '#166534', border: '1px solid #4b5563', color: '#86efac', borderRadius: 8, padding: 12, fontSize: 14, maxWidth: 300, zIndex: 100 }}>{sucesso}</div>}
+
+        {/* Modal: Usuário (formulário direto para coordenador) */}
+        {showUserModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div style={{ backgroundColor: '#1F1F4D' }} className="px-5 py-4 flex items-center justify-between rounded-t-xl">
+                <div>
+                  <h2 className="text-white font-semibold">Novo Operador</h2>
+                  {areaPreSelecionada && (
+                    <p className="text-xs text-gray-300 mt-1">Para: {AREAS_COMUNICACAO.find(a => a.key === areaPreSelecionada)?.label || areaPreSelecionada}</p>
+                  )}
+                </div>
+                <button onClick={() => { setShowUserModal(false); router.push('/') }} className="text-gray-400 hover:text-white text-xl">×</button>
+              </div>
+              <div className="p-5 space-y-3">
+                <div>
+                  <label className={labelCls}>Nome Completo *</label>
+                  <input className={inputCls} value={formUser.nome}
+                    onChange={e => setFormUser(f => ({ ...f, nome: e.target.value }))} />
+                </div>
+                <div>
+                  <label className={labelCls}>E-mail (obrigatório) *</label>
+                  <input type="email" className={inputCls} placeholder="usuario@email.com"
+                    value={formUser.email} onChange={e => setFormUser(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div>
+                  <label className={labelCls}>Usuário (login) *</label>
+                  <input className={inputCls}
+                    value={formUser.usuario}
+                    onChange={e => setFormUser(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
+                </div>
+                <div>
+                  <label className={labelCls}>Senha *</label>
+                  <input type="password" className={inputCls}
+                    value={formUser.senha} onChange={e => setFormUser(f => ({ ...f, senha: e.target.value }))} />
+                </div>
+                <div>
+                  <label className={labelCls}>Perfil de acesso (pré-selecionado)</label>
+                  <select className={`${inputCls} disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                    disabled={true}
+                    value={formUser.perfil_id ?? ''}
+                    onChange={e => setFormUser(f => ({ ...f, perfil_id: e.target.value ? Number(e.target.value) : null }))}>
+                    <option value="">— Sem perfil —</option>
+                    {perfis.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-0.5">Perfil pré-selecionado para esta área (não pode ser alterado).</p>
+                </div>
+                <div>
+                  <label className={labelCls}>Módulos (pré-selecionado)</label>
+                  <select className={`${inputCls} disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                    disabled={true}
+                    value={formUser.modulos}>
+                    {MODULOS_OPTS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-0.5">Módulo pré-selecionado (não pode ser alterado).</p>
+                </div>
+              </div>
+              <div className="px-5 pb-5 flex justify-end gap-3">
+                <button onClick={() => { setShowUserModal(false); router.push('/') }}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">
+                  Cancelar
+                </button>
+                <button onClick={handleSaveUser}
+                  disabled={savingUser || !formUser.usuario.trim() || !formUser.nome.trim() || !formUser.email.trim()}
+                  style={{ backgroundColor: '#4848A8' }}
+                  className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+                  {savingUser ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Se operador ou tipo não detectado: renderizar vazio ou redirecionar
+  if (userRole === 'operador') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+          <p>Acesso bloqueado para operadores.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Admin: renderizar UI completa com lista e abas
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)', padding: '32px 16px' }}>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>

@@ -3,6 +3,15 @@ import { redirect } from 'next/navigation'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { getUsuario } from '@/lib/db'
 
+// Mapeamento de nomes de perfis para IDs de áreas
+const AREA_MAPPING: Record<string, string> = {
+  'Transmissão': 'transmissao-youtube',
+  'Mix de Som': 'mix-som',
+  'Datashow': 'datashow',
+  'Câmeras': 'cameras',
+  'Iluminação': 'iluminacao',
+}
+
 export default async function ConfiguracoesLayout({ children }: { children: React.ReactNode }) {
   const token = (await cookies()).get(COOKIE_NAME)?.value
   if (!token) redirect('/login')
@@ -18,17 +27,20 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
 
   // Permitir coordenadores de comunicação
   let temPermissao = false
+  let areasCoordenador: Set<string> = new Set()
 
   if (user.perfil_id) {
     try {
       const { getDb } = await import('@/lib/db')
       const sql = getDb()
-      const perfil = await sql`SELECT permissoes FROM perfis_acesso WHERE id = ${user.perfil_id}`
+      const perfil = await sql`SELECT nome, permissoes FROM perfis_acesso WHERE id = ${user.perfil_id}`
 
       if (perfil.length > 0) {
-        const permissoes = JSON.parse(perfil[0].permissoes)
-        // Coordenador: tem .coordenador OU tem permissões de criar/editar em uma área de comunicação
-        temPermissao = permissoes.some((p: string) => {
+        const perfilNome = perfil[0].nome as string
+        const permissoes = JSON.parse(perfil[0].permissoes as string) as string[]
+
+        // Detectar se é coordenador
+        const isCoordenador = permissoes.some((p: string) => {
           if (typeof p !== 'string') return false
           // Caso 1: permissão explícita de coordenador
           if (p.includes('comunicacao') && p.includes('coordenador')) return true
@@ -36,6 +48,24 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
           if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
           return false
         })
+
+        if (isCoordenador) {
+          temPermissao = true
+
+          // Detectar áreas de coordenação baseado no nome do perfil
+          for (const [searchText, areaId] of Object.entries(AREA_MAPPING)) {
+            if (perfilNome.includes(searchText)) {
+              areasCoordenador.add(areaId)
+            }
+          }
+
+          // Se "Coordenador Geral", permitir múltiplas áreas (isso será tratado no client)
+          if (perfilNome.includes('Coordenador Geral')) {
+            areasCoordenador.clear()
+            // Adicionar todas as áreas para "Coordenador Geral"
+            Object.values(AREA_MAPPING).forEach(id => areasCoordenador.add(id))
+          }
+        }
       }
     } catch (e) {
       console.error('Erro ao verificar permissões:', e)
@@ -44,6 +74,14 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
   }
 
   if (!temPermissao) redirect('/')
+
+  // Verificar múltiplas áreas: se coordenador tem múltiplas áreas, bloquear acesso
+  // (v3.0 com "Líder de Área" permitirá múltiplas áreas)
+  if (user.role !== 'admin' && areasCoordenador.size > 1) {
+    // Bloquear coordenador com múltiplas áreas
+    // Será redirecionado com mensagem de erro via query param
+    redirect('/?error=multiplas_areas&msg=Sua+conta+tem+permiss%C3%B5es+em+m%C3%BAltiplas+%C3%A1reas.+Essa+funcionalidade+est%C3%A1+em+desenvolvimento.')
+  }
 
   return <>{children}</>
 }
