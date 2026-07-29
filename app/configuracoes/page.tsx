@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -86,6 +87,8 @@ const labelCls = 'block text-xs font-medium text-gray-500 mb-1'
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ConfiguracoesPage() {
+  const searchParams = useSearchParams()
+  const areaParam = searchParams?.get('area') || null
   const [aba, setAba] = useState<'usuarios' | 'perfis'>('usuarios')
 
   // ── Usuarios state ──
@@ -96,6 +99,7 @@ export default function ConfiguracoesPage() {
   const [formUser, setFormUser] = useState(emptyUser)
   const [savingUser, setSavingUser] = useState(false)
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<number | null>(null)
+  const [areaPreSelecionada, setAreaPreSelecionada] = useState<string | null>(null)
 
   // ── Perfis state ──
   const [perfis, setPerfis] = useState<Perfil[]>([])
@@ -137,7 +141,31 @@ export default function ConfiguracoesPage() {
     finally { setLoadingP(false) }
   }
 
-  useEffect(() => { loadUsuarios(); loadPerfis() }, [])
+  useEffect(() => {
+    loadUsuarios()
+    loadPerfis()
+  }, [])
+
+  useEffect(() => {
+    if (areaParam && perfis.length > 0) {
+      // Procurar o perfil de operador para essa área
+      const perfilOperador = perfis.find(p => {
+        try {
+          const perms = JSON.parse(p.permissoes)
+          return perms.some((perm: string) => perm === `comunicacao:${areaParam}.operador`)
+        } catch {
+          return false
+        }
+      })
+
+      if (perfilOperador) {
+        setAreaPreSelecionada(areaParam)
+        setEditingUser(null)
+        setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
+        setShowUserModal(true)
+      }
+    }
+  }, [areaParam, perfis])
 
   // ── Usuarios CRUD ──────────────────────────────────────────────────────────
 
@@ -167,6 +195,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar')
       setShowUserModal(false)
+      setAreaPreSelecionada(null)
       flash(editingUser ? 'Usuário atualizado.' : 'Usuário criado com sucesso.')
       await loadUsuarios()
     } catch (e: any) { flash(e.message, 'err') }
@@ -414,8 +443,13 @@ export default function ConfiguracoesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div style={{ backgroundColor: '#1F1F4D' }} className="px-5 py-4 flex items-center justify-between rounded-t-xl">
-              <h2 className="text-white font-semibold">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
-              <button onClick={() => setShowUserModal(false)} className="text-gray-400 hover:text-white text-xl">×</button>
+              <div>
+                <h2 className="text-white font-semibold">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+                {areaPreSelecionada && (
+                  <p className="text-xs text-gray-300 mt-1">Para: {areaPreSelecionada.replace('-', ' ')}</p>
+                )}
+              </div>
+              <button onClick={() => { setShowUserModal(false); setAreaPreSelecionada(null) }} className="text-gray-400 hover:text-white text-xl">×</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
@@ -442,11 +476,16 @@ export default function ConfiguracoesPage() {
               </div>
               <div>
                 <label className={labelCls}>Perfil de acesso</label>
-                <select className={inputCls} value={formUser.perfil_id ?? ''}
+                <select className={`${inputCls} ${areaPreSelecionada ? 'disabled:bg-gray-100 disabled:cursor-not-allowed' : ''}`}
+                  disabled={!!areaPreSelecionada}
+                  value={formUser.perfil_id ?? ''}
                   onChange={e => setFormUser(f => ({ ...f, perfil_id: e.target.value ? Number(e.target.value) : null }))}>
                   <option value="">— Sem perfil —</option>
                   {perfis.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
+                {areaPreSelecionada && (
+                  <p className="text-xs text-gray-400 mt-0.5">Perfil pré-selecionado para esta área.</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -472,7 +511,7 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
             <div className="px-5 pb-5 flex justify-end gap-3">
-              <button onClick={() => setShowUserModal(false)}
+              <button onClick={() => { setShowUserModal(false); setAreaPreSelecionada(null) }}
                 className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">
                 Cancelar
               </button>
