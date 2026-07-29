@@ -149,16 +149,26 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
         <div className="px-2 py-2">
           <p style={{ color: '#C5A059' }} className="text-xs font-semibold mb-3 uppercase">Áreas</p>
           {PROCEDIMENTOS.areas.filter(area => areasPermitidas.includes(area.id)).map((area) => (
-            <Link
-              key={area.id}
-              href={`/comunicacao/area-historico/${area.id}`}
-              onClick={onClose}
-              style={pathname.startsWith(`/comunicacao/area-historico/${area.id}`) ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
-            >
-              <span className="text-base leading-none">{area.icone}</span>
-              <span className="text-xs">{area.nome}</span>
-            </Link>
+            <div key={area.id} className="mb-2">
+              <Link
+                href={`/comunicacao/area-historico/${area.id}`}
+                onClick={onClose}
+                style={pathname.startsWith(`/comunicacao/area-historico/${area.id}`) ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+              >
+                <span className="text-base leading-none">{area.icone}</span>
+                <span className="text-xs">{area.nome}</span>
+              </Link>
+              <Link
+                href={`/comunicacao/area/${area.id}/gerenciar`}
+                onClick={onClose}
+                style={{ color: '#e8e8e8' }}
+                className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
+              >
+                <span>⚙️</span>
+                <span>Gerenciar Passos</span>
+              </Link>
+            </div>
           ))}
         </div>
       </nav>
