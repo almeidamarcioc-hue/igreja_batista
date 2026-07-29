@@ -549,6 +549,17 @@ export async function initDb(): Promise<void> {
       UNIQUE(culto_data, area_id, titulo)
     )
   `
+
+  // ── Comunicação — Passos desabilitados por área ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS area_passos_desabilitados (
+      id SERIAL PRIMARY KEY,
+      area_id VARCHAR(50) NOT NULL,
+      passo_id VARCHAR(50) NOT NULL,
+      desabilitado_em TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(area_id, passo_id)
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
