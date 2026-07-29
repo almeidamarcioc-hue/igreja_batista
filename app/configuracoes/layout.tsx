@@ -17,22 +17,28 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
   if (user.role === 'admin') return <>{children}</>
 
   // Permitir coordenadores de comunicação
-  let permissoes: string[] = []
+  let temPermissao = false
+
   if (user.perfil_id) {
     try {
       const { getDb } = await import('@/lib/db')
       const sql = getDb()
       const perfil = await sql`SELECT permissoes FROM perfis_acesso WHERE id = ${user.perfil_id}`
+
       if (perfil.length > 0) {
-        permissoes = JSON.parse(perfil[0].permissoes)
+        const permissoes = JSON.parse(perfil[0].permissoes)
+        // Verificar se é coordenador de QUALQUER área de comunicação
+        temPermissao = permissoes.some((p: string) =>
+          typeof p === 'string' && p.includes('comunicacao') && p.includes('coordenador')
+        )
       }
     } catch (e) {
-      permissoes = []
+      console.error('Erro ao verificar permissões:', e)
+      temPermissao = false
     }
   }
 
-  const ehCoordenador = permissoes.some((p: string) => p.startsWith('comunicacao:') && p.endsWith('.coordenador'))
-  if (!ehCoordenador) redirect('/')
+  if (!temPermissao) redirect('/')
 
   return <>{children}</>
 }
