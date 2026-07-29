@@ -1,22 +1,31 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface Me { id: number; usuario: string; nome: string; role: string; modulos: string }
 
-export default function WorkspacePage() {
+function WorkspacePageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [me, setMe] = useState<Me | null>(null)
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
+    // Verificar se há erro nos searchParams (ex: múltiplas áreas)
+    const error = searchParams?.get('error')
+    const msg = searchParams?.get('msg')
+    if (error && msg) {
+      setErrorMsg(decodeURIComponent(msg))
+    }
+
     fetch('/api/auth/me')
       .then(r => { if (!r.ok) { router.push('/login'); return null }; return r.json() })
       .then(d => { if (d) { setMe(d); setLoading(false) } })
       .catch(() => router.push('/login'))
-  }, [router])
+  }, [router, searchParams])
 
   function hasModule(mod: string) {
     if (!me) return false
@@ -59,6 +68,26 @@ export default function WorkspacePage() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: '32px 16px',
     }}>
+      {/* Error message from searchParams */}
+      {errorMsg && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          background: '#991b1b',
+          border: '1px solid #7c2d2d',
+          color: '#fca5a5',
+          borderRadius: 8,
+          padding: 16,
+          fontSize: 14,
+          maxWidth: 350,
+          zIndex: 100,
+          lineHeight: 1.5,
+        }}>
+          {errorMsg}
+        </div>
+      )}
+
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/ibtm-logo.png" alt="IBTM" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: 16 }} loading="lazy" />
 
@@ -203,5 +232,13 @@ function ModuleCard({ onClick, icon, title, desc, accent, bg, image }: {
       <p style={{ color: accent, fontWeight: 700, fontSize: 17, marginBottom: 8 }}>{title}</p>
       <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.5 }}>{desc}</p>
     </button>
+  )
+}
+
+export default function WorkspacePage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#1F1F4D', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}><LoadingSpinner /></div>}>
+      <WorkspacePageContent />
+    </Suspense>
   )
 }

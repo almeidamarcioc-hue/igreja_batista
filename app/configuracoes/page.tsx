@@ -259,9 +259,15 @@ export default function ConfiguracoesPage() {
         setEditingUser(null)
         setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
         setShowUserModal(true)
+      } else {
+        // Perfil de operador não encontrado - exibir erro e redirecionar
+        flash('Perfil de operador não disponível para sua área. Contate o administrador.', 'err')
+        setTimeout(() => {
+          router.push('/')
+        }, 2000)
       }
     }
-  }, [userRole, coordenadorArea, perfis, loadingAuth])
+  }, [userRole, coordenadorArea, perfis, loadingAuth, router])
 
   useEffect(() => {
     if (areaParam && perfis.length > 0) {
@@ -280,9 +286,15 @@ export default function ConfiguracoesPage() {
         setEditingUser(null)
         setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
         setShowUserModal(true)
+      } else {
+        // Perfil de operador não encontrado - exibir erro e redirecionar
+        flash('Perfil de operador não disponível para a área selecionada. Contate o administrador.', 'err')
+        setTimeout(() => {
+          router.push('/')
+        }, 2000)
       }
     }
-  }, [areaParam, perfis])
+  }, [areaParam, perfis, router])
 
   // ── Usuarios CRUD ──────────────────────────────────────────────────────────
 
@@ -477,17 +489,6 @@ export default function ConfiguracoesPage() {
             </div>
           </div>
         )}
-      </div>
-    )
-  }
-
-  // Se operador ou tipo não detectado: renderizar vazio ou redirecionar
-  if (userRole === 'operador') {
-    return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-          <p>Acesso bloqueado para operadores.</p>
-        </div>
       </div>
     )
   }
