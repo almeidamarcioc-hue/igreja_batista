@@ -27,10 +27,15 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
 
       if (perfil.length > 0) {
         const permissoes = JSON.parse(perfil[0].permissoes)
-        // Verificar se é coordenador de QUALQUER área de comunicação
-        temPermissao = permissoes.some((p: string) =>
-          typeof p === 'string' && p.includes('comunicacao') && p.includes('coordenador')
-        )
+        // Coordenador: tem .coordenador OU tem permissões de criar/editar em uma área de comunicação
+        temPermissao = permissoes.some((p: string) => {
+          if (typeof p !== 'string') return false
+          // Caso 1: permissão explícita de coordenador
+          if (p.includes('comunicacao') && p.includes('coordenador')) return true
+          // Caso 2: permissões de criar/editar em uma área (implicitamente coordenador)
+          if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
+          return false
+        })
       }
     } catch (e) {
       console.error('Erro ao verificar permissões:', e)

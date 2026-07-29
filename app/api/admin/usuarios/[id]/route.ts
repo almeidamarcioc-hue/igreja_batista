@@ -23,9 +23,14 @@ async function requireAdminOrCoordenador(req: NextRequest): Promise<number | nul
       const perfil = await sql`SELECT permissoes FROM perfis_acesso WHERE id = ${usuario.perfil_id}`
       if (perfil.length > 0) {
         const permissoes = JSON.parse(perfil[0].permissoes)
-        const ehCoordenador = permissoes.some((p: string) =>
-          typeof p === 'string' && p.includes('comunicacao') && p.includes('coordenador')
-        )
+        const ehCoordenador = permissoes.some((p: string) => {
+          if (typeof p !== 'string') return false
+          // Caso 1: permissão explícita de coordenador
+          if (p.includes('comunicacao') && p.includes('coordenador')) return true
+          // Caso 2: permissões de criar/editar em uma área (implicitamente coordenador)
+          if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
+          return false
+        })
         if (ehCoordenador) return userId
       }
     } catch (e) {
