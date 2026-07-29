@@ -23,6 +23,7 @@ export default function AreaPage() {
   const router = useRouter()
   const cultoData = searchParams.get('culto_data') || new Date().toISOString().split('T')[0]
   const modoVisualizacao = searchParams.get('mode') === 'view'
+  const modoGerenciar = searchParams.get('mode') === 'gerenciar'
   const areaId = (routeParams?.id as string) || ''
 
   const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)
@@ -34,8 +35,14 @@ export default function AreaPage() {
   const [temPermissao, setTemPermissao] = useState(true)
   const [finalizado, setFinalizado] = useState(false)
   const [salvandoChecklist, setSalvandoChecklist] = useState(false)
-  const [mostrarGerenciarPassos, setMostrarGerenciarPassos] = useState(false)
+  const [mostrarGerenciarPassos, setMostrarGerenciarPassos] = useState(modoGerenciar)
   const [temPermissaoEdicao, setTemPermissaoEdicao] = useState(false)
+
+  useEffect(() => {
+    if (modoGerenciar) {
+      setMostrarGerenciarPassos(true)
+    }
+  }, [modoGerenciar])
 
   useEffect(() => {
     if (!areaId || !cultoData) return
@@ -126,7 +133,7 @@ export default function AreaPage() {
   }
 
   const handleMarcaPasso = async (passoId: string, marcado: boolean) => {
-    if (modoVisualizacao) return
+    if (modoVisualizacao || modoGerenciar) return
     setSalvando(passoId)
     try {
       await fetch('/api/comunicacao/progresso', {
@@ -315,7 +322,7 @@ export default function AreaPage() {
             salvando={salvando}
             onMarcaPasso={handleMarcaPasso}
             cor={area.cor}
-            desabilitado={modoVisualizacao}
+            desabilitado={modoVisualizacao || modoGerenciar}
           />
 
           {/* DURANTE */}
@@ -334,7 +341,7 @@ export default function AreaPage() {
             salvando={salvando}
             onMarcaPasso={handleMarcaPasso}
             cor={area.cor}
-            desabilitado={modoVisualizacao}
+            desabilitado={modoVisualizacao || modoGerenciar}
           />
 
           {/* TROUBLESHOOTING */}
@@ -357,6 +364,7 @@ export default function AreaPage() {
           )}
 
           {/* AÇÕES */}
+          {!modoGerenciar && (
           <div className="bg-white rounded-lg shadow p-6 flex gap-3 flex-wrap">
             {modoVisualizacao && (
               <button
@@ -409,6 +417,31 @@ export default function AreaPage() {
               </button>
             )}
           </div>
+          )}
+
+          {modoGerenciar && (
+          <div className="bg-white rounded-lg shadow p-6 flex gap-3 flex-wrap">
+            <button
+              onClick={() => setMostrarGerenciarPassos(true)}
+              className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200"
+            >
+              ⚙️ Gerenciar Passos
+            </button>
+            <button
+              onClick={handleExportar}
+              className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
+              style={{ backgroundColor: area.cor, color: '#fff' }}
+            >
+              📥 Exportar checklist
+            </button>
+            <button
+              onClick={() => router.push('/comunicacao')}
+              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-200"
+            >
+              ← Voltar
+            </button>
+          </div>
+          )}
 
           {showConfirmSalvar && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
