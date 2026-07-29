@@ -4,19 +4,42 @@ import { getUsuario, getUsuarios, criarUsuario } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-async function requireAdmin(req: NextRequest): Promise<number | null> {
+async function requireAdminOrCoordenador(req: NextRequest): Promise<number | null> {
   const token = req.cookies.get(COOKIE_NAME)?.value
   if (!token) return null
   const userId = await verifySessionToken(token)
   if (!userId) return null
   const usuario = await getUsuario(userId)
-  if (!usuario || usuario.role !== 'admin' || !usuario.ativo) return null
-  return userId
+  if (!usuario || !usuario.ativo) return null
+
+  // Admin sempre tem acesso
+  if (usuario.role === 'admin') return userId
+
+  // Coordenadores de comunicação também têm acesso
+  if (usuario.perfil_id) {
+    try {
+      const { getDb } = await import('@/lib/db')
+      const sql = getDb()
+      const perfil = await sql`SELECT permissoes FROM perfis_acesso WHERE id = ${usuario.perfil_id}`
+      if (perfil.length > 0) {
+        const permissoes = JSON.parse(perfil[0].permissoes)
+        const ehCoordenador = permissoes.some((p: string) =>
+          typeof p === 'string' && p.includes('comunicacao') && p.includes('coordenador')
+        )
+        if (ehCoordenador) return userId
+      }
+    } catch (e) {
+      // Erro ao verificar, nega acesso
+      return null
+    }
+  }
+
+  return null
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = await requireAdmin(req)
+    const userId = await requireAdminOrCoordenador(req)
     if (!userId) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
     const usuarios = await getUsuarios()
     return NextResponse.json(usuarios)
@@ -27,7 +50,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await requireAdmin(req)
+    const userId = await requireAdminOrCoordenador(req)
     if (!userId) return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 })
     const body = await req.json()
     const { usuario, nome, email, senha, role, modulos, perfil_id } = body
