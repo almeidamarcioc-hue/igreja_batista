@@ -168,6 +168,15 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
                 <span>⚙️</span>
                 <span>Gerenciar Passos</span>
               </Link>
+              <Link
+                href={`/configuracoes?area=${area.id}`}
+                onClick={onClose}
+                style={{ color: '#e8e8e8' }}
+                className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
+              >
+                <span>➕</span>
+                <span>Novo Usuário</span>
+              </Link>
             </div>
           ))}
         </div>
