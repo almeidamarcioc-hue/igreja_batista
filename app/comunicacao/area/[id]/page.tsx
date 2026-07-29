@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import GerenciarPassosModal from '@/components/GerenciarPassosModal'
 
 interface PassoComMarcacao {
   id: string
@@ -33,6 +34,8 @@ export default function AreaPage() {
   const [temPermissao, setTemPermissao] = useState(true)
   const [finalizado, setFinalizado] = useState(false)
   const [salvandoChecklist, setSalvandoChecklist] = useState(false)
+  const [mostrarGerenciarPassos, setMostrarGerenciarPassos] = useState(false)
+  const [temPermissaoEdicao, setTemPermissaoEdicao] = useState(false)
 
   useEffect(() => {
     if (!areaId || !cultoData) return
@@ -57,6 +60,11 @@ export default function AreaPage() {
           setTemPermissao(false)
           return
         }
+
+        // Verificar se tem permissão de edição (admin ou coordenador)
+        const ehAdmin = user.role === 'admin'
+        const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+        setTemPermissaoEdicao(ehAdmin || ehCoordenador)
 
         setTemPermissao(true)
       } catch (err) {
@@ -384,6 +392,14 @@ export default function AreaPage() {
             >
               📥 Exportar checklist
             </button>
+            {!finalizado && !modoVisualizacao && temPermissaoEdicao && (
+              <button
+                onClick={() => setMostrarGerenciarPassos(true)}
+                className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200"
+              >
+                ⚙️ Gerenciar Passos
+              </button>
+            )}
             {!finalizado && !modoVisualizacao && (
               <button
                 onClick={() => setShowConfirm(true)}
@@ -467,6 +483,15 @@ export default function AreaPage() {
             </div>
           )}
         </>
+      )}
+
+      {mostrarGerenciarPassos && (
+        <GerenciarPassosModal
+          cultoData={cultoData}
+          areaId={areaId}
+          onClose={() => setMostrarGerenciarPassos(false)}
+          temPermissao={temPermissaoEdicao}
+        />
       )}
     </div>
   )

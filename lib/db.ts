@@ -535,6 +535,20 @@ export async function initDb(): Promise<void> {
       UNIQUE(culto_data, area_id, passo_id, usuario_id)
     )
   `
+
+  // ── Comunicação — Passos customizados por checklist ──
+  await sql`
+    CREATE TABLE IF NOT EXISTS checklist_passos_customizados (
+      id SERIAL PRIMARY KEY,
+      culto_data DATE NOT NULL,
+      area_id VARCHAR(50) NOT NULL,
+      titulo VARCHAR(255) NOT NULL,
+      descricao TEXT DEFAULT '',
+      tipo VARCHAR(20) NOT NULL DEFAULT 'pre',
+      criado_em TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(culto_data, area_id, titulo)
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────
