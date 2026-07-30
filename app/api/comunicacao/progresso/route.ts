@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, unauthorized, getCurrentUserId } from '@/lib/guard'
 import { obterProgressoCulto, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (areaId && areaId !== 'undefined') {
+      const user = await getComunicacaoUser(req)
+      if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      if (!podeVerArea(user, areaId)) {
+        return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
+      }
+
       // Retornar progresso de uma área específica para um usuário
       const passos = await obterProgressoCulto(cultoData, areaId, userId)
       const mapa = new Map(passos.map((p: any) => [p.passo_id, p.marcado]))
@@ -49,10 +56,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(resultado)
     }
 
-    // Retornar resumo de todas as áreas para um culto
+    // Retornar resumo das áreas que o usuário pode ver
+    const userResumo = await getComunicacaoUser(req)
+    if (!userResumo) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
     const resultado: Record<string, { total: number; marcados: number }> = {}
 
     for (const area of PROCEDIMENTOS.areas) {
+      if (!podeVerArea(userResumo, area.id)) continue
+
       if (area.pendente) {
         resultado[area.id] = { total: 0, marcados: 0 }
         continue
@@ -80,6 +92,14 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { culto_data, area_id, passo_id, marcado } = body
+
+    if (area_id) {
+      const user = await getComunicacaoUser(req)
+      if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      if (!podeVerArea(user, area_id)) {
+        return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
+      }
+    }
 
     if (!culto_data || !area_id || !passo_id || marcado === undefined) {
       return NextResponse.json({ error: 'Campos obrigatórios faltando' }, { status: 400 })

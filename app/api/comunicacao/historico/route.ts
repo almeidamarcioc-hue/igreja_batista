@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,12 @@ export async function GET(req: NextRequest) {
       { error: 'Parâmetros culto_data e area_id são obrigatórios' },
       { status: 400 }
     )
+  }
+
+  const user = await getComunicacaoUser(req)
+  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+  if (!podeVerArea(user, areaId)) {
+    return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
   }
 
   try {

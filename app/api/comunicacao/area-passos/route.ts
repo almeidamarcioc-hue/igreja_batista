@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,12 @@ export async function GET(req: NextRequest) {
       { error: 'Parâmetro area_id é obrigatório' },
       { status: 400 }
     )
+  }
+
+  const user = await getComunicacaoUser(req)
+  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+  if (!podeVerArea(user, areaId)) {
+    return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
   }
 
   try {

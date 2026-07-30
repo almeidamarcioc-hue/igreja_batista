@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
         { error: 'Parâmetros culto_data e area_id são obrigatórios' },
         { status: 400 }
       )
+    }
+
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeVerArea(user, area_id)) {
+      return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
     }
 
     const sql = getDb()
