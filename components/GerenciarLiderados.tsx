@@ -71,22 +71,20 @@ export default function GerenciarLiderados() {
   }
 
   async function salvarEdicao() {
-    if (!senha.trim()) {
-      flash('Senha é obrigatória', 'err')
-      return
-    }
-
-    if (senha.length < 6) {
+    // Senha é opcional: vazia significa "não alterar"
+    if (senha.trim() && senha.trim().length < 6) {
       flash('Senha deve ter pelo menos 6 caracteres', 'err')
       return
     }
 
     setSavingEdit(true)
     try {
+      const body: Record<string, any> = { ativo }
+      if (senha.trim()) body.senha = senha
       const res = await fetch(`/api/admin/usuarios/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha, ativo }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -144,6 +142,12 @@ export default function GerenciarLiderados() {
   }
 
   const lideradoEmEdicao = liderados.find(l => l.id === editingId)
+
+  // Salvar habilitado quando há uma senha válida a definir ou o status mudou
+  const senhaInformada = senha.trim() !== ''
+  const senhaValida = senhaInformada && senha.trim().length >= 6
+  const statusMudou = lideradoEmEdicao ? ativo !== lideradoEmEdicao.ativo : false
+  const podeSalvarEdicao = (senhaValida || (!senhaInformada && statusMudou))
 
   return (
     <div>
@@ -260,16 +264,16 @@ export default function GerenciarLiderados() {
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Nova Senha *
+                  Nova Senha <span className="font-normal">(deixe vazio para não alterar)</span>
                 </label>
                 <input
                   type="password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
-                  placeholder="Digite a nova senha"
+                  placeholder="Mínimo 6 caracteres"
                 />
-                {senha && senha.length < 6 && (
+                {senha.trim() !== '' && senha.trim().length < 6 && (
                   <p className="text-xs text-red-500 mt-1">
                     Mínimo 6 caracteres
                   </p>
@@ -304,7 +308,7 @@ export default function GerenciarLiderados() {
               </button>
               <button
                 onClick={salvarEdicao}
-                disabled={savingEdit || !senha.trim() || senha.length < 6}
+                disabled={savingEdit || !podeSalvarEdicao}
                 style={{ backgroundColor: '#4848A8' }}
                 className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
