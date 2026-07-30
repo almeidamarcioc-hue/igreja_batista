@@ -429,7 +429,7 @@ export default function ConfiguracoesPage() {
         {sucesso && <div style={{ position: 'fixed', top: 20, right: 20, background: '#166534', border: '1px solid #4b5563', color: '#86efac', borderRadius: 8, padding: 12, fontSize: 14, maxWidth: 300, zIndex: 100 }}>{sucesso}</div>}
 
         {/* Modal: Usuário (formulário direto para coordenador) */}
-        {showUserModal && (
+        {showUserModal && userRole === 'coordenador' && (
           <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div style={{ backgroundColor: '#1F1F4D' }} className="px-5 py-4 flex items-center justify-between rounded-t-xl">
@@ -682,7 +682,7 @@ export default function ConfiguracoesPage() {
       </div>
 
       {/* ── Modal: Usuário ── */}
-      {showUserModal && (
+      {showUserModal && userRole === 'admin' && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div style={{ backgroundColor: '#1F1F4D' }} className="px-5 py-4 flex items-center justify-between rounded-t-xl">
