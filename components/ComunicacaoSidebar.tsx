@@ -142,7 +142,7 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
                 className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
               >
                 <span>⚙️</span>
-                <span>Gerenciar Passos</span>
+                <span>Gerenciar Checklist</span>
               </Link>
               {usuario?.role !== 'admin' && (
                 <Link

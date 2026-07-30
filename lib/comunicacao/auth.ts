@@ -87,6 +87,31 @@ export function podeVerArea(user: ComunicacaoUser, areaId: string): boolean {
   return false
 }
 
+/**
+ * True se o usuário pode gerenciar o template da área (incluir/editar/remover
+ * passos). A tela de perfis grava `.editar`/`.excluir`, nunca `.coordenador` —
+ * exigir só `.coordenador` tornava o gerenciamento exclusivo do admin.
+ */
+export function podeGerenciarArea(user: ComunicacaoUser, areaId: string): boolean {
+  if (temAcessoTotal(user)) return true
+  if (!podeVerArea(user, areaId)) return false
+
+  const scoped = user.permissoes.filter(p => p.startsWith(`comunicacao:${areaId}`))
+  if (scoped.some(p => p.endsWith('.coordenador') || p.endsWith('.editar') || p.endsWith('.excluir'))) {
+    return true
+  }
+
+  // Perfil antigo (sem área nas permissões): cai para o nome do perfil
+  const temAlgumaScoped = user.permissoes.some(p => p.startsWith('comunicacao:'))
+  if (!temAlgumaScoped) {
+    const nome = user.perfilNome.toLowerCase()
+    const temGenericaEditar = user.permissoes.some(p => p === 'comunicacao.editar' || p === 'comunicacao.excluir')
+    return temGenericaEditar && nome.includes('coordenador')
+  }
+
+  return false
+}
+
 /** Ids das áreas que o usuário pode ver. */
 export function areasPermitidas(user: ComunicacaoUser): string[] {
   return PROCEDIMENTOS.areas.map(a => a.id).filter(id => podeVerArea(user, id))

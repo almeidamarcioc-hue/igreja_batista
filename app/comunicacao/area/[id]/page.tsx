@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 import GerenciarPassosModal from '@/components/GerenciarPassosModal'
+import { formatarDataBR } from '@/lib/datas'
 
 interface PassoComMarcacao {
   id: string
@@ -220,7 +221,7 @@ export default function AreaPage() {
   }
 
   const handleExportar = () => {
-    const dataFormatada = new Date(cultoData).toLocaleDateString('pt-BR')
+    const dataFormatada = formatarDataBR(cultoData)
     const conteudo = gerarTextoChecklist()
     const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -231,7 +232,7 @@ export default function AreaPage() {
   }
 
   const gerarTextoChecklist = () => {
-    const dataFormatada = new Date(cultoData).toLocaleDateString('pt-BR')
+    const dataFormatada = formatarDataBR(cultoData)
     let texto = `CHECKLIST — ${area.nome.toUpperCase()}\n`
     texto += `Culto: ${dataFormatada}\n`
     texto += `${'='.repeat(60)}\n\n`
@@ -291,7 +292,7 @@ export default function AreaPage() {
               {area.nome}
             </h1>
             <p className="text-gray-600 mt-1">
-              {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {formatarDataBR(cultoData, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
         </div>
@@ -396,7 +397,7 @@ export default function AreaPage() {
             )}
             {finalizado && (
               <div className="px-6 py-2 rounded-lg font-semibold text-sm bg-green-100 text-green-700 flex items-center gap-2">
-                ✓ Checklist finalizado em {new Date(cultoData).toLocaleDateString('pt-BR')}
+                ✓ Checklist finalizado em {formatarDataBR(cultoData)}
               </div>
             )}
             <button
@@ -411,7 +412,7 @@ export default function AreaPage() {
                 onClick={() => setMostrarGerenciarPassos(true)}
                 className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200"
               >
-                ⚙️ Gerenciar Passos
+                ⚙️ Gerenciar Checklist
               </button>
             )}
             {!finalizado && !modoVisualizacao && (
@@ -431,7 +432,7 @@ export default function AreaPage() {
               onClick={() => setMostrarGerenciarPassos(true)}
               className="px-6 py-2 rounded-lg font-semibold text-sm transition-colors bg-purple-100 text-purple-700 hover:bg-purple-200"
             >
-              ⚙️ Gerenciar Passos
+              ⚙️ Gerenciar Checklist
             </button>
             <button
               onClick={handleExportar}
@@ -459,7 +460,7 @@ export default function AreaPage() {
                   Você está salvando este checklist como finalizado em:
                 </p>
                 <p className="text-lg font-semibold mb-6" style={{ color: area.cor }}>
-                  {new Date(cultoData).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  {formatarDataBR(cultoData, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
                 <p className="text-sm text-gray-600 mb-6">
                   Uma vez salvo, o checklist fica registrado com {progresso.marcados} de {progresso.total} passos concluídos. Você poderá criar um novo checklist para outra data.

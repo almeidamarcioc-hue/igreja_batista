@@ -1,69 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { getComunicacaoUser, podeGerenciarArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/** Área do passo customizado, ou null se ele não existir. */
+async function areaDoPasso(id: number): Promise<string | null> {
+  const sql = getDb()
+  const rows = await sql`SELECT area_id FROM checklist_passos_customizados WHERE id = ${id}`
+  return rows.length > 0 ? String((rows[0] as any).area_id) : null
+}
+
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = req.cookies.get(COOKIE_NAME)?.value
-    if (!token) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
-    }
-
-    const userId = await verifySessionToken(token)
-    if (!userId) {
-      return NextResponse.json({ error: 'Sessão inválida' }, { status: 401 })
-    }
-
     const { id } = await params
-    const passoBusca = await getDb()`
-      SELECT area_id FROM checklist_passos_customizados WHERE id = ${parseInt(id)}
-    `
+    const passoId = parseInt(id)
+    if (Number.isNaN(passoId)) {
+      return NextResponse.json({ error: 'Id inválido' }, { status: 400 })
+    }
 
-    if (passoBusca.length === 0) {
+    const areaId = await areaDoPasso(passoId)
+    if (!areaId) {
       return NextResponse.json({ error: 'Passo não encontrado' }, { status: 404 })
     }
 
-    const areaId = passoBusca[0].area_id
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeGerenciarArea(user, areaId)) {
+      return NextResponse.json(
+        { error: 'Apenas admin e coordenadores podem editar passos' },
+        { status: 403 }
+      )
+    }
 
-    // Verificar permissão: admin ou coordenador da área
+    const { titulo, descricao, tipo } = await req.json()
+    if (!titulo?.trim()) {
+      return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 })
+    }
+
     const sql = getDb()
-    const userRows = await sql`
-      SELECT u.role, COALESCE(p.permissoes, '[]') as permissoes
-      FROM usuarios u
-      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
-      WHERE u.id = ${userId}
-    `
-
-    if (userRows.length === 0) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+    if (tipo) {
+      await sql`
+        UPDATE checklist_passos_customizados
+        SET titulo = ${titulo.trim()}, descricao = ${descricao?.trim() ?? ''}, tipo = ${tipo}
+        WHERE id = ${passoId}
+      `
+    } else {
+      await sql`
+        UPDATE checklist_passos_customizados
+        SET titulo = ${titulo.trim()}, descricao = ${descricao?.trim() ?? ''}
+        WHERE id = ${passoId}
+      `
     }
 
-    const user = userRows[0]
-    let permissoes: string[] = []
-    try {
-      permissoes = JSON.parse(user.permissoes)
-    } catch (e) {
-      permissoes = []
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    console.error('Erro ao editar passo customizado:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const passoId = parseInt(id)
+    if (Number.isNaN(passoId)) {
+      return NextResponse.json({ error: 'Id inválido' }, { status: 400 })
     }
 
-    // Apenas admin e coordenadores podem remover passos
-    const ehAdmin = user.role === 'admin'
-    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+    const areaId = await areaDoPasso(passoId)
+    if (!areaId) {
+      return NextResponse.json({ error: 'Passo não encontrado' }, { status: 404 })
+    }
 
-    if (!ehAdmin && !ehCoordenador) {
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeGerenciarArea(user, areaId)) {
       return NextResponse.json(
         { error: 'Apenas admin e coordenadores podem remover passos' },
         { status: 403 }
       )
     }
 
-    // Remover passo customizado
-    await sql`
-      DELETE FROM checklist_passos_customizados
-      WHERE id = ${parseInt(id)}
-    `
+    const sql = getDb()
+    await sql`DELETE FROM checklist_passos_customizados WHERE id = ${passoId}`
 
     return NextResponse.json({ ok: true, message: 'Passo removido com sucesso' })
   } catch (err: any) {

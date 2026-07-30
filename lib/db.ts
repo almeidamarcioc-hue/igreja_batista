@@ -561,6 +561,20 @@ export async function initDb(): Promise<void> {
       UNIQUE(area_id, passo_id)
     )
   `
+
+  // Edições dos passos padrão. O texto original vive em procedimentos.ts (código),
+  // então a alteração feita pelo coordenador é guardada aqui como sobreposição.
+  await sql`
+    CREATE TABLE IF NOT EXISTS area_passos_override (
+      id SERIAL PRIMARY KEY,
+      area_id VARCHAR(50) NOT NULL,
+      passo_id VARCHAR(50) NOT NULL,
+      titulo TEXT NOT NULL,
+      descricao TEXT DEFAULT '',
+      atualizado_em TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(area_id, passo_id)
+    )
+  `
 }
 
 // ─── Pastores ──────────────────────────────────────────────────────────────

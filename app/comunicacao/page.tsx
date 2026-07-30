@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
+import { formatarDataBR } from '@/lib/datas'
 
 interface Usuario {
   id: number
@@ -182,7 +183,7 @@ export default function ComunicacaoDashboard() {
                       <span className="text-2xl">{area.icone}</span>
                       <div>
                         <h4 className="font-semibold" style={{ color: '#002347' }}>{area.nome}</h4>
-                        <p className="text-xs text-gray-500">{new Date(item.culto_data).toLocaleDateString('pt-BR')}</p>
+                        <p className="text-xs text-gray-500">{formatarDataBR(item.culto_data)}</p>
                       </div>
                     </div>
                     <div className="mt-3">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
-import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
+import { getComunicacaoUser, podeVerArea, podeGerenciarArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,14 +52,26 @@ export async function GET(req: NextRequest) {
       ORDER BY titulo, criado_em DESC
     `
 
+    // Edições feitas nos passos padrão (o texto original vem do código)
+    const overrides = await sql`
+      SELECT passo_id, titulo, descricao FROM area_passos_override WHERE area_id = ${areaId}
+    `
+    const overridePorPasso = new Map<string, { titulo: string; descricao: string }>(
+      overrides.map((o: any) => [String(o.passo_id), { titulo: String(o.titulo), descricao: String(o.descricao ?? '') }])
+    )
+
     return NextResponse.json({
-      padrao: todosPadrao.map(p => ({
-        id: p.id,
-        titulo: p.titulo,
-        descricao: p.descricao || '',
-        tipo: area.fases.pre.includes(p) ? 'pre' : area.fases.operacao.includes(p) ? 'operacao' : 'pos',
-        isCustomizado: false
-      })),
+      padrao: todosPadrao.map(p => {
+        const ov = overridePorPasso.get(p.id)
+        return {
+          id: p.id,
+          titulo: ov?.titulo ?? p.titulo,
+          descricao: ov?.descricao ?? (p.descricao || ''),
+          tipo: area.fases.pre.includes(p) ? 'pre' : area.fases.operacao.includes(p) ? 'operacao' : 'pos',
+          isCustomizado: false,
+          editado: !!ov,
+        }
+      }),
       customizados: customizados.map((p: any) => ({
         id: p.id,
         titulo: p.titulo,
@@ -88,39 +100,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { areaId, action, passoId } = body
+    const { areaId, action, passoId, titulo, descricao } = body
 
     if (!areaId || !action || !passoId) {
       return NextResponse.json({ error: 'Campos obrigatórios faltando' }, { status: 400 })
     }
 
-    // Verificar permissão
     const sql = getDb()
-    const userRows = await sql`
-      SELECT u.role, COALESCE(p.permissoes, '[]') as permissoes
-      FROM usuarios u
-      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
-      WHERE u.id = ${userId}
-    `
 
-    if (userRows.length === 0) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
-    }
-
-    const user = userRows[0]
-    let permissoes: string[] = []
-    try {
-      permissoes = JSON.parse(user.permissoes)
-    } catch (e) {
-      permissoes = []
-    }
-
-    const ehAdmin = user.role === 'admin'
-    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
-
-    if (!ehAdmin && !ehCoordenador) {
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeGerenciarArea(user, areaId)) {
       return NextResponse.json(
-        { error: 'Apenas admin e coordenadores podem gerenciar passos' },
+        { error: 'Apenas admin e coordenadores podem gerenciar o checklist desta área' },
         { status: 403 }
       )
     }
@@ -138,6 +130,25 @@ export async function POST(req: NextRequest) {
         DELETE FROM area_passos_desabilitados
         WHERE area_id = ${areaId} AND passo_id = ${passoId}
       `
+    } else if (action === 'editar') {
+      // Editar um passo padrão: guarda sobreposição do texto vindo do código
+      if (!titulo?.trim()) {
+        return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 })
+      }
+      await sql`
+        INSERT INTO area_passos_override (area_id, passo_id, titulo, descricao)
+        VALUES (${areaId}, ${passoId}, ${titulo.trim()}, ${descricao?.trim() ?? ''})
+        ON CONFLICT (area_id, passo_id)
+        DO UPDATE SET titulo = EXCLUDED.titulo, descricao = EXCLUDED.descricao, atualizado_em = NOW()
+      `
+    } else if (action === 'restaurar') {
+      // Voltar ao texto original do template
+      await sql`
+        DELETE FROM area_passos_override
+        WHERE area_id = ${areaId} AND passo_id = ${passoId}
+      `
+    } else {
+      return NextResponse.json({ error: `Ação desconhecida: ${action}` }, { status: 400 })
     }
 
     return NextResponse.json({ ok: true })

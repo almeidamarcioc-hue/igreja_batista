@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
-import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
+import { getComunicacaoUser, podeVerArea, podeGerenciarArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,30 +62,10 @@ export async function POST(req: NextRequest) {
 
     // Verificar permissão: admin ou coordenador da área
     const sql = getDb()
-    const userRows = await sql`
-      SELECT u.role, COALESCE(p.permissoes, '[]') as permissoes
-      FROM usuarios u
-      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
-      WHERE u.id = ${userId}
-    `
 
-    if (userRows.length === 0) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
-    }
-
-    const user = userRows[0]
-    let permissoes: string[] = []
-    try {
-      permissoes = JSON.parse(user.permissoes)
-    } catch (e) {
-      permissoes = []
-    }
-
-    // Apenas admin e coordenadores podem adicionar passos
-    const ehAdmin = user.role === 'admin'
-    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${area_id}.coordenador`)
-
-    if (!ehAdmin && !ehCoordenador) {
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeGerenciarArea(user, area_id)) {
       return NextResponse.json(
         { error: 'Apenas admin e coordenadores podem adicionar passos' },
         { status: 403 }
