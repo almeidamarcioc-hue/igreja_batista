@@ -106,6 +106,11 @@ export default function ConfiguracoesPage() {
   const tabParam = searchParams?.get('tab') || null
   const [aba, setAba] = useState<'usuarios' | 'perfis' | 'liderados'>('usuarios')
 
+  // Debug
+  useEffect(() => {
+    console.log('ConfiguracoesPage - searchParams:', { areaParam, tabParam, aba })
+  }, [areaParam, tabParam, aba])
+
   // ── Current user state (para detectar tipo de usuário) ──
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [loadingAuth, setLoadingAuth] = useState(true)
@@ -249,9 +254,11 @@ export default function ConfiguracoesPage() {
         setTimeout(() => router.push('/'), 2000)
         return
       }
+      // Debug
+      console.log('Setting aba to liderados, tabParam:', tabParam, 'userRole:', userRole)
       setAba('liderados')
     }
-  }, [tabParam, userRole, temMultiplasAreas])
+  }, [tabParam, userRole, temMultiplasAreas, router])
 
   useEffect(() => {
     loadUsuarios()
