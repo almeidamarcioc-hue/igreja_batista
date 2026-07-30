@@ -29,11 +29,6 @@ export default function GerenciarLiderados() {
   // Modal de confirmação
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
 
-  // Debug
-  useEffect(() => {
-    console.log('GerenciarLiderados mounted!')
-  }, [])
-
   function flash(msg: string, tipo: 'ok' | 'err' = 'ok') {
     if (tipo === 'ok') {
       setSucesso(msg)
@@ -130,19 +125,14 @@ export default function GerenciarLiderados() {
   const lideradoEmEdicao = liderados.find(l => l.id === editingId)
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1F1F4D 0%, #2E2E66 100%)', padding: '32px 16px' }}>
+    <div>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-white text-xl font-bold">Gerenciar Liderados</h1>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-              Edite senhas e status dos operadores que você cadastrou
-            </p>
-          </div>
-          <a href="/configuracoes" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-            ← Voltar
-          </a>
+        <div className="mb-6">
+          <h1 className="text-white text-xl font-bold">Gerenciar Liderados</h1>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
+            Edite senhas e status dos operadores que você cadastrou
+          </p>
         </div>
 
         {/* Global messages */}

@@ -249,8 +249,6 @@ export default function ConfiguracoesPage() {
         setTimeout(() => router.push('/'), 2000)
         return
       }
-      // Debug
-      console.log('Setting aba to liderados, tabParam:', tabParam, 'userRole:', userRole)
       setAba('liderados')
     }
   }, [tabParam, userRole, temMultiplasAreas, router])
@@ -661,13 +659,7 @@ export default function ConfiguracoesPage() {
         )}
 
         {/* ── Tab: Liderados ── */}
-        {console.log('Verificando render - aba:', aba, 'userRole:', userRole, 'temMultiplasAreas:', temMultiplasAreas, 'condition:', aba === 'liderados')}
-        {aba === 'liderados' && (
-          <>
-            {console.log('✅ Renderizando GerenciarLiderados, aba:', aba)}
-            <GerenciarLiderados />
-          </>
-        )}
+        {aba === 'liderados' && <GerenciarLiderados />}
 
         {/* ── Tab: Perfis ── */}
         {aba === 'perfis' && (
