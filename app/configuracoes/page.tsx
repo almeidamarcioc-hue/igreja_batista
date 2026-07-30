@@ -500,7 +500,7 @@ export default function ConfiguracoesPage() {
                   Cancelar
                 </button>
                 <button onClick={handleSaveUser}
-                  disabled={savingUser || !formUser.usuario.trim() || !formUser.nome.trim() || !formUser.email.trim()}
+                  disabled={savingUser || !formNovoOperador.usuario.trim() || !formNovoOperador.nome.trim() || !formNovoOperador.email.trim()}
                   style={{ backgroundColor: '#4848A8' }}
                   className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
                   {savingUser ? 'Salvando...' : 'Salvar'}
