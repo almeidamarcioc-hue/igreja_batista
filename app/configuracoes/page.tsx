@@ -274,6 +274,13 @@ export default function ConfiguracoesPage() {
     }
   }, [userRole, coordenadorArea, perfis, loadingAuth, router])
 
+  // Garantir que formulário para novo operador sempre tem campos vazios
+  useEffect(() => {
+    if (showUserModal && !editingUser && userRole === 'coordenador') {
+      setFormUser(prev => ({ ...prev, usuario: '', senha: '', email: '' }))
+    }
+  }, [showUserModal, editingUser, userRole])
+
   useEffect(() => {
     if (areaParam && perfis.length > 0) {
       // Procurar o perfil de operador para essa área
@@ -453,12 +460,14 @@ export default function ConfiguracoesPage() {
                 <div>
                   <label className={labelCls}>Usuário (login) *</label>
                   <input className={inputCls}
+                    autoComplete="off"
                     value={formUser.usuario}
                     onChange={e => setFormUser(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Senha *</label>
                   <input type="password" className={inputCls}
+                    autoComplete="off"
                     value={formUser.senha} onChange={e => setFormUser(f => ({ ...f, senha: e.target.value }))} />
                 </div>
                 <div>
