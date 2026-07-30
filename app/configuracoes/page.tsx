@@ -248,11 +248,16 @@ export default function ConfiguracoesPage() {
       const areaConfig = AREAS_COMUNICACAO.find(a => a.key === coordenadorArea)
       if (!areaConfig) return
 
-      const perfilOperador = perfis.find(p =>
-        p.nome.includes('Comunicação') &&
-        p.nome.includes(areaConfig.perfilLabel) &&
-        p.nome.includes('Operador')
-      )
+      // Procurar de forma mais flexível, permitindo variações no nome
+      const perfilOperador = perfis.find(p => {
+        const nomeLower = p.nome.toLowerCase()
+        const searchTerms = [
+          'comunicação',
+          areaConfig.perfilLabel.toLowerCase(),
+          'operador'
+        ]
+        return searchTerms.every(term => nomeLower.includes(term))
+      })
 
       if (perfilOperador) {
         setAreaPreSelecionada(coordenadorArea)
@@ -272,14 +277,17 @@ export default function ConfiguracoesPage() {
   useEffect(() => {
     if (areaParam && perfis.length > 0) {
       // Procurar o perfil de operador para essa área
-      const perfilOperador = perfis.find(p => {
-        try {
-          const perms = JSON.parse(p.permissoes)
-          return perms.some((perm: string) => perm === `comunicacao:${areaParam}.operador`)
-        } catch {
-          return false
-        }
-      })
+      // Procurar perfil de operador da área
+      const areaConfig = AREAS_COMUNICACAO.find(a => a.key === areaParam)
+      const perfilOperador = areaConfig ? perfis.find(p => {
+        const nomeLower = p.nome.toLowerCase()
+        const searchTerms = [
+          'comunicação',
+          areaConfig.perfilLabel.toLowerCase(),
+          'operador'
+        ]
+        return searchTerms.every(term => nomeLower.includes(term))
+      }) : null
 
       if (perfilOperador) {
         setAreaPreSelecionada(areaParam)
