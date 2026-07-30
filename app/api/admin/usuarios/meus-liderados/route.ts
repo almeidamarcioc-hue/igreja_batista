@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
-import { getUsuario, getUsuarios, getUsuariosPorCriador } from '@/lib/db'
+import { getUsuario, getUsuarios, getLideradosDoCoordenador } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
       // Admin vê TODOS os usuários
       usuarios = await getUsuarios()
     } else {
-      // Coordenador vê apenas seus liderados
-      usuarios = await getUsuariosPorCriador(userId)
+      // Coordenador vê os usuários da(s) área(s) que lidera + os que ele criou
+      usuarios = await getLideradosDoCoordenador(userId)
     }
 
     return NextResponse.json(usuarios)

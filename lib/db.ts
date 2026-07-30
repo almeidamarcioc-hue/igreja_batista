@@ -1588,6 +1588,99 @@ export async function getUsuariosPorCriador(criadorId: number) {
   return rows
 }
 
+// ── Liderados de um coordenador ────────────────────────────────────────────
+// Um usuário é "liderado" de um coordenador quando o perfil dele pertence a uma
+// das áreas de comunicação que o coordenador lidera, ou quando foi criado por ele.
+// Usuários criados antes do rastreamento (criado_por_usuario_id = NULL) também
+// aparecem, pois o vínculo é resolvido pela área do perfil.
+
+const AREA_LABELS: Record<string, string[]> = {
+  'transmissao-youtube': ['transmissão', 'transmissao'],
+  'mix-som': ['mix de som', 'mix'],
+  'datashow': ['datashow'],
+  'cameras': ['câmeras', 'cameras'],
+  'iluminacao': ['iluminação', 'iluminacao'],
+}
+
+function parsePerms(raw: unknown): string[] {
+  try {
+    const v = JSON.parse(String(raw ?? '[]'))
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+/** Áreas de comunicação lideradas pelo coordenador, deduzidas do perfil dele. */
+export async function getAreasDoCoordenador(coordenadorId: number): Promise<string[]> {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT p.nome AS perfil_nome, p.permissoes AS permissoes
+    FROM usuarios u LEFT JOIN perfis_acesso p ON p.id = u.perfil_id
+    WHERE u.id = ${coordenadorId}
+  `
+  if (rows.length === 0) return []
+  const perfilNome = String((rows[0] as any).perfil_nome ?? '').toLowerCase()
+  const perms = parsePerms((rows[0] as any).permissoes)
+
+  const areas = new Set<string>()
+  for (const p of perms) {
+    const m = p.match(/^comunicacao:([a-z0-9-]+)/)
+    if (m) areas.add(m[1])
+  }
+  // Fallback: perfis antigos sem permissão por área — deduzir pelo nome do perfil
+  if (areas.size === 0 && perfilNome) {
+    for (const [areaId, labels] of Object.entries(AREA_LABELS)) {
+      if (labels.some(l => perfilNome.includes(l))) areas.add(areaId)
+    }
+  }
+  return [...areas]
+}
+
+/** Lista os liderados do coordenador (mesma área do perfil, ou criados por ele). */
+export async function getLideradosDoCoordenador(coordenadorId: number) {
+  const sql = getDb()
+  const areas = await getAreasDoCoordenador(coordenadorId)
+
+  const coordRows = await sql`SELECT perfil_id FROM usuarios WHERE id = ${coordenadorId}`
+  const perfilCoordenador = coordRows.length > 0 ? (coordRows[0] as any).perfil_id : null
+
+  // Perfis que pertencem às áreas lideradas (excluindo o próprio perfil do coordenador,
+  // para que ele não gerencie outros coordenadores da mesma área)
+  let perfisDaArea: number[] = []
+  if (areas.length > 0) {
+    const perfis = await sql`SELECT id, nome, permissoes FROM perfis_acesso`
+    perfisDaArea = perfis
+      .filter((p: any) => {
+        if (perfilCoordenador != null && Number(p.id) === Number(perfilCoordenador)) return false
+        const nome = String(p.nome ?? '').toLowerCase()
+        const perms = parsePerms(p.permissoes)
+        return areas.some(areaId => {
+          if (perms.some(x => x.startsWith(`comunicacao:${areaId}`))) return true
+          const labels = AREA_LABELS[areaId] ?? []
+          return nome.includes('comunica') && labels.some(l => nome.includes(l))
+        })
+      })
+      .map((p: any) => Number(p.id))
+  }
+
+  const rows = await sql`
+    SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao, criado_por_usuario_id
+    FROM usuarios
+    WHERE id <> ${coordenadorId}
+      AND role <> 'admin'
+      AND (criado_por_usuario_id = ${coordenadorId} OR perfil_id = ANY(${perfisDaArea}::int[]))
+    ORDER BY nome
+  `
+  return rows
+}
+
+/** True se o coordenador pode gerenciar (senha/status) o usuário alvo. */
+export async function coordenadorPodeGerenciar(coordenadorId: number, alvoId: number): Promise<boolean> {
+  const liderados = await getLideradosDoCoordenador(coordenadorId)
+  return liderados.some((l: any) => Number(l.id) === Number(alvoId))
+}
+
 export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string; perfil_id?: number | null; criado_por_usuario_id?: number | null }): Promise<number> {
   const sql = getDb()
   const hash = hashPassword(dados.senha)

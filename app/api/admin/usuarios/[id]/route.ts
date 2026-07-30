@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
-import { getUsuario, updateUsuario, deleteUsuario } from '@/lib/db'
+import { getUsuario, updateUsuario, deleteUsuario, coordenadorPodeGerenciar } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,10 +69,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json()
     const { nome, senha, email, role, modulos, perfil_id, ativo } = body
 
-    // Validar permissões: se coordenador, só pode editar seu próprio liderado
+    // Validar permissões: se coordenador, só pode editar seus liderados
     if (usuarioAdmin.role !== 'admin') {
-      // Coordenador só pode editar se criou o usuário
-      if ((usuarioAlvo as any).criado_por_usuario_id !== adminId) {
+      // Liderado = usuário da área que ele lidera, ou que ele mesmo criou
+      if (!(await coordenadorPodeGerenciar(adminId, Number(id)))) {
         return NextResponse.json({ error: 'Você não tem permissão para editar este usuário' }, { status: 403 })
       }
 
@@ -112,10 +112,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const usuarioAdmin = await getUsuario(adminId)
     if (!usuarioAdmin) return NextResponse.json({ error: 'Usuário autenticado não encontrado' }, { status: 404 })
 
-    // Validar permissões: se coordenador, só pode desativar seu próprio liderado
+    // Validar permissões: se coordenador, só pode desativar seus liderados
     if (usuarioAdmin.role !== 'admin') {
-      // Coordenador só pode desativar se criou o usuário
-      if ((usuarioAlvo as any).criado_por_usuario_id !== adminId) {
+      if (!(await coordenadorPodeGerenciar(adminId, Number(id)))) {
         return NextResponse.json({ error: 'Você não tem permissão para desativar este usuário' }, { status: 403 })
       }
     }
