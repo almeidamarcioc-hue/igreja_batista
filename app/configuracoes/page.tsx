@@ -108,8 +108,8 @@ export default function ConfiguracoesPage() {
 
   // Debug
   useEffect(() => {
-    console.log('ConfiguracoesPage - searchParams:', { areaParam, tabParam, aba })
-  }, [areaParam, tabParam, aba])
+    console.log('ConfiguracoesPage - searchParams:', { areaParam, tabParam, aba, userRole, temMultiplasAreas })
+  }, [areaParam, tabParam, aba, userRole, temMultiplasAreas])
 
   // ── Current user state (para detectar tipo de usuário) ──
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -666,9 +666,10 @@ export default function ConfiguracoesPage() {
         )}
 
         {/* ── Tab: Liderados ── */}
+        {console.log('Verificando render - aba:', aba, 'userRole:', userRole, 'temMultiplasAreas:', temMultiplasAreas, 'condition:', aba === 'liderados')}
         {aba === 'liderados' && (
           <>
-            {console.log('Renderizando GerenciarLiderados, aba:', aba)}
+            {console.log('✅ Renderizando GerenciarLiderados, aba:', aba)}
             <GerenciarLiderados />
           </>
         )}
