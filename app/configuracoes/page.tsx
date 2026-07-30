@@ -294,6 +294,11 @@ export default function ConfiguracoesPage() {
   }, [userRole, coordenadorArea, perfis, loadingAuth, router])
 
   useEffect(() => {
+    // Se estamos tentando acessar a aba de liderados, NÃO abrir o modal de novo usuário
+    if (tabParam === 'liderados') {
+      return
+    }
+
     if (areaParam && perfis.length > 0) {
       // Procurar o perfil de operador para essa área
       // Procurar perfil de operador da área
@@ -322,7 +327,7 @@ export default function ConfiguracoesPage() {
         }, 2000)
       }
     }
-  }, [areaParam, perfis, router])
+  }, [areaParam, perfis, router, tabParam])
 
   // ── Usuarios CRUD ──────────────────────────────────────────────────────────
 
