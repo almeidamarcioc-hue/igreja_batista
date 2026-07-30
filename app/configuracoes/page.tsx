@@ -444,24 +444,24 @@ export default function ConfiguracoesPage() {
               <div className="p-5 space-y-3">
                 <div>
                   <label className={labelCls}>Nome Completo *</label>
-                  <input className={inputCls} value={formUser.nome}
+                  <input key={`nome-${areaPreSelecionada}`} className={inputCls} value={formUser.nome}
                     onChange={e => setFormUser(f => ({ ...f, nome: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>E-mail (obrigatório) *</label>
-                  <input type="email" className={inputCls} placeholder="usuario@email.com"
+                  <input key={`email-${areaPreSelecionada}`} type="email" className={inputCls} placeholder="usuario@email.com"
                     value={formUser.email} onChange={e => setFormUser(f => ({ ...f, email: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Usuário (login) *</label>
-                  <input className={inputCls}
+                  <input key={`usuario-${areaPreSelecionada}`} className={inputCls}
                     autoComplete="off"
                     value={formUser.usuario}
                     onChange={e => setFormUser(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Senha *</label>
-                  <input type="password" className={inputCls}
+                  <input key={`senha-${areaPreSelecionada}`} type="password" className={inputCls}
                     autoComplete="off"
                     value={formUser.senha} onChange={e => setFormUser(f => ({ ...f, senha: e.target.value }))} />
                 </div>
