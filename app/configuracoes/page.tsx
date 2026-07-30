@@ -450,25 +450,27 @@ export default function ConfiguracoesPage() {
               <div className="p-5 space-y-3">
                 <div>
                   <label className={labelCls}>Nome Completo *</label>
-                  <input className={inputCls} value={formNovoOperador.nome}
+                  <input className={inputCls} value={formNovoOperador.nome} defaultValue=""
                     onChange={e => setFormNovoOperador(f => ({ ...f, nome: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>E-mail (obrigatório) *</label>
-                  <input type="email" className={inputCls} placeholder="usuario@email.com"
+                  <input type="email" className={inputCls} placeholder="usuario@email.com" defaultValue=""
                     value={formNovoOperador.email} onChange={e => setFormNovoOperador(f => ({ ...f, email: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Usuário (login) *</label>
                   <input className={inputCls}
-                    autoComplete="off"
+                    autoComplete="new-username"
+                    defaultValue=""
                     value={formNovoOperador.usuario}
                     onChange={e => setFormNovoOperador(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Senha *</label>
                   <input type="password" className={inputCls}
-                    autoComplete="off"
+                    autoComplete="new-password"
+                    defaultValue=""
                     value={formNovoOperador.senha} onChange={e => setFormNovoOperador(f => ({ ...f, senha: e.target.value }))} />
                 </div>
                 <div>
