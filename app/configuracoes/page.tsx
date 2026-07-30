@@ -106,11 +106,6 @@ export default function ConfiguracoesPage() {
   const tabParam = searchParams?.get('tab') || null
   const [aba, setAba] = useState<'usuarios' | 'perfis' | 'liderados'>('usuarios')
 
-  // Debug
-  useEffect(() => {
-    console.log('ConfiguracoesPage - searchParams:', { areaParam, tabParam, aba, userRole, temMultiplasAreas })
-  }, [areaParam, tabParam, aba, userRole, temMultiplasAreas])
-
   // ── Current user state (para detectar tipo de usuário) ──
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [loadingAuth, setLoadingAuth] = useState(true)
