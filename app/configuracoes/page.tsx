@@ -934,7 +934,9 @@ export default function ConfiguracoesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center">
             <p className="text-2xl mb-3">⚠️</p>
-            <p className="font-semibold mb-1">Excluir usuário?</p>
+            <p className="font-semibold mb-1">
+              Excluir {usuarios.find(u => u.id === confirmDeleteUser)?.nome ?? 'usuário'}?
+            </p>
             <p className="text-sm text-gray-500 mb-5">Esta ação não pode ser desfeita.</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => setConfirmDeleteUser(null)}

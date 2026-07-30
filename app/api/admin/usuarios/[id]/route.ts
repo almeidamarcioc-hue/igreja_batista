@@ -112,17 +112,20 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const usuarioAdmin = await getUsuario(adminId)
     if (!usuarioAdmin) return NextResponse.json({ error: 'Usuário autenticado não encontrado' }, { status: 404 })
 
-    // Validar permissões: se coordenador, só pode desativar seus liderados
-    if (usuarioAdmin.role !== 'admin') {
-      if (!(await coordenadorPodeGerenciar(adminId, Number(id)))) {
-        return NextResponse.json({ error: 'Você não tem permissão para desativar este usuário' }, { status: 403 })
-      }
+    // Admin exclui de fato; coordenador apenas desativa o próprio liderado
+    if (usuarioAdmin.role === 'admin') {
+      await deleteUsuario(Number(id))
+      return NextResponse.json({ ok: true, excluido: true })
+    }
+
+    if (!(await coordenadorPodeGerenciar(adminId, Number(id)))) {
+      return NextResponse.json({ error: 'Você não tem permissão para desativar este usuário' }, { status: 403 })
     }
 
     // Soft delete: marcar como inativo
     await updateUsuario(Number(id), { ativo: false })
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, excluido: false })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

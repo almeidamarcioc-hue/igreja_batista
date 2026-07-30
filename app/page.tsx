@@ -12,6 +12,7 @@ function WorkspacePageContent() {
   const [me, setMe] = useState<Me | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [temMotivosOracao, setTemMotivosOracao] = useState(false)
 
   useEffect(() => {
     // Verificar se há erro nos searchParams (ex: múltiplas áreas)
@@ -25,6 +26,12 @@ function WorkspacePageContent() {
       .then(r => { if (!r.ok) { router.push('/login'); return null }; return r.json() })
       .then(d => { if (d) { setMe(d); setLoading(false) } })
       .catch(() => router.push('/login'))
+
+    // O painel de orações só aparece quando existe motivo ativo cadastrado
+    fetch('/api/oracao/motivos')
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => setTemMotivosOracao(Array.isArray(d) && d.length > 0))
+      .catch(() => setTemMotivosOracao(false))
   }, [router, searchParams])
 
   function hasModule(mod: string) {
@@ -159,14 +166,16 @@ function WorkspacePageContent() {
             bg="#4C0519"
           />
         )}
-        <ModuleCard
-          onClick={() => router.push('/oracao/dashboard')}
-          icon="🙏"
-          title="Motivos de Oração"
-          desc="Dashboard de orações ativo (sem autenticação)"
-          accent="#6366F1"
-          bg="#312E81"
-        />
+        {temMotivosOracao && (
+          <ModuleCard
+            onClick={() => router.push('/oracao/dashboard')}
+            icon="🙏"
+            title="Motivos de Oração"
+            desc="Dashboard de orações ativo (sem autenticação)"
+            accent="#6366F1"
+            bg="#312E81"
+          />
+        )}
         {me?.role === 'admin' && (
           <ModuleCard
             onClick={() => router.push('/configuracoes')}
