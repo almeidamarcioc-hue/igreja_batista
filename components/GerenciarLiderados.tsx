@@ -122,6 +122,27 @@ export default function GerenciarLiderados() {
     }
   }
 
+  async function reativar(id: number) {
+    setSavingEdit(true)
+    try {
+      const res = await fetch(`/api/admin/usuarios/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ativo: true }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Erro ao reativar usuário')
+      }
+      flash('Liderado reativado com sucesso')
+      await carregarLiderados()
+    } catch (e: any) {
+      flash(e.message, 'err')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   const lideradoEmEdicao = liderados.find(l => l.id === editingId)
 
   return (
@@ -129,40 +150,40 @@ export default function GerenciarLiderados() {
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-white text-xl font-bold">Gerenciar Liderados</h1>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-            Edite senhas e status dos operadores que você cadastrou
+          <h1 className="text-2xl font-bold" style={{ color: '#002347' }}>Gerenciar Liderados</h1>
+          <p className="text-sm text-gray-500">
+            Altere a senha ou o status dos operadores da sua área
           </p>
         </div>
 
         {/* Global messages */}
         {erro && (
-          <div className="bg-red-900 border border-red-600 text-red-200 rounded-lg px-4 py-3 mb-4 text-sm">
+          <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
             {erro}
           </div>
         )}
         {sucesso && (
-          <div className="bg-green-900 border border-green-600 text-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
+          <div className="bg-green-50 border border-green-300 text-green-700 rounded-lg px-4 py-3 mb-4 text-sm">
             {sucesso}
           </div>
         )}
 
         {/* Lista */}
-        <div className="bg-white bg-opacity-10 rounded-xl p-5">
+        <div>
           {loading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner />
             </div>
           ) : liderados.length === 0 ? (
-            <div className="text-center py-12" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <div className="bg-white rounded-lg shadow-md text-center py-12 px-4">
               <p className="text-3xl mb-3">👥</p>
-              <p className="text-sm mb-6">Você ainda não cadastrou nenhum liderado.</p>
+              <p className="text-sm text-gray-500 mb-6">Nenhum liderado encontrado na sua área.</p>
               <a
                 href="/configuracoes"
-                style={{ backgroundColor: '#4848A8' }}
+                style={{ backgroundColor: '#002347' }}
                 className="inline-block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
               >
-                ➕ Criar primeiro operador
+                ➕ Cadastrar operador
               </a>
             </div>
           ) : (
@@ -170,47 +191,55 @@ export default function GerenciarLiderados() {
               {liderados.map(liderado => (
                 <div
                   key={liderado.id}
-                  className="bg-white bg-opacity-10 rounded-xl px-4 py-4 flex items-start justify-between gap-4"
+                  className="bg-white rounded-lg shadow-md p-4 border-l-4 flex items-start justify-between gap-4 flex-wrap"
+                  style={{ borderLeftColor: liderado.ativo ? '#16a34a' : '#9ca3af' }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p className="text-white font-semibold">{liderado.nome}</p>
+                      <p className="font-semibold" style={{ color: '#002347' }}>{liderado.nome}</p>
                       {liderado.ativo ? (
-                        <span className="text-xs bg-green-700 text-green-100 px-2 py-1 rounded">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">
                           Ativo
                         </span>
                       ) : (
-                        <span className="text-xs bg-red-700 text-red-100 px-2 py-1 rounded">
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">
                           Inativo
                         </span>
                       )}
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
-                      @{liderado.usuario}
-                    </p>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
-                      {liderado.email}
-                    </p>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: '4px' }}>
-                      Criado em{' '}
-                      {new Date(liderado.data_criacao).toLocaleDateString('pt-BR')}
-                    </p>
+                    <p className="text-xs text-gray-600">@{liderado.usuario}</p>
+                    {liderado.email && <p className="text-xs text-gray-600">{liderado.email}</p>}
+                    {liderado.data_criacao && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Criado em {new Date(liderado.data_criacao).toLocaleDateString('pt-BR')}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-3 flex-shrink-0">
                     <button
                       onClick={() => abrirEditar(liderado)}
-                      style={{ color: '#a5b4fc' }}
-                      className="text-xs font-medium hover:underline"
+                      style={{ color: '#002347' }}
+                      className="text-xs font-semibold hover:underline"
                     >
                       🔐 Alterar Senha
                     </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(liderado.id)}
-                      style={{ color: '#fca5a5' }}
-                      className="text-xs font-medium hover:underline"
-                    >
-                      ⚪ Desativar
-                    </button>
+                    {liderado.ativo ? (
+                      <button
+                        onClick={() => setConfirmDeleteId(liderado.id)}
+                        disabled={savingEdit}
+                        className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        ⚪ Desativar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => reativar(liderado.id)}
+                        disabled={savingEdit}
+                        className="text-xs font-semibold text-green-700 hover:underline disabled:opacity-50"
+                      >
+                        ✅ Reativar
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

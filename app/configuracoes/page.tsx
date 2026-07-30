@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import GerenciarLiderados from '@/components/GerenciarLiderados'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -104,7 +103,7 @@ export default function ConfiguracoesPage() {
   const searchParams = useSearchParams()
   const areaParam = searchParams?.get('area') || null
   const tabParam = searchParams?.get('tab') || null
-  const [aba, setAba] = useState<'usuarios' | 'perfis' | 'liderados'>('usuarios')
+  const [aba, setAba] = useState<'usuarios' | 'perfis'>('usuarios')
 
   // ── Current user state (para detectar tipo de usuário) ──
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -240,18 +239,10 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  // Carregar aba do tab parameter
+  // Links antigos com ?tab=liderados agora vivem em /comunicacao/liderados
   useEffect(() => {
-    if (tabParam === 'liderados') {
-      // Validar se coordenador com múltiplas áreas
-      if (userRole === 'coordenador' && temMultiplasAreas) {
-        flash('Sua conta tem permissões em múltiplas áreas. Essa funcionalidade está em desenvolvimento.', 'err')
-        setTimeout(() => router.push('/'), 2000)
-        return
-      }
-      setAba('liderados')
-    }
-  }, [tabParam, userRole, temMultiplasAreas, router])
+    if (tabParam === 'liderados') router.replace('/comunicacao/liderados')
+  }, [tabParam, router])
 
   useEffect(() => {
     loadUsuarios()
@@ -591,11 +582,11 @@ export default function ConfiguracoesPage() {
             Perfis de Acesso
           </button>
           {userRole === 'coordenador' && !temMultiplasAreas && (
-            <button onClick={() => setAba('liderados')}
-              style={{ backgroundColor: aba === 'liderados' ? '#4848A8' : 'rgba(255,255,255,0.1)', color: '#fff' }}
-              className="px-5 py-2 rounded-lg text-sm font-medium capitalize transition-colors">
+            <a href="/comunicacao/liderados"
+              style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
+              className="px-5 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-opacity-20">
               Liderados
-            </button>
+            </a>
           )}
         </div>
 
@@ -657,9 +648,6 @@ export default function ConfiguracoesPage() {
             )}
           </div>
         )}
-
-        {/* ── Tab: Liderados ── */}
-        {aba === 'liderados' && <GerenciarLiderados />}
 
         {/* ── Tab: Perfis ── */}
         {aba === 'perfis' && (
