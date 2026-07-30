@@ -3,6 +3,7 @@ import { requirePermission, unauthorized, getCurrentUserId } from '@/lib/guard'
 import { obterProgressoCulto, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
+import { obterPassosEfetivos } from '@/lib/comunicacao/passos'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,8 +37,11 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Área não encontrada' }, { status: 404 })
       }
 
-      const passosPre = area.fases.pre.filter(p => !area.pendente)
-      const passosPos = area.fases.pos.filter(p => !area.pendente)
+      // Usa a lista efetiva (sem os removidos, com os customizados) para que os
+      // contadores batam com o que a tela mostra
+      const efetivos = await obterPassosEfetivos(areaId)
+      const passosPre = area.pendente ? [] : (efetivos?.pre ?? area.fases.pre)
+      const passosPos = area.pendente ? [] : (efetivos?.pos ?? area.fases.pos)
       const todosPassos = [...passosPre, ...passosPos]
 
       const resultado = {
@@ -50,7 +54,8 @@ export async function GET(req: NextRequest) {
           marcado: mapa.get(p.id) ?? false,
         })),
         total: todosPassos.length,
-        marcados: Array.from(mapa.values()).filter(Boolean).length,
+        // Só conta marcações de passos que ainda existem no template
+        marcados: todosPassos.filter(p => mapa.get(p.id)).length,
       }
 
       return NextResponse.json(resultado)

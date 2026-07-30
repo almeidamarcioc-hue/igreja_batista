@@ -39,6 +39,27 @@ export default function AreaPage() {
   const [mostrarGerenciarPassos, setMostrarGerenciarPassos] = useState(modoGerenciar)
   const [temPermissaoEdicao, setTemPermissaoEdicao] = useState(false)
 
+  // Passos efetivos (com edições, remoções e customizados). Enquanto não chegam,
+  // usa o template do código para a tela não ficar vazia.
+  const [passosEfetivos, setPassosEfetivos] = useState<{ pre: any[]; operacao: any[]; pos: any[] } | null>(null)
+
+  const carregarPassosEfetivos = async () => {
+    if (!areaId) return
+    try {
+      const resp = await fetch(`/api/comunicacao/area-passos?area_id=${areaId}`)
+      if (resp.ok) {
+        const dados = await resp.json()
+        if (dados.efetivos) setPassosEfetivos(dados.efetivos)
+      }
+    } catch (err) {
+      console.error('Erro ao carregar passos do checklist:', err)
+    }
+  }
+
+  const fasePre = passosEfetivos?.pre ?? area?.fases.pre ?? []
+  const faseOperacao = passosEfetivos?.operacao ?? area?.fases.operacao ?? []
+  const fasePos = passosEfetivos?.pos ?? area?.fases.pos ?? []
+
   useEffect(() => {
     if (modoGerenciar) {
       setMostrarGerenciarPassos(true)
@@ -112,6 +133,7 @@ export default function AreaPage() {
     }
 
     carregarProgresso()
+    carregarPassosEfetivos()
   }, [cultoData, areaId, temPermissao, modoVisualizacao, area])
 
   if (!area) {
@@ -172,6 +194,17 @@ export default function AreaPage() {
       console.error('Erro ao salvar:', err)
     } finally {
       setSalvando(null)
+    }
+  }
+
+  // Ao fechar, remove ?mode=gerenciar da URL. Sem isso, o link do menu aponta
+  // para a mesma URL em que já estamos e clicar nele não reabre o modal.
+  // Recarrega os passos para refletir edições feitas no template.
+  const handleFecharGerenciar = () => {
+    setMostrarGerenciarPassos(false)
+    carregarPassosEfetivos()
+    if (modoGerenciar) {
+      router.replace(`/comunicacao/area/${areaId}?culto_data=${cultoData.split('T')[0]}`)
     }
   }
 
@@ -249,7 +282,7 @@ export default function AreaPage() {
 
     // ANTES
     texto += `ANTES DE INICIAR\n${'-'.repeat(60)}\n`
-    area.fases.pre.forEach((passo, idx) => {
+    fasePre.forEach((passo, idx) => {
       const marcado = progresso.pre.find(p => p.id === passo.id)?.marcado
       const simbolo = marcado ? '[✓]' : '[ ]'
       texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
@@ -259,7 +292,7 @@ export default function AreaPage() {
 
     // DURANTE
     texto += `DURANTE (GUIA DE CONSULTA)\n${'-'.repeat(60)}\n`
-    area.fases.operacao.forEach((passo, idx) => {
+    faseOperacao.forEach((passo, idx) => {
       const simbolo = passo.critico ? '[ATENÇÃO]' : '▸'
       texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
       if (passo.descricao) texto += `    ${passo.descricao}\n`
@@ -268,7 +301,7 @@ export default function AreaPage() {
 
     // DEPOIS
     texto += `DEPOIS DE FINALIZAR\n${'-'.repeat(60)}\n`
-    area.fases.pos.forEach((passo, idx) => {
+    fasePos.forEach((passo, idx) => {
       const marcado = progresso.pos.find(p => p.id === passo.id)?.marcado
       const simbolo = marcado ? '[✓]' : '[ ]'
       texto += `${simbolo} ${idx + 1}. ${passo.titulo}\n`
@@ -323,7 +356,7 @@ export default function AreaPage() {
           {/* ANTES DE INICIAR */}
           <BlocoChecklist
             titulo="✅ ANTES DE INICIAR"
-            passos={area.fases.pre}
+            passos={fasePre}
             progresso={progresso.pre}
             percentual={percentualPre}
             salvando={salvando}
@@ -335,14 +368,14 @@ export default function AreaPage() {
           {/* DURANTE */}
           <BlocoGuia
             titulo="▸ DURANTE (GUIA DE CONSULTA)"
-            passos={area.fases.operacao}
+            passos={faseOperacao}
             cor={area.cor}
           />
 
           {/* DEPOIS */}
           <BlocoChecklist
             titulo="🏁 DEPOIS DE FINALIZAR"
-            passos={area.fases.pos}
+            passos={fasePos}
             progresso={progresso.pos}
             percentual={percentualPos}
             salvando={salvando}
@@ -529,7 +562,7 @@ export default function AreaPage() {
         <GerenciarPassosModal
           cultoData={cultoData}
           areaId={areaId}
-          onClose={() => setMostrarGerenciarPassos(false)}
+          onClose={handleFecharGerenciar}
           temPermissao={temPermissaoEdicao}
         />
       )}

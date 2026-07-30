@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 import { getComunicacaoUser, podeVerArea, podeGerenciarArea } from '@/lib/comunicacao/auth'
+import { obterPassosEfetivos, garantirTabelaOverride } from '@/lib/comunicacao/passos'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
     `
 
     // Edições feitas nos passos padrão (o texto original vem do código)
+    await garantirTabelaOverride()
     const overrides = await sql`
       SELECT passo_id, titulo, descricao FROM area_passos_override WHERE area_id = ${areaId}
     `
@@ -79,7 +81,9 @@ export async function GET(req: NextRequest) {
         tipo: p.tipo,
         isCustomizado: true
       })),
-      desabilitados: desabilitadosIds
+      desabilitados: desabilitadosIds,
+      // Lista final usada pela tela do checklist (com edições, remoções e customizados)
+      efetivos: await obterPassosEfetivos(areaId)
     })
   } catch (err: any) {
     console.error('Erro ao buscar passos:', err)
@@ -135,6 +139,7 @@ export async function POST(req: NextRequest) {
       if (!titulo?.trim()) {
         return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 })
       }
+      await garantirTabelaOverride()
       await sql`
         INSERT INTO area_passos_override (area_id, passo_id, titulo, descricao)
         VALUES (${areaId}, ${passoId}, ${titulo.trim()}, ${descricao?.trim() ?? ''})
