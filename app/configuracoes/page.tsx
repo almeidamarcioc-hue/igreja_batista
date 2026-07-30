@@ -260,6 +260,11 @@ export default function ConfiguracoesPage() {
 
   // ── Pré-carregar perfil de operador para coordenador com 1 área ──
   useEffect(() => {
+    // Se estamos tentando acessar a aba de liderados, NÃO abrir o modal de novo usuário
+    if (tabParam === 'liderados') {
+      return
+    }
+
     if (userRole === 'coordenador' && coordenadorArea && perfis.length > 0 && loadingAuth === false) {
       // Procurar o perfil de operador para essa área
       // O perfil tem nome como "Comunicação — {Area} (Operador)"
@@ -291,7 +296,7 @@ export default function ConfiguracoesPage() {
         }, 2000)
       }
     }
-  }, [userRole, coordenadorArea, perfis, loadingAuth, router])
+  }, [userRole, coordenadorArea, perfis, loadingAuth, router, tabParam])
 
   useEffect(() => {
     // Se estamos tentando acessar a aba de liderados, NÃO abrir o modal de novo usuário
