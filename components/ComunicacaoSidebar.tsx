@@ -177,6 +177,17 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
                 <span>➕</span>
                 <span>Novo Usuário</span>
               </Link>
+              {usuario?.role !== 'admin' && (
+                <Link
+                  href={`/configuracoes?tab=liderados&area=${area.id}`}
+                  onClick={onClose}
+                  style={{ color: '#e8e8e8' }}
+                  className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
+                >
+                  <span>👥</span>
+                  <span>Gerenciar Liderados</span>
+                </Link>
+              )}
             </div>
           ))}
         </div>

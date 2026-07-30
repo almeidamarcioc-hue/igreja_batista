@@ -264,6 +264,7 @@ export async function initDb(): Promise<void> {
   await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(200) DEFAULT ''`
   await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS permissoes TEXT DEFAULT '[]'`
   await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil_id INTEGER`
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS criado_por_usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`
 
   // ── Perfis de acesso ──
   await sql`
@@ -1571,22 +1572,28 @@ export async function getUsuarioPorLogin(usuario: string) {
 
 export async function getUsuarios() {
   const sql = getDb()
-  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao FROM usuarios ORDER BY nome`
+  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao, criado_por_usuario_id FROM usuarios ORDER BY nome`
   return rows
 }
 
 export async function getUsuario(id: number) {
   const sql = getDb()
-  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao FROM usuarios WHERE id = ${id}`
+  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao, criado_por_usuario_id FROM usuarios WHERE id = ${id}`
   return rows[0] ?? null
 }
 
-export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string; perfil_id?: number | null }): Promise<number> {
+export async function getUsuariosPorCriador(criadorId: number) {
+  const sql = getDb()
+  const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao, criado_por_usuario_id FROM usuarios WHERE criado_por_usuario_id = ${criadorId} ORDER BY nome`
+  return rows
+}
+
+export async function criarUsuario(dados: { usuario: string; senha: string; nome: string; email?: string | null; role?: string; modulos?: string; perfil_id?: number | null; criado_por_usuario_id?: number | null }): Promise<number> {
   const sql = getDb()
   const hash = hashPassword(dados.senha)
   const rows = await sql`
-    INSERT INTO usuarios (usuario, senha_hash, nome, email, role, modulos, perfil_id)
-    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.email ?? null}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'}, ${dados.perfil_id ?? null})
+    INSERT INTO usuarios (usuario, senha_hash, nome, email, role, modulos, perfil_id, criado_por_usuario_id)
+    VALUES (${dados.usuario}, ${hash}, ${dados.nome}, ${dados.email ?? null}, ${dados.role ?? 'admin'}, ${dados.modulos ?? '*'}, ${dados.perfil_id ?? null}, ${dados.criado_por_usuario_id ?? null})
     RETURNING id
   `
   return (rows[0] as { id: number }).id

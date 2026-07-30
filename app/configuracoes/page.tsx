@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import GerenciarLiderados from '@/components/GerenciarLiderados'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,8 @@ export default function ConfiguracoesPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const areaParam = searchParams?.get('area') || null
-  const [aba, setAba] = useState<'usuarios' | 'perfis'>('usuarios')
+  const tabParam = searchParams?.get('tab') || null
+  const [aba, setAba] = useState<'usuarios' | 'perfis' | 'liderados'>('usuarios')
 
   // ── Current user state (para detectar tipo de usuário) ──
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -237,6 +239,19 @@ export default function ConfiguracoesPage() {
       return null
     }
   }
+
+  // Carregar aba do tab parameter
+  useEffect(() => {
+    if (tabParam === 'liderados') {
+      // Validar se coordenador com múltiplas áreas
+      if (userRole === 'coordenador' && temMultiplasAreas) {
+        flash('Sua conta tem permissões em múltiplas áreas. Essa funcionalidade está em desenvolvimento.', 'err')
+        setTimeout(() => router.push('/'), 2000)
+        return
+      }
+      setAba('liderados')
+    }
+  }, [tabParam, userRole, temMultiplasAreas])
 
   useEffect(() => {
     loadUsuarios()
@@ -555,13 +570,23 @@ export default function ConfiguracoesPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
-          {(['usuarios', 'perfis'] as const).map(t => (
-            <button key={t} onClick={() => setAba(t)}
-              style={{ backgroundColor: aba === t ? '#4848A8' : 'rgba(255,255,255,0.1)', color: '#fff' }}
+          <button onClick={() => setAba('usuarios')}
+            style={{ backgroundColor: aba === 'usuarios' ? '#4848A8' : 'rgba(255,255,255,0.1)', color: '#fff' }}
+            className="px-5 py-2 rounded-lg text-sm font-medium capitalize transition-colors">
+            Usuários
+          </button>
+          <button onClick={() => setAba('perfis')}
+            style={{ backgroundColor: aba === 'perfis' ? '#4848A8' : 'rgba(255,255,255,0.1)', color: '#fff' }}
+            className="px-5 py-2 rounded-lg text-sm font-medium capitalize transition-colors">
+            Perfis de Acesso
+          </button>
+          {userRole === 'coordenador' && !temMultiplasAreas && (
+            <button onClick={() => setAba('liderados')}
+              style={{ backgroundColor: aba === 'liderados' ? '#4848A8' : 'rgba(255,255,255,0.1)', color: '#fff' }}
               className="px-5 py-2 rounded-lg text-sm font-medium capitalize transition-colors">
-              {t === 'usuarios' ? 'Usuários' : 'Perfis de Acesso'}
+              Liderados
             </button>
-          ))}
+          )}
         </div>
 
         {/* ── Tab: Usuários ── */}
@@ -621,6 +646,11 @@ export default function ConfiguracoesPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ── Tab: Liderados ── */}
+        {aba === 'liderados' && (
+          <GerenciarLiderados />
         )}
 
         {/* ── Tab: Perfis ── */}
