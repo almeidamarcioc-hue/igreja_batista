@@ -29,6 +29,12 @@ export default function GerenciarLiderados() {
   // Modal de confirmação
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
 
+  // Modal de novo operador
+  const emptyNovo = { nome: '', email: '', usuario: '', senha: '' }
+  const [showNovo, setShowNovo] = useState(false)
+  const [formNovo, setFormNovo] = useState(emptyNovo)
+  const [savingNovo, setSavingNovo] = useState(false)
+
   function flash(msg: string, tipo: 'ok' | 'err' = 'ok') {
     if (tipo === 'ok') {
       setSucesso(msg)
@@ -120,6 +126,34 @@ export default function GerenciarLiderados() {
     }
   }
 
+  function abrirNovo() {
+    setFormNovo(emptyNovo)
+    setShowNovo(true)
+  }
+
+  async function salvarNovo() {
+    setSavingNovo(true)
+    try {
+      const res = await fetch('/api/admin/usuarios/meus-liderados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formNovo),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Erro ao cadastrar operador')
+      }
+      setShowNovo(false)
+      setFormNovo(emptyNovo)
+      flash('Operador cadastrado com sucesso')
+      await carregarLiderados()
+    } catch (e: any) {
+      flash(e.message, 'err')
+    } finally {
+      setSavingNovo(false)
+    }
+  }
+
   async function reativar(id: number) {
     setSavingEdit(true)
     try {
@@ -149,15 +183,30 @@ export default function GerenciarLiderados() {
   const statusMudou = lideradoEmEdicao ? ativo !== lideradoEmEdicao.ativo : false
   const podeSalvarEdicao = (senhaValida || (!senhaInformada && statusMudou))
 
+  const podeSalvarNovo =
+    formNovo.nome.trim() !== '' &&
+    formNovo.email.trim() !== '' &&
+    formNovo.usuario.trim() !== '' &&
+    formNovo.senha.trim().length >= 6
+
   return (
     <div>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: '#002347' }}>Gerenciar Liderados</h1>
-          <p className="text-sm text-gray-500">
-            Altere a senha ou o status dos operadores da sua área
-          </p>
+        <div className="mb-6 flex items-end justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold" style={{ color: '#002347' }}>Gerenciar Liderados</h1>
+            <p className="text-sm text-gray-500">
+              Cadastre operadores e altere a senha ou o status de quem já existe
+            </p>
+          </div>
+          <button
+            onClick={abrirNovo}
+            style={{ backgroundColor: '#002347' }}
+            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
+          >
+            ➕ Novo Operador
+          </button>
         </div>
 
         {/* Global messages */}
@@ -182,13 +231,13 @@ export default function GerenciarLiderados() {
             <div className="bg-white rounded-lg shadow-md text-center py-12 px-4">
               <p className="text-3xl mb-3">👥</p>
               <p className="text-sm text-gray-500 mb-6">Nenhum liderado encontrado na sua área.</p>
-              <a
-                href="/configuracoes"
+              <button
+                onClick={abrirNovo}
                 style={{ backgroundColor: '#002347' }}
                 className="inline-block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
               >
                 ➕ Cadastrar operador
-              </a>
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -313,6 +362,80 @@ export default function GerenciarLiderados() {
                 className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
                 {savingEdit ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Novo Operador */}
+      {showNovo && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div style={{ backgroundColor: '#1F1F4D' }} className="px-5 py-4 flex items-center justify-between rounded-t-xl">
+              <h2 className="text-white font-semibold">Novo Operador</h2>
+              <button onClick={() => setShowNovo(false)} className="text-gray-400 hover:text-white text-xl">×</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-gray-500">
+                O operador será cadastrado na sua área, com o perfil padrão de operador.
+              </p>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Nome Completo *</label>
+                <input
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                  value={formNovo.nome}
+                  onChange={e => setFormNovo(f => ({ ...f, nome: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">E-mail *</label>
+                <input
+                  type="email"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                  placeholder="usuario@email.com"
+                  value={formNovo.email}
+                  onChange={e => setFormNovo(f => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Usuário (login) *</label>
+                <input
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                  value={formNovo.usuario}
+                  onChange={e => setFormNovo(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Senha *</label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                  placeholder="Mínimo 6 caracteres"
+                  value={formNovo.senha}
+                  onChange={e => setFormNovo(f => ({ ...f, senha: e.target.value }))}
+                />
+                {formNovo.senha.trim() !== '' && formNovo.senha.trim().length < 6 && (
+                  <p className="text-xs text-red-500 mt-1">Mínimo 6 caracteres</p>
+                )}
+              </div>
+            </div>
+            <div className="px-5 pb-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowNovo(false)}
+                disabled={savingNovo}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarNovo}
+                disabled={savingNovo || !podeSalvarNovo}
+                style={{ backgroundColor: '#4848A8' }}
+                className="px-5 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                {savingNovo ? 'Salvando...' : 'Cadastrar'}
               </button>
             </div>
           </div>

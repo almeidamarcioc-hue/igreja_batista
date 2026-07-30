@@ -1675,6 +1675,29 @@ export async function getLideradosDoCoordenador(coordenadorId: number) {
   return rows
 }
 
+/** Perfil de operador correspondente a uma área de comunicação. */
+export async function getPerfilOperadorDaArea(areaId: string): Promise<number | null> {
+  const sql = getDb()
+  const perfis = await sql`SELECT id, nome, permissoes FROM perfis_acesso`
+  const labels = AREA_LABELS[areaId] ?? []
+
+  // 1) Pelo nome do perfil: "Comunicação — <Área> (Operador)"
+  const porNome = perfis.find((p: any) => {
+    const nome = String(p.nome ?? '').toLowerCase()
+    return nome.includes('operador') && labels.some(l => nome.includes(l))
+  })
+  if (porNome) return Number((porNome as any).id)
+
+  // 2) Fallback: perfil com permissões da área, mas sem editar/excluir (não é coordenador)
+  const porPerms = perfis.find((p: any) => {
+    const perms = parsePerms((p as any).permissoes)
+    const daArea = perms.some(x => x.startsWith(`comunicacao:${areaId}`))
+    if (!daArea) return false
+    return !perms.some(x => x.startsWith(`comunicacao:${areaId}`) && (x.endsWith('.editar') || x.endsWith('.excluir')))
+  })
+  return porPerms ? Number((porPerms as any).id) : null
+}
+
 /** True se o coordenador pode gerenciar (senha/status) o usuário alvo. */
 export async function coordenadorPodeGerenciar(coordenadorId: number, alvoId: number): Promise<boolean> {
   const liderados = await getLideradosDoCoordenador(coordenadorId)
