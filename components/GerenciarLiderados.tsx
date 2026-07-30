@@ -29,6 +29,11 @@ export default function GerenciarLiderados() {
   // Modal de confirmação
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
 
+  // Debug
+  useEffect(() => {
+    console.log('GerenciarLiderados mounted!')
+  }, [])
+
   function flash(msg: string, tipo: 'ok' | 'err' = 'ok') {
     if (tipo === 'ok') {
       setSucesso(msg)
