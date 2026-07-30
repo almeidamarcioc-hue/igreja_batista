@@ -262,7 +262,8 @@ export default function ConfiguracoesPage() {
       if (perfilOperador) {
         setAreaPreSelecionada(coordenadorArea)
         setEditingUser(null)
-        setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
+        // Resetar completamente o formUser com campos vazios
+        setFormUser({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
         setShowUserModal(true)
       } else {
         // Perfil de operador não encontrado - exibir erro e redirecionar
@@ -273,13 +274,6 @@ export default function ConfiguracoesPage() {
       }
     }
   }, [userRole, coordenadorArea, perfis, loadingAuth, router])
-
-  // Garantir que formulário para novo operador sempre tem campos vazios
-  useEffect(() => {
-    if (showUserModal && !editingUser && userRole === 'coordenador') {
-      setFormUser(prev => ({ ...prev, usuario: '', senha: '', email: '' }))
-    }
-  }, [showUserModal, editingUser, userRole])
 
   useEffect(() => {
     if (areaParam && perfis.length > 0) {
@@ -299,7 +293,8 @@ export default function ConfiguracoesPage() {
       if (perfilOperador) {
         setAreaPreSelecionada(areaParam)
         setEditingUser(null)
-        setFormUser({ ...emptyUser, perfil_id: perfilOperador.id, modulos: 'comunicacao' })
+        // Resetar completamente o formUser com campos vazios
+        setFormUser({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
         setShowUserModal(true)
       } else {
         // Perfil de operador não encontrado - exibir erro e redirecionar
