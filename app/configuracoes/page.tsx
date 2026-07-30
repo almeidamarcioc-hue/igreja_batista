@@ -121,6 +121,9 @@ export default function ConfiguracoesPage() {
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<number | null>(null)
   const [areaPreSelecionada, setAreaPreSelecionada] = useState<string | null>(null)
 
+  // Estado separado para novo operador (coordenador) - sem contaminação com admin
+  const [formNovoOperador, setFormNovoOperador] = useState({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: null as number | null, ativo: true })
+
   // ── Perfis state ──
   const [perfis, setPerfis] = useState<Perfil[]>([])
   const [loadingP, setLoadingP] = useState(true)
@@ -262,8 +265,8 @@ export default function ConfiguracoesPage() {
       if (perfilOperador) {
         setAreaPreSelecionada(coordenadorArea)
         setEditingUser(null)
-        // Resetar completamente o formUser com campos vazios
-        setFormUser({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
+        // Usar estado separado para novo operador
+        setFormNovoOperador({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
         setShowUserModal(true)
       } else {
         // Perfil de operador não encontrado - exibir erro e redirecionar
@@ -293,8 +296,8 @@ export default function ConfiguracoesPage() {
       if (perfilOperador) {
         setAreaPreSelecionada(areaParam)
         setEditingUser(null)
-        // Resetar completamente o formUser com campos vazios
-        setFormUser({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
+        // Usar estado separado para novo operador
+        setFormNovoOperador({ usuario: '', nome: '', email: '', senha: '', role: 'usuario', modulos: 'comunicacao', perfil_id: perfilOperador.id, ativo: true })
         setShowUserModal(true)
       } else {
         // Perfil de operador não encontrado - exibir erro e redirecionar
@@ -317,21 +320,24 @@ export default function ConfiguracoesPage() {
   }
 
   async function handleSaveUser() {
-    if (!formUser.usuario.trim() || !formUser.nome.trim()) return
-    if (!editingUser && !formUser.senha.trim()) { flash('Senha é obrigatória para novos usuários.', 'err'); return }
-    if (!editingUser && !formUser.email.trim()) { flash('E-mail é obrigatório para novos usuários.', 'err'); return }
+    // Usar formNovoOperador se coordenador, senão usar formUser
+    const form = userRole === 'coordenador' ? formNovoOperador : formUser
+
+    if (!form.usuario.trim() || !form.nome.trim()) return
+    if (!editingUser && !form.senha.trim()) { flash('Senha é obrigatória para novos usuários.', 'err'); return }
+    if (!editingUser && !form.email.trim()) { flash('E-mail é obrigatório para novos usuários.', 'err'); return }
     setSavingUser(true)
     try {
       const method = editingUser ? 'PUT' : 'POST'
       const url = editingUser ? `/api/admin/usuarios/${editingUser.id}` : '/api/admin/usuarios'
       const body: Record<string, any> = {
-        usuario: formUser.usuario, nome: formUser.nome,
-        email: formUser.email.trim() || null,
-        role: formUser.role, modulos: formUser.modulos,
-        perfil_id: formUser.perfil_id,
-        ativo: formUser.ativo,
+        usuario: form.usuario, nome: form.nome,
+        email: form.email.trim() || null,
+        role: form.role, modulos: form.modulos,
+        perfil_id: form.perfil_id,
+        ativo: form.ativo,
       }
-      if (formUser.senha.trim()) body.senha = formUser.senha
+      if (form.senha.trim()) body.senha = form.senha
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar')
       setShowUserModal(false)
@@ -444,33 +450,33 @@ export default function ConfiguracoesPage() {
               <div className="p-5 space-y-3">
                 <div>
                   <label className={labelCls}>Nome Completo *</label>
-                  <input key={`nome-${areaPreSelecionada}`} className={inputCls} value={formUser.nome}
-                    onChange={e => setFormUser(f => ({ ...f, nome: e.target.value }))} />
+                  <input className={inputCls} value={formNovoOperador.nome}
+                    onChange={e => setFormNovoOperador(f => ({ ...f, nome: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>E-mail (obrigatório) *</label>
-                  <input key={`email-${areaPreSelecionada}`} type="email" className={inputCls} placeholder="usuario@email.com"
-                    value={formUser.email} onChange={e => setFormUser(f => ({ ...f, email: e.target.value }))} />
+                  <input type="email" className={inputCls} placeholder="usuario@email.com"
+                    value={formNovoOperador.email} onChange={e => setFormNovoOperador(f => ({ ...f, email: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Usuário (login) *</label>
-                  <input key={`usuario-${areaPreSelecionada}`} className={inputCls}
+                  <input className={inputCls}
                     autoComplete="off"
-                    value={formUser.usuario}
-                    onChange={e => setFormUser(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
+                    value={formNovoOperador.usuario}
+                    onChange={e => setFormNovoOperador(f => ({ ...f, usuario: e.target.value.toLowerCase().replace(/\s/g, '') }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Senha *</label>
-                  <input key={`senha-${areaPreSelecionada}`} type="password" className={inputCls}
+                  <input type="password" className={inputCls}
                     autoComplete="off"
-                    value={formUser.senha} onChange={e => setFormUser(f => ({ ...f, senha: e.target.value }))} />
+                    value={formNovoOperador.senha} onChange={e => setFormNovoOperador(f => ({ ...f, senha: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Perfil de acesso (pré-selecionado)</label>
                   <select className={`${inputCls} disabled:bg-gray-100 disabled:cursor-not-allowed`}
                     disabled={true}
-                    value={formUser.perfil_id ?? ''}
-                    onChange={e => setFormUser(f => ({ ...f, perfil_id: e.target.value ? Number(e.target.value) : null }))}>
+                    value={formNovoOperador.perfil_id ?? ''}
+                    onChange={e => setFormNovoOperador(f => ({ ...f, perfil_id: e.target.value ? Number(e.target.value) : null }))}>
                     <option value="">— Sem perfil —</option>
                     {perfis.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                   </select>
@@ -480,7 +486,7 @@ export default function ConfiguracoesPage() {
                   <label className={labelCls}>Módulos (pré-selecionado)</label>
                   <select className={`${inputCls} disabled:bg-gray-100 disabled:cursor-not-allowed`}
                     disabled={true}
-                    value={formUser.modulos}>
+                    value={formNovoOperador.modulos}>
                     {MODULOS_OPTS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
                   <p className="text-xs text-gray-400 mt-0.5">Módulo pré-selecionado (não pode ser alterado).</p>
