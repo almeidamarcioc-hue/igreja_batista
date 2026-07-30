@@ -43,37 +43,13 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
           const user = await resp.json()
           setUsuario(user)
 
-          // Determinar quais áreas o usuário pode acessar
-          let permissoes: string[] = []
-          try {
-            permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
-          } catch (e) {
-            permissoes = []
-          }
-
-          console.log('Usuário:', user.nome)
-          console.log('Permissões brutas:', user.permissoes)
-          console.log('Permissões parseadas:', permissoes)
-
-          const areas: string[] = []
-
-          if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
-            // Acesso a todas as áreas
-            const todasAreas = PROCEDIMENTOS.areas.map(a => a.id)
-            console.log('Acesso a todas as áreas:', todasAreas)
-            setAreasPermitidas(todasAreas)
+          // As áreas vêm do servidor (fonte única da regra de acesso)
+          const respAreas = await fetch('/api/comunicacao/areas-permitidas')
+          if (respAreas.ok) {
+            const { areas } = await respAreas.json()
+            setAreasPermitidas(Array.isArray(areas) ? areas : [])
           } else {
-            // Acesso apenas às áreas específicas
-            permissoes.forEach((perm: string) => {
-              if (perm.startsWith('comunicacao:')) {
-                const area = perm.split(':')[1].split('.')[0]
-                if (area && !areas.includes(area)) {
-                  areas.push(area)
-                }
-              }
-            })
-            console.log('Áreas permitidas:', areas)
-            setAreasPermitidas(areas)
+            setAreasPermitidas([])
           }
         }
       } catch (err) {

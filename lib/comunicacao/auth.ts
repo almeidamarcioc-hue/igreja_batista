@@ -12,6 +12,19 @@ export interface ComunicacaoUser {
   id: number
   role: string
   permissoes: string[]
+  perfilNome: string
+}
+
+// Perfis antigos (semeados) só têm permissões genéricas `comunicacao.*`, sem a
+// área. Para eles a área é deduzida do nome do perfil — sem isso ficariam sem
+// acesso a nada, e tratar a permissão genérica como "todas as áreas" era
+// justamente o furo que deixava um líder ver as demais áreas.
+const AREA_LABELS: Record<string, string[]> = {
+  'transmissao-youtube': ['transmissão', 'transmissao'],
+  'mix-som': ['mix de som', 'mix'],
+  'datashow': ['datashow'],
+  'cameras': ['câmeras', 'cameras'],
+  'iluminacao': ['iluminação', 'iluminacao'],
 }
 
 export async function getComunicacaoUser(req: NextRequest): Promise<ComunicacaoUser | null> {
@@ -23,7 +36,8 @@ export async function getComunicacaoUser(req: NextRequest): Promise<ComunicacaoU
 
   const sql = getDb()
   const rows = await sql`
-    SELECT u.id, u.role, u.ativo, COALESCE(p.permissoes, '[]') AS permissoes
+    SELECT u.id, u.role, u.ativo, COALESCE(p.permissoes, '[]') AS permissoes,
+           COALESCE(p.nome, '') AS perfil_nome
     FROM usuarios u
     LEFT JOIN perfis_acesso p ON p.id = u.perfil_id
     WHERE u.id = ${userId}
@@ -39,17 +53,38 @@ export async function getComunicacaoUser(req: NextRequest): Promise<ComunicacaoU
     permissoes = []
   }
 
-  return { id: Number(u.id), role: String(u.role ?? ''), permissoes }
+  return {
+    id: Number(u.id),
+    role: String(u.role ?? ''),
+    permissoes,
+    perfilNome: String(u.perfil_nome ?? ''),
+  }
 }
 
 export function temAcessoTotal(user: ComunicacaoUser): boolean {
-  return user.role === 'admin' || user.permissoes.includes('*')
+  if (user.role === 'admin' || user.permissoes.includes('*')) return true
+  // "Coordenador Geral" enxerga todas as áreas
+  return user.perfilNome.toLowerCase().includes('coordenador geral')
 }
 
 /** True se o usuário pode ver/operar a área informada. */
 export function podeVerArea(user: ComunicacaoUser, areaId: string): boolean {
   if (temAcessoTotal(user)) return true
-  return user.permissoes.some(p => p.startsWith(`comunicacao:${areaId}`))
+
+  // Regra principal: permissão com a área explícita
+  if (user.permissoes.some(p => p.startsWith(`comunicacao:${areaId}`))) return true
+
+  // Perfil antigo: nenhuma permissão traz a área, então usa o nome do perfil.
+  // Só vale se ele tiver alguma permissão de comunicação.
+  const temAlgumaScoped = user.permissoes.some(p => p.startsWith('comunicacao:'))
+  const temGenerica = user.permissoes.some(p => p === 'comunicacao' || p.startsWith('comunicacao.'))
+  if (!temAlgumaScoped && temGenerica) {
+    const nome = user.perfilNome.toLowerCase()
+    const labels = AREA_LABELS[areaId] ?? []
+    return labels.some(l => nome.includes(l))
+  }
+
+  return false
 }
 
 /** Ids das áreas que o usuário pode ver. */

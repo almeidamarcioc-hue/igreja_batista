@@ -38,24 +38,13 @@ export default function CoordenadorPage() {
           const user = await resp.json()
           setUsuario(user)
 
-          // Determinar quais áreas o usuário pode acessar
-          const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
-          const areas: string[] = []
-
-          if (permissoes.includes('*') || permissoes.includes('comunicacao')) {
-            // Acesso a todas as áreas
-            setAreasPermitidas(PROCEDIMENTOS.areas.map(a => a.id))
+          // As áreas vêm do servidor (fonte única da regra de acesso)
+          const respAreas = await fetch('/api/comunicacao/areas-permitidas')
+          if (respAreas.ok) {
+            const { areas } = await respAreas.json()
+            setAreasPermitidas(Array.isArray(areas) ? areas : [])
           } else {
-            // Acesso apenas às áreas específicas
-            permissoes.forEach((perm: string) => {
-              if (perm.startsWith('comunicacao:')) {
-                const area = perm.split(':')[1].split('.')[0]
-                if (area && !areas.includes(area)) {
-                  areas.push(area)
-                }
-              }
-            })
-            setAreasPermitidas(areas)
+            setAreasPermitidas([])
           }
         }
       } catch (err) {

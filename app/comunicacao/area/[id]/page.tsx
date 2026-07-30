@@ -58,19 +58,25 @@ export default function AreaPage() {
         const user = await respUser.json()
         const permissoes = user.permissoes ? JSON.parse(user.permissoes) : []
 
-        // Verificar se tem permissão para esta área específica
-        const temAcesso = permissoes.includes('*') ||
-          permissoes.some((p: string) => p.startsWith(`comunicacao:${areaId}`)) ||
-          permissoes.includes('comunicacao.visualizar')
+        // A lista de áreas vem do servidor — a regra de acesso mora num só lugar.
+        // Antes, `comunicacao.visualizar` (genérica) liberava qualquer área aqui.
+        const respAreas = await fetch('/api/comunicacao/areas-permitidas')
+        if (!respAreas.ok) {
+          setTemPermissao(false)
+          return
+        }
+        const { areas } = await respAreas.json()
 
-        if (!temAcesso && !permissoes.includes('comunicacao')) {
+        if (!Array.isArray(areas) || !areas.includes(areaId)) {
           setTemPermissao(false)
           return
         }
 
         // Verificar se tem permissão de edição (admin ou coordenador)
         const ehAdmin = user.role === 'admin'
-        const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`)
+        const ehCoordenador =
+          permissoes.some((p: string) => p === `comunicacao:${areaId}.coordenador`) ||
+          permissoes.some((p: string) => p.startsWith(`comunicacao:${areaId}`) && (p.endsWith('.editar') || p.endsWith('.excluir')))
         setTemPermissaoEdicao(ehAdmin || ehCoordenador)
 
         setTemPermissao(true)
