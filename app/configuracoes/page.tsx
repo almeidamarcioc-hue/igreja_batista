@@ -667,7 +667,10 @@ export default function ConfiguracoesPage() {
 
         {/* ── Tab: Liderados ── */}
         {aba === 'liderados' && (
-          <GerenciarLiderados />
+          <>
+            {console.log('Renderizando GerenciarLiderados, aba:', aba)}
+            <GerenciarLiderados />
+          </>
         )}
 
         {/* ── Tab: Perfis ── */}
