@@ -1584,6 +1584,17 @@ export async function getUsuarioPorLogin(usuario: string) {
   return rows[0] ?? null
 }
 
+/**
+ * Busca o login incluindo contas inativas, para que o login possa distinguir
+ * "senha errada" de "conta desativada" — antes o usuário desativado recebia
+ * "usuário ou senha incorretos" e não tinha como saber o motivo.
+ */
+export async function getUsuarioPorLoginIncluindoInativos(usuario: string) {
+  const sql = getDb()
+  const rows = await sql`SELECT * FROM usuarios WHERE usuario = ${usuario}`
+  return rows[0] ?? null
+}
+
 export async function getUsuarios() {
   const sql = getDb()
   const rows = await sql`SELECT id, usuario, nome, email, role, modulos, perfil_id, ativo, data_criacao, criado_por_usuario_id FROM usuarios ORDER BY nome`

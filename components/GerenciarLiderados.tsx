@@ -19,6 +19,7 @@ export default function GerenciarLiderados() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [semPermissao, setSemPermissao] = useState(false)
 
   // Modal de edição
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -50,6 +51,12 @@ export default function GerenciarLiderados() {
     setErro('')
     try {
       const res = await fetch('/api/admin/usuarios/meus-liderados')
+      // Operador não lidera ninguém: mostra aviso em vez de erro genérico
+      if (res.status === 403) {
+        setSemPermissao(true)
+        setLiderados([])
+        return
+      }
       if (!res.ok) throw new Error('Erro ao carregar liderados')
       const data = await res.json()
       setLiderados(data)
@@ -200,13 +207,15 @@ export default function GerenciarLiderados() {
               Cadastre operadores e altere a senha ou o status de quem já existe
             </p>
           </div>
-          <button
-            onClick={abrirNovo}
-            style={{ backgroundColor: '#002347' }}
-            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
-          >
-            ➕ Novo Operador
-          </button>
+          {!semPermissao && (
+            <button
+              onClick={abrirNovo}
+              style={{ backgroundColor: '#002347' }}
+              className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
+            >
+              ➕ Novo Operador
+            </button>
+          )}
         </div>
 
         {/* Global messages */}
@@ -226,6 +235,21 @@ export default function GerenciarLiderados() {
           {loading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner />
+            </div>
+          ) : semPermissao ? (
+            <div className="bg-white rounded-lg shadow-md text-center py-12 px-4">
+              <p className="text-3xl mb-3">🔒</p>
+              <p className="font-semibold mb-2" style={{ color: '#002347' }}>Acesso restrito</p>
+              <p className="text-sm text-gray-500 mb-6">
+                Esta tela é para quem coordena uma área. Sua conta é de operador.
+              </p>
+              <a
+                href="/comunicacao"
+                style={{ backgroundColor: '#002347' }}
+                className="inline-block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
+              >
+                ← Voltar
+              </a>
             </div>
           ) : liderados.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md text-center py-12 px-4">

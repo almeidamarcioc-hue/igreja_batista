@@ -55,16 +55,8 @@ export default function ComunicacaoDashboard() {
           // As áreas vêm do servidor (fonte única da regra de acesso)
           const respAreas = await fetch('/api/comunicacao/areas-permitidas')
           if (respAreas.ok) {
-            const { areas, ehCoordenador } = await respAreas.json()
-            const lista = Array.isArray(areas) ? areas : []
-            setAreasPermitidas(lista)
-
-            // Operador só preenche checklist: vai direto para a lista da área
-            // dele, onde vê o que já preencheu e pode criar um novo.
-            if (!ehCoordenador && user.role !== 'admin' && lista.length === 1) {
-              router.replace(`/comunicacao/area-historico/${lista[0]}`)
-              return
-            }
+            const { areas } = await respAreas.json()
+            setAreasPermitidas(Array.isArray(areas) ? areas : [])
           } else {
             setAreasPermitidas([])
           }
@@ -129,9 +121,27 @@ export default function ComunicacaoDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: '#002347' }}>📡 Comunicação — Operacional</h1>
-        <p className="text-gray-600">Runbook dos voluntários da cabine técnica</p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#002347' }}>📡 Comunicação — Operacional</h1>
+          <p className="text-gray-600">Runbook dos voluntários da cabine técnica</p>
+        </div>
+        {/* Atalho para iniciar um checklist sem sair do dashboard */}
+        <div className="flex gap-2 flex-wrap">
+          {PROCEDIMENTOS.areas
+            .filter(area => areasPermitidas.includes(area.id))
+            .map(area => (
+              <Link
+                key={area.id}
+                href={`/comunicacao/area-historico/${area.id}`}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                style={{ backgroundColor: area.cor, color: '#fff' }}
+              >
+                ➕ Novo Checklist
+                {areasPermitidas.length > 1 && ` — ${area.nome}`}
+              </Link>
+            ))}
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">

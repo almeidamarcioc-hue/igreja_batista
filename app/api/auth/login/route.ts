@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUsuarioPorLogin } from '@/lib/db'
+import { getUsuarioPorLoginIncluindoInativos } from '@/lib/db'
 import { verifyPassword } from '@/lib/auth'
 import { createSessionToken, COOKIE_NAME } from '@/lib/session'
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Preencha usuário e senha.' }, { status: 400 })
     }
 
-    const user = await getUsuarioPorLogin(String(usuario).trim())
+    const user = await getUsuarioPorLoginIncluindoInativos(String(usuario).trim())
     if (!user) {
       console.log(`Usuário não encontrado: "${usuario}"`)
       return NextResponse.json({ error: 'Usuário ou senha incorretos.' }, { status: 401 })
@@ -21,6 +21,14 @@ export async function POST(req: NextRequest) {
     if (!verifyPassword(String(senha), user.senha_hash)) {
       console.log(`Senha incorreta para usuário: "${usuario}"`)
       return NextResponse.json({ error: 'Usuário ou senha incorretos.' }, { status: 401 })
+    }
+
+    // Só depois de conferir a senha, para não revelar quais logins existem
+    if (!user.ativo) {
+      return NextResponse.json(
+        { error: 'Sua conta está desativada. Procure o líder da sua área ou o administrador.' },
+        { status: 403 },
+      )
     }
 
     const token = await createSessionToken(user.id)
