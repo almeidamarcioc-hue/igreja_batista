@@ -55,8 +55,16 @@ export default function ComunicacaoDashboard() {
           // As áreas vêm do servidor (fonte única da regra de acesso)
           const respAreas = await fetch('/api/comunicacao/areas-permitidas')
           if (respAreas.ok) {
-            const { areas } = await respAreas.json()
-            setAreasPermitidas(Array.isArray(areas) ? areas : [])
+            const { areas, ehCoordenador } = await respAreas.json()
+            const lista = Array.isArray(areas) ? areas : []
+            setAreasPermitidas(lista)
+
+            // Operador só preenche checklist: vai direto para a lista da área
+            // dele, onde vê o que já preencheu e pode criar um novo.
+            if (!ehCoordenador && user.role !== 'admin' && lista.length === 1) {
+              router.replace(`/comunicacao/area-historico/${lista[0]}`)
+              return
+            }
           } else {
             setAreasPermitidas([])
           }

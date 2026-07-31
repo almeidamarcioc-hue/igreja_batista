@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getComunicacaoUser, areasPermitidas, temAcessoTotal } from '@/lib/comunicacao/auth'
+import {
+  getComunicacaoUser,
+  areasPermitidas,
+  temAcessoTotal,
+  podeGerenciarArea,
+} from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +15,15 @@ export async function GET(req: NextRequest) {
   const user = await getComunicacaoUser(req)
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
+  const areas = areasPermitidas(user)
+  // Áreas em que a pessoa pode mexer no template/liderados. Operador tem lista
+  // vazia — ele só preenche checklist.
+  const areasGerenciaveis = areas.filter(id => podeGerenciarArea(user, id))
+
   return NextResponse.json({
-    areas: areasPermitidas(user),
+    areas,
+    areasGerenciaveis,
+    ehCoordenador: areasGerenciaveis.length > 0,
     acessoTotal: temAcessoTotal(user),
   })
 }

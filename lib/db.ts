@@ -1637,13 +1637,19 @@ export async function getAreasDoCoordenador(coordenadorId: number): Promise<stri
   const perfilNome = String((rows[0] as any).perfil_nome ?? '').toLowerCase()
   const perms = parsePerms((rows[0] as any).permissoes)
 
+  // Só conta como coordenador da área quem tem permissão de nível gerencial.
+  // `.criar` é "marcar checklist" (operador) e não pode entrar aqui, senão o
+  // operador viraria líder dos colegas da própria área.
   const areas = new Set<string>()
   for (const p of perms) {
-    const m = p.match(/^comunicacao:([a-z0-9-]+)/)
+    const m = p.match(/^comunicacao:([a-z0-9-]+)\.(editar|excluir|coordenador)$/)
     if (m) areas.add(m[1])
   }
-  // Fallback: perfis antigos sem permissão por área — deduzir pelo nome do perfil
-  if (areas.size === 0 && perfilNome) {
+
+  // Fallback: perfis antigos não têm a área nas permissões. Usa o nome do perfil,
+  // exigindo que ele indique coordenação.
+  const temAlgumaScoped = perms.some(p => p.startsWith('comunicacao:'))
+  if (areas.size === 0 && !temAlgumaScoped && perfilNome.includes('coordenador')) {
     for (const [areaId, labels] of Object.entries(AREA_LABELS)) {
       if (labels.some(l => perfilNome.includes(l))) areas.add(areaId)
     }

@@ -182,8 +182,8 @@ export default function ConfiguracoesPage() {
           const permissoes = typeof user.permissoes === 'string' ? JSON.parse(user.permissoes) : []
           const isCoordenador = permissoes.some((p: string) => {
             if (typeof p !== 'string') return false
-            // Deve ter .editar ou .criar para ser considerado coordenador
-            if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
+            // Nível gerencial: .editar/.excluir. `.criar` é "marcar checklist" (operador).
+            if (p.startsWith('comunicacao:') && (p.includes('.editar') || p.includes('.excluir'))) return true
             return false
           })
 

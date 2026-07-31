@@ -39,13 +39,14 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
         const perfilNome = perfil[0].nome as string
         const permissoes = JSON.parse(perfil[0].permissoes as string) as string[]
 
-        // Detectar se é coordenador
+        // Detectar se é coordenador.
+        // `.criar` NÃO entra aqui: na tela de perfis ela significa "marcar
+        // checklist" e é a permissão do operador — aceitá-la dava ao operador
+        // acesso à tela de configurações.
         const isCoordenador = permissoes.some((p: string) => {
           if (typeof p !== 'string') return false
-          // Caso 1: permissão explícita de coordenador
           if (p.includes('comunicacao') && p.includes('coordenador')) return true
-          // Caso 2: permissões de criar/editar em uma área (implicitamente coordenador)
-          if (p.startsWith('comunicacao:') && (p.includes('.criar') || p.includes('.editar'))) return true
+          if (p.startsWith('comunicacao:') && (p.includes('.editar') || p.includes('.excluir'))) return true
           return false
         })
 

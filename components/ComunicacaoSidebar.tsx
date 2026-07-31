@@ -28,6 +28,9 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
   const [logoError, setLogoError] = useState(false)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
+  // Áreas que a pessoa pode gerenciar. Operador não gerencia nada: só preenche checklist.
+  const [areasGerenciaveis, setAreasGerenciaveis] = useState<string[]>([])
+  const ehCoordenador = areasGerenciaveis.length > 0
 
   useEffect(() => {
     setNow(new Date())
@@ -46,10 +49,12 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
           // As áreas vêm do servidor (fonte única da regra de acesso)
           const respAreas = await fetch('/api/comunicacao/areas-permitidas')
           if (respAreas.ok) {
-            const { areas } = await respAreas.json()
+            const { areas, areasGerenciaveis } = await respAreas.json()
             setAreasPermitidas(Array.isArray(areas) ? areas : [])
+            setAreasGerenciaveis(Array.isArray(areasGerenciaveis) ? areasGerenciaveis : [])
           } else {
             setAreasPermitidas([])
+            setAreasGerenciaveis([])
           }
         }
       } catch (err) {
@@ -135,28 +140,32 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
                 <span className="text-base leading-none">{area.icone}</span>
                 <span className="text-xs">{area.nome}</span>
               </Link>
-              <Link
-                href={`/comunicacao/area/${area.id}?mode=gerenciar`}
-                onClick={onClose}
-                style={{ color: '#e8e8e8' }}
-                className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
-              >
-                <span>⚙️</span>
-                <span>Gerenciar Checklist</span>
-              </Link>
-              {usuario?.role !== 'admin' && (
+              {areasGerenciaveis.includes(area.id) && (
                 <Link
-                  href="/comunicacao/liderados"
+                  href={`/comunicacao/area/${area.id}?mode=gerenciar`}
                   onClick={onClose}
                   style={{ color: '#e8e8e8' }}
                   className="flex items-center gap-3 px-6 py-1.5 rounded-lg ml-1 text-xs font-medium transition-all duration-150 hover:text-yellow-400"
                 >
-                  <span>👥</span>
-                  <span>Gerenciar Liderados</span>
+                  <span>⚙️</span>
+                  <span>Gerenciar Checklist</span>
                 </Link>
               )}
             </div>
           ))}
+
+          {/* Liderados não é por área: fica fora do laço e só para coordenador */}
+          {ehCoordenador && usuario?.role !== 'admin' && (
+            <Link
+              href="/comunicacao/liderados"
+              onClick={onClose}
+              style={pathname.startsWith('/comunicacao/liderados') ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg mt-3 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+            >
+              <span>👥</span>
+              <span className="text-xs">Gerenciar Liderados</span>
+            </Link>
+          )}
         </div>
       </nav>
 

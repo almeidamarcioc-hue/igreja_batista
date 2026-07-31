@@ -116,3 +116,24 @@ export function podeGerenciarArea(user: ComunicacaoUser, areaId: string): boolea
 export function areasPermitidas(user: ComunicacaoUser): string[] {
   return PROCEDIMENTOS.areas.map(a => a.id).filter(id => podeVerArea(user, id))
 }
+
+/** Ids das áreas que o usuário pode gerenciar (coordenador). */
+export function areasGerenciaveis(user: ComunicacaoUser): string[] {
+  return PROCEDIMENTOS.areas.map(a => a.id).filter(id => podeGerenciarArea(user, id))
+}
+
+/**
+ * Id do usuário quando ele é admin ou coordenador de alguma área; null caso
+ * contrário. Usado pelos endpoints administrativos.
+ *
+ * ATENÇÃO: não confundir `.criar` com nível de coordenador. Na tela de perfis
+ * `.criar` significa "marcar/criar checklist" e é a permissão do OPERADOR —
+ * aceitá-la aqui dava ao operador acesso a listar/criar usuários, ler perfis e
+ * trocar a senha dos colegas.
+ */
+export async function requireAdminOuCoordenador(req: NextRequest): Promise<number | null> {
+  const user = await getComunicacaoUser(req)
+  if (!user) return null
+  if (user.role === 'admin') return user.id
+  return areasGerenciaveis(user).length > 0 ? user.id : null
+}
