@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifySessionToken, COOKIE_NAME } from '@/lib/session'
+import { getComunicacaoUser, podeGerenciarArea } from '@/lib/comunicacao/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,33 +27,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verificar se é coordenador
-    const sql = getDb()
-    const userRows = await sql`
-      SELECT
-        u.id, u.usuario, u.role,
-        COALESCE(p.permissoes, '[]') as permissoes
-      FROM usuarios u
-      LEFT JOIN perfis_acesso p ON u.perfil_id = p.id
-      WHERE u.id = ${userId}
-    `
-    const user = userRows[0]
-    if (!user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
-    }
-
-    let permissoes: string[] = []
-    try {
-      permissoes = JSON.parse(user.permissoes)
-    } catch (e) {
-      permissoes = []
-    }
-
-    // Apenas admin e coordenadores podem excluir
-    const ehAdmin = user.role === 'admin'
-    const ehCoordenador = permissoes.some((p: string) => p === `comunicacao:${area_id}.coordenador`)
-
-    if (!ehAdmin && !ehCoordenador) {
+    // Apenas admin e coordenadores da área podem excluir.
+    // Antes exigia a permissão exata `comunicacao:<area>.coordenador`, que a tela
+    // de perfis nunca grava — na prática só o admin conseguia excluir.
+    const user = await getComunicacaoUser(req)
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    if (!podeGerenciarArea(user, area_id)) {
       return NextResponse.json({ error: 'Apenas admin e coordenadores podem excluir checklists' }, { status: 403 })
     }
 
