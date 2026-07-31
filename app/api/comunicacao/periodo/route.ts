@@ -37,22 +37,41 @@ export async function GET(req: NextRequest) {
   const areasComEquipe = areas.filter(id => podeGerenciarArea(user, id))
   const areasSoMinhas = areas.filter(id => !areasComEquipe.includes(id))
 
+  // Filtro por operador: só faz sentido nas áreas que a pessoa coordena. Nas
+  // demais ela já está restrita às próprias marcações.
+  const filtroUsuarioParam = searchParams.get('usuario_id')
+  const filtroUsuarioId =
+    filtroUsuarioParam && !Number.isNaN(Number(filtroUsuarioParam)) && areasComEquipe.length > 0
+      ? Number(filtroUsuarioParam)
+      : null
+
   try {
     const sql = getDb()
     const query = `
       SELECT
-        culto_data,
-        area_id,
-        COUNT(DISTINCT CASE WHEN marcado = true THEN passo_id END) as marcados
-      FROM checklist_progresso
-      WHERE culto_data >= $1 AND culto_data <= $2
+        cp.culto_data,
+        cp.area_id,
+        COUNT(DISTINCT CASE WHEN cp.marcado = true THEN cp.passo_id END) as marcados,
+        COALESCE(ARRAY_AGG(DISTINCT u.nome) FILTER (WHERE cp.marcado = true), '{}') as responsaveis
+      FROM checklist_progresso cp
+      LEFT JOIN usuarios u ON u.id = cp.usuario_id
+      WHERE cp.culto_data >= $1 AND cp.culto_data <= $2
         AND (
-          area_id = ANY($3::text[])
-          OR (area_id = ANY($4::text[]) AND usuario_id = $5)
+          (cp.area_id = ANY($3::text[]) AND ($4::int IS NULL OR cp.usuario_id = $4))
+          OR (cp.area_id = ANY($5::text[]) AND cp.usuario_id = $6)
         )
-      GROUP BY culto_data, area_id ORDER BY culto_data DESC
+      GROUP BY cp.culto_data, cp.area_id
+      HAVING COUNT(DISTINCT CASE WHEN cp.marcado = true THEN cp.passo_id END) > 0
+      ORDER BY cp.culto_data DESC
     `
-    const params: any[] = [dataInicio, dataFim, areasComEquipe, areasSoMinhas, user.id]
+    const params: any[] = [
+      dataInicio,
+      dataFim,
+      areasComEquipe,
+      filtroUsuarioId,
+      areasSoMinhas,
+      user.id,
+    ]
 
     const resultado = await sql(query, params)
 

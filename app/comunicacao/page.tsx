@@ -17,6 +17,12 @@ interface RelatorioData {
   area_id: string
   total: number
   marcados: number
+  responsaveis?: string[]
+}
+
+interface Operador {
+  id: number
+  nome: string
 }
 
 export default function ComunicacaoDashboard() {
@@ -27,6 +33,9 @@ export default function ComunicacaoDashboard() {
   const [filtroAtivo, setFiltroAtivo] = useState(false)
   const [progresso, setProgresso] = useState<Record<string, { total: number; marcados: number }>>({})
   const [relatorioPeriodo, setRelatorioPeriodo] = useState<RelatorioData[]>([])
+  // Filtro por operador — só o coordenador recebe operadores para escolher
+  const [operadores, setOperadores] = useState<Operador[]>([])
+  const [operadorFiltro, setOperadorFiltro] = useState<string>('')
   const [carregando, setCarregando] = useState(true)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>([])
@@ -77,6 +86,7 @@ export default function ComunicacaoDashboard() {
         setCarregando(true)
         try {
           const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim })
+          if (operadorFiltro) params.set('usuario_id', operadorFiltro)
           const resp = await fetch(`/api/comunicacao/periodo?${params.toString()}`)
           if (resp.ok) {
             const dados = await resp.json()
@@ -91,7 +101,28 @@ export default function ComunicacaoDashboard() {
 
       carregarRelatorio()
     }
-  }, [filtroAtivo, dataInicio, dataFim])
+  }, [filtroAtivo, dataInicio, dataFim, operadorFiltro])
+
+  // Lista de operadores do período. Não depende de operadorFiltro, senão as
+  // opções sumiriam ao filtrar por uma pessoa.
+  useEffect(() => {
+    if (!dataInicio || !dataFim) return
+
+    const carregarOperadores = async () => {
+      try {
+        const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim })
+        const resp = await fetch(`/api/comunicacao/operadores?${params.toString()}`)
+        if (resp.ok) {
+          const dados = await resp.json()
+          setOperadores(Array.isArray(dados) ? dados : [])
+        }
+      } catch (err) {
+        console.error('Erro ao carregar operadores:', err)
+      }
+    }
+
+    carregarOperadores()
+  }, [dataInicio, dataFim])
 
   useEffect(() => {
     if (!cultoData || filtroAtivo) return
@@ -171,6 +202,24 @@ export default function ComunicacaoDashboard() {
             />
           </div>
         </div>
+        {/* Só aparece para quem coordena: a lista vem vazia para o operador */}
+        {operadores.length > 0 && (
+          <div className="mt-4">
+            <label className="block text-xs text-gray-600 mb-1">Operador:</label>
+            <select
+              value={operadorFiltro}
+              onChange={(e) => setOperadorFiltro(e.target.value)}
+              className="w-full px-4 py-2 border-2 rounded-lg"
+              style={{ borderColor: '#C5A059' }}
+            >
+              <option value="">Todos os operadores</option>
+              {operadores.map(op => (
+                <option key={op.id} value={String(op.id)}>{op.nome}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <p className="text-xs text-gray-500 mt-2">Visualize o histórico de checklists realizados neste período.</p>
       </div>
 
@@ -202,6 +251,11 @@ export default function ComunicacaoDashboard() {
                       <div>
                         <h4 className="font-semibold" style={{ color: '#002347' }}>{area.nome}</h4>
                         <p className="text-xs text-gray-500">{formatarDataBR(item.culto_data)}</p>
+                        {(item.responsaveis?.length ?? 0) > 0 && (
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            👤 {item.responsaveis!.join(', ')}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="mt-3">
