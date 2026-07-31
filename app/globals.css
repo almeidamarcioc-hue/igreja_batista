@@ -11,13 +11,14 @@
   --background-end-rgb: 240, 242, 245;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 230, 230, 230;
-    --background-start-rgb: 20, 20, 20;
-    --background-end-rgb: 20, 20, 20;
-  }
-}
+/*
+ * Não há tema escuro: o fundo do app é fixo (#f0f2f5, claro).
+ * Existia aqui um bloco `prefers-color-scheme: dark` que clareava o texto para
+ * rgb(230,230,230) sem mudar o fundo — quem usa o navegador em modo escuro via
+ * texto quase branco sobre fundo claro em qualquer trecho sem cor explícita.
+ * As telas de fundo escuro (login, configurações, workspace) definem a cor do
+ * texto por conta própria, então não dependem disso.
+ */
 
 html,
 body {

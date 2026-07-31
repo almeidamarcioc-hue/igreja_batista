@@ -40,7 +40,11 @@ function Secao({ id, titulo, subtitulo, children }: { id: string; titulo: string
 
 function Aviso({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg px-4 py-3 text-sm mt-3" style={{ backgroundColor: '#FFF8E7', border: `1px solid ${COR_DOURADO}` }}>
+    <div
+      className="rounded-lg px-4 py-3 text-sm mt-3"
+      // Cor do texto explícita: sem isso o conteúdo herda a cor do body
+      style={{ backgroundColor: '#FFF8E7', border: `1px solid ${COR_DOURADO}`, color: '#5C4A1F' }}
+    >
       {children}
     </div>
   )
@@ -84,7 +88,7 @@ export default function ComoUsarPage() {
 
       {aba === 'operador' && (
         <>
-          <div className="rounded-lg px-4 py-3 mb-6 text-sm" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+          <div className="rounded-lg px-4 py-3 mb-6 text-sm" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E3A5F' }}>
             <strong>Quem é o operador:</strong> quem opera a área durante o culto (câmeras, som, datashow,
             transmissão ou iluminação) e vai marcando no sistema o que já foi feito.
           </div>
@@ -219,7 +223,7 @@ export default function ComoUsarPage() {
 
       {aba === 'lider' && (
         <>
-          <div className="rounded-lg px-4 py-3 mb-6 text-sm" style={{ backgroundColor: '#F5F3FF', border: '1px solid #DDD6FE' }}>
+          <div className="rounded-lg px-4 py-3 mb-6 text-sm" style={{ backgroundColor: '#F5F3FF', border: '1px solid #DDD6FE', color: '#3B2E5A' }}>
             <strong>Quem é o líder da área:</strong> o responsável por uma área da Comunicação. Além de
             tudo que o operador faz, você acompanha o trabalho da equipe, ajusta o checklist da sua área e
             cuida dos acessos dos seus operadores.
