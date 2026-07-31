@@ -166,6 +166,19 @@ export default function ComunicacaoSidebar({ open, onClose }: { open?: boolean; 
               <span className="text-xs">Gerenciar Liderados</span>
             </Link>
           )}
+
+          {/* Manual de uso, para o líder consultar e orientar a equipe */}
+          {ehCoordenador && (
+            <Link
+              href="/comunicacao/como-usar"
+              onClick={onClose}
+              style={pathname.startsWith('/comunicacao/como-usar') ? { backgroundColor: 'rgba(197,160,89,0.15)', color: '#C5A059' } : { color: '#e8e8e8' }}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg mt-1 text-sm font-medium transition-all duration-150 hover:text-yellow-400"
+            >
+              <span>📖</span>
+              <span className="text-xs">Como Usar o Sistema</span>
+            </Link>
+          )}
         </div>
       </nav>
 
