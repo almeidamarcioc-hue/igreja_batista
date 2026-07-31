@@ -2186,6 +2186,37 @@ export async function obterProgressoCultoEquipe(cultoData: string, areaId: strin
   return rows
 }
 
+/**
+ * Nomes de quem efetivamente marcou passos no checklist. Quando `usuarioId` é
+ * informado, restringe às marcações dessa pessoa (usado para o operador, que só
+ * vê o próprio trabalho).
+ */
+export async function obterResponsaveisChecklist(
+  cultoData: string,
+  areaId: string,
+  usuarioId?: number,
+): Promise<string[]> {
+  const sql = getDb()
+  const rows = usuarioId
+    ? await sql`
+        SELECT DISTINCT u.nome
+        FROM checklist_progresso cp
+        JOIN usuarios u ON u.id = cp.usuario_id
+        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
+          AND cp.marcado = TRUE AND cp.usuario_id = ${usuarioId}
+        ORDER BY u.nome
+      `
+    : await sql`
+        SELECT DISTINCT u.nome
+        FROM checklist_progresso cp
+        JOIN usuarios u ON u.id = cp.usuario_id
+        WHERE cp.culto_data = ${cultoData} AND cp.area_id = ${areaId}
+          AND cp.marcado = TRUE
+        ORDER BY u.nome
+      `
+  return rows.map((r: any) => String(r.nome))
+}
+
 export async function alternarPassoProgresso(cultoData: string, areaId: string, passoId: string, usuarioId: number, marcado: boolean) {
   const sql = getDb()
   await sql`

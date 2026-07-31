@@ -16,6 +16,7 @@ interface ProgresoPasso {
   pos: PassoComMarcacao[]
   total: number
   marcados: number
+  responsaveis?: string[]
 }
 
 export default function AreaPage() {
@@ -334,9 +335,15 @@ export default function AreaPage() {
           </div>
         </div>
 
-        {area.responsavelSugerido && (
+        {/* Mostra quem preencheu; sem preenchimento, cai no responsável sugerido do template */}
+        {(progresso.responsaveis?.length ?? 0) > 0 ? (
+          <p className="text-sm text-gray-700 mb-2">
+            <span className="font-semibold">👤 Responsável:</span> {progresso.responsaveis!.join(', ')}
+          </p>
+        ) : area.responsavelSugerido && (
           <p className="text-sm text-gray-700 mb-2">
             <span className="font-semibold">👤 Responsável:</span> {area.responsavelSugerido}
+            <span className="text-gray-500"> (sugerido)</span>
           </p>
         )}
         {area.chegadaAntecedencia && (

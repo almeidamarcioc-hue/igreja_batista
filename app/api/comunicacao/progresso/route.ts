@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, unauthorized, getCurrentUserId } from '@/lib/guard'
-import { obterProgressoCulto, obterProgressoCultoEquipe, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
+import { obterProgressoCulto, obterProgressoCultoEquipe, obterResponsaveisChecklist, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
 import { getComunicacaoUser, podeVerArea, podeGerenciarArea } from '@/lib/comunicacao/auth'
 import { obterPassosEfetivos } from '@/lib/comunicacao/passos'
@@ -62,6 +62,12 @@ export async function GET(req: NextRequest) {
         total: todosPassos.length,
         // Só conta marcações de passos que ainda existem no template
         marcados: todosPassos.filter(p => mapa.get(p.id)).length,
+        // Quem de fato preencheu — a tela mostrava só o responsável sugerido
+        responsaveis: await obterResponsaveisChecklist(
+          cultoData,
+          areaId,
+          verEquipe ? undefined : userId,
+        ),
       }
 
       return NextResponse.json(resultado)
