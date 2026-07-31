@@ -2169,6 +2169,23 @@ export async function obterProgressoCulto(cultoData: string, areaId: string, usu
   return rows
 }
 
+/**
+ * Progresso consolidado da equipe: um passo conta como marcado se qualquer
+ * pessoa da área o marcou. Usado quando o coordenador visualiza um checklist,
+ * já que as marcações ficam gravadas por usuário e ele veria a tela vazia se
+ * olhasse apenas as próprias.
+ */
+export async function obterProgressoCultoEquipe(cultoData: string, areaId: string) {
+  const sql = getDb()
+  const rows = await sql`
+    SELECT passo_id, BOOL_OR(marcado) AS marcado, MAX(atualizado_em) AS atualizado_em
+    FROM checklist_progresso
+    WHERE culto_data = ${cultoData} AND area_id = ${areaId}
+    GROUP BY passo_id
+  `
+  return rows
+}
+
 export async function alternarPassoProgresso(cultoData: string, areaId: string, passoId: string, usuarioId: number, marcado: boolean) {
   const sql = getDb()
   await sql`

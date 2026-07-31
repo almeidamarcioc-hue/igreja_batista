@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, unauthorized, getCurrentUserId } from '@/lib/guard'
-import { obterProgressoCulto, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
+import { obterProgressoCulto, obterProgressoCultoEquipe, alternarPassoProgresso, obterResumoAreaCulto } from '@/lib/db'
 import { PROCEDIMENTOS } from '@/lib/comunicacao/procedimentos'
-import { getComunicacaoUser, podeVerArea } from '@/lib/comunicacao/auth'
+import { getComunicacaoUser, podeVerArea, podeGerenciarArea } from '@/lib/comunicacao/auth'
 import { obterPassosEfetivos } from '@/lib/comunicacao/passos'
 
 export const dynamic = 'force-dynamic'
@@ -28,8 +28,14 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Acesso negado a esta área' }, { status: 403 })
       }
 
-      // Retornar progresso de uma área específica para um usuário
-      const passos = await obterProgressoCulto(cultoData, areaId, userId)
+      // Quem coordena a área e está visualizando um checklist vê o resultado da
+      // equipe. As marcações são gravadas por usuário, então olhando só as
+      // próprias o coordenador veria a tela vazia. Na marcação (sem `equipe`)
+      // continua sendo o progresso individual, coerente com o que ele grava.
+      const verEquipe = searchParams.get('equipe') === '1' && podeGerenciarArea(user, areaId)
+      const passos = verEquipe
+        ? await obterProgressoCultoEquipe(cultoData, areaId)
+        : await obterProgressoCulto(cultoData, areaId, userId)
       const mapa = new Map(passos.map((p: any) => [p.passo_id, p.marcado]))
 
       const area = PROCEDIMENTOS.areas.find(a => a.id === areaId)

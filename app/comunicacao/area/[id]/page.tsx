@@ -117,8 +117,12 @@ export default function AreaPage() {
       setCarregando(true)
       try {
         const dataFormatada = cultoData.split('T')[0]
-        // Sempre usar o mesmo endpoint para consistência
-        const endpoint = `/api/comunicacao/progresso?culto_data=${dataFormatada}&area_id=${areaId}`
+        // Em modo de visualização pede o resultado da equipe: as marcações são
+        // gravadas por usuário, então o coordenador veria a tela vazia se
+        // olhasse apenas as próprias. O servidor só atende quem coordena a área.
+        const endpoint =
+          `/api/comunicacao/progresso?culto_data=${dataFormatada}&area_id=${areaId}` +
+          (modoVisualizacao ? '&equipe=1' : '')
 
         const resp = await fetch(endpoint)
         if (resp.ok) {
